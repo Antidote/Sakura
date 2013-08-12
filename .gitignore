@@ -1,0 +1,13 @@
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/extlibs/SFML/doc/html/*.htm
+/release/*.o
+/*.user
+/Makefile.Debug
+Makefile
+*.exe
