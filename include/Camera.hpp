@@ -22,6 +22,7 @@ public:
     void setSize(const sf::Vector2f& size);
     sf::Vector2f size() const;
 
+    bool intersects(const sf::FloatRect& rect) const;
     void update();
 
     void move(float x, float y);
@@ -31,11 +32,15 @@ public:
     Entity* lockedOn() const;\
     void setLockedOn(Entity* entity);
 
+    sf::FloatRect viewRect() const;
+
+    void resize(int width, int height);
 protected:
 private:
     sf::Vector2i m_world;
     sf::Vector2f m_pos;
     sf::Vector2f m_size;
+    sf::Vector2f m_virtualSize;
     sf::View     m_view;
     Entity*      m_lock;
 };

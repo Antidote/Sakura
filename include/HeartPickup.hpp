@@ -10,8 +10,7 @@ class HeartPickup : public Entity, public Collideable
 {
 public:
     HeartPickup();
-
-    void update(sf::Time delta);
+    void update(sf::Time dt);
     void draw(sf::RenderTarget &rt);
 
     void collide(Entity *entity);

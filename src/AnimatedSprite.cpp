@@ -31,6 +31,9 @@ AnimatedSprite::AnimatedSprite(sf::Time frameTime, bool paused, bool looped) :
 
 void AnimatedSprite::setAnimation(const Animation& animation)
 {
+    if (!&animation)
+        return;
+
     m_animation = &animation;
     m_texture = m_animation->getSpriteSheet();
     m_currentFrame = 0;
@@ -78,6 +81,9 @@ void AnimatedSprite::setColor(const sf::Color& color)
 
 sf::FloatRect AnimatedSprite::getLocalBounds() const
 {
+    if (m_animation->getSize() <= 0)
+        return sf::FloatRect(0.0f, 0.0f, 1.0f, 1.0f);
+
     sf::IntRect rect = m_animation->getFrame(m_currentFrame);
 
     float width = static_cast<float>(std::abs(rect.width));
@@ -136,6 +142,11 @@ void AnimatedSprite::setFrame(std::size_t newFrame, bool resetTime)
 sf::Color AnimatedSprite::color() const
 {
     return m_vertices[0].color;
+}
+
+const sf::Texture* AnimatedSprite::getTexture() const
+{
+    return m_texture;
 }
 
 void AnimatedSprite::update(sf::Time deltaTime)

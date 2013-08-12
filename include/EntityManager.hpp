@@ -26,6 +26,7 @@ public:
     void think(sf::Time dt);
     void draw(sf::RenderTarget& rt);
 
+    void shutdown();
 protected:
 private:
     sf::Mutex m_mutex;

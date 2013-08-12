@@ -7,13 +7,17 @@
 class TextureResource : public Resource<sf::Texture>
 {
 public:
-    TextureResource(const std::string& filename);
+    TextureResource(const std::string& filename, bool precache = false);
     ~TextureResource();
 
     std::string filename() const;
     sf::Texture* data();
 
+
+    void load();
+    bool exists() const;
     bool isLoaded() const;
+    bool isPrecached() const;
 private:
     void setData(sf::Texture *data);
 };

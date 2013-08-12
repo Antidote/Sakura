@@ -1,6 +1,6 @@
 #include "Widget.hpp"
 #include "Engine.hpp"
-
+#include "Container.hpp"
 
 Widget::Widget(const std::string &name, Widget::Group group, bool visible, bool enabled)
     : m_name(name),
@@ -25,7 +25,12 @@ Widget::~Widget()
 
 }
 
-UIManager*Widget::owner() const
+void Widget::setOwner(Container* owner)
+{
+    m_owner = owner;
+}
+
+Container* Widget::owner() const
 {
     return m_owner;
 }
@@ -121,6 +126,7 @@ void Widget::onMouseClick()
 
 void Widget::update(sf::Time dt)
 {
+    ((void)dt);
     if (contains((sf::Vector2f)Engine::instance().inputManager().mouse().mouseLocalPosition()) && !m_mouseIn)
     {
         onMouseEnter();

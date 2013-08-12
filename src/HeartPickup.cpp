@@ -11,10 +11,14 @@ HeartPickup::HeartPickup()
     : Entity("HeartPickup", Pickup)
 {
     setSize(8, 8);
-    if (!Engine::instance().resourceManger().textureExists("items/pickups/heart"))
+    if (!Engine::instance().resourceManager().textureExists("items/pickups/heart"))
     {
-        if (Engine::instance().resourceManger().loadTexture("items/pickups/heart", new TextureResource("heartpickup.png")))
-            m_animation.setSpriteSheet(*Engine::instance().resourceManger().texture("items/pickups/heart"));
+        if (Engine::instance().resourceManager().loadTexture("items/pickups/heart", new TextureResource("sprites/heartpickup.png")))
+            m_animation.setSpriteSheet(*Engine::instance().resourceManager().texture("items/pickups/heart"));
+    }
+    else
+    {
+        m_animation.setSpriteSheet(Engine::instance().resourceManager().texture("items/pickups/heart"));
     }
 
     m_animation.addFrame(sf::IntRect(0, 0, 8, 8));
@@ -22,25 +26,27 @@ HeartPickup::HeartPickup()
     m_animation.addFrame(sf::IntRect(16, 0, 8, 8));
     m_sprite.setAnimation(m_animation);
 
-    if (!Engine::instance().resourceManger().soundExists("player/wavs/itempickup"))
-        Engine::instance().resourceManger().loadSound("player/wavs/itempickup", new SoundResource("LTTP_Item.wav"));
+    if (!Engine::instance().resourceManager().soundExists("player/wavs/itempickup"))
+        Engine::instance().resourceManager().loadSound("player/wavs/itempickup", new SoundResource("sounds/LTTP_Item.wav"));
 
 }
 
-void HeartPickup::update(sf::Time delta)
+void HeartPickup::update(sf::Time dt)
 {
-    if (!m_animation.getSpriteSheet())
+    if (m_animation.getSpriteSheet())
     {
-        if (Engine::instance().resourceManger().loadTexture("items/pickups/heart", new TextureResource("heartpickup.png")))
-            m_animation.setSpriteSheet(*Engine::instance().resourceManger().texture("items/pickups/heart"));
+        m_sprite.setAnimation(m_animation);
+        m_sprite.setPosition(m_pos);
     }
-    m_sprite.setAnimation(m_animation);
-    m_sprite.setPosition(m_pos);
+
+    Entity::update(dt);
 }
 
 void HeartPickup::draw(sf::RenderTarget &rt)
 {
-    rt.draw(m_sprite);
+    if (m_sprite.getTexture())
+        rt.draw(m_sprite);
+    Entity::draw(rt);
 }
 
 void HeartPickup::collide(Entity *entity)
@@ -51,8 +57,7 @@ void HeartPickup::collide(Entity *entity)
         if (link)
         {
             link->giveHp(6);
-            if (Engine::instance().resourceManger().soundExists("player/wavs/itempickup"))
-                Engine::instance().resourceManger().sound("player/wavs/itempickup")->play();
+            Engine::instance().resourceManager().playSound("player/wavs/itempickup");
 
             Engine::instance().entityManager().removeEntity(this);
         }

@@ -26,6 +26,9 @@ public:
 
     void onDamage(Entity *e);
     void onDeath();
+
+    void giveRupees(int num);
+    void takeRupees(int num);
 private:
 
     void doCollision();
@@ -40,6 +43,8 @@ private:
     sf::Color              m_blinkColor;
     sf::Time               m_invincibilityTime;
 
+    int                    m_rupees;
+    int                    m_maxRupees;
 };
 
 #endif // LINK_HPP

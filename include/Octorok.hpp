@@ -34,11 +34,13 @@ public:
     sf::Time      m_runTime;
     sf::Sprite    m_sprite;
     AiState       m_aiState;
+    bool          m_outsidePatrol;
 
     sf::RectangleShape m_debugShape;
 
     sf::FloatRect m_patrolZone;
 
+    void checkFacing();
 };
 
 #endif // OCTOROCK_HPP

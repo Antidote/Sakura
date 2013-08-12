@@ -15,6 +15,8 @@ public:
     virtual void onDeath()=0;
 protected:
     int  m_hp;
+    int  m_maxHp;
+    int  m_hpCounter; // Mostly for link
     bool m_takeDamage;
 };
 

@@ -1,5 +1,7 @@
 #include "EntityManager.hpp"
 #include "Entity.hpp"
+#include "Engine.hpp"
+#include "Camera.hpp"
 #include "iostream"
 #include "AI.hpp"
 
@@ -10,13 +12,6 @@ EntityManager::EntityManager()
 
 EntityManager::~EntityManager()
 {
-    for(Entity* e : m_entities)
-    {
-        delete e;
-        e = NULL;
-    }
-
-    m_entities.clear();
 }
 
 void EntityManager::addEntity(Entity* e)
@@ -58,10 +53,9 @@ void EntityManager::removeEntity(Entity* e)
 
     if (index != -1)
     {
+        m_entities.erase(m_entities.begin() + index);
         delete e;
         e = NULL;
-        m_entities[index] = NULL;
-        m_entities.erase(m_entities.begin() + index);
     }
 
 }
@@ -111,8 +105,9 @@ void EntityManager::update(sf::Time dt)
 
     for (Entity* e : m_entities)
     {
-        if(e)
-            e->update(dt);
+        if (!Engine::instance().camera().intersects(e->bounds()) && e->type() != Entity::Player)
+            continue;
+        e->update(dt);
     }
 }
 
@@ -120,7 +115,10 @@ void EntityManager::think(sf::Time dt)
 {
     for (Entity* e : m_entities)
     {
+        if (!Engine::instance().camera().intersects(e->bounds()))
+            continue;
         AI* ai = dynamic_cast<AI*>(e);
+        // clip all entites that aren't in view
         if (ai)
             ai->think(dt);
     }
@@ -138,9 +136,28 @@ void EntityManager::draw(sf::RenderTarget& rt)
 
     std::sort(m_entities.begin(), m_entities.end(), sort);
     for (Entity* e : m_entities)
+    {
+        // clip all entites that aren't in view
+        if (!Engine::instance().camera().intersects(e->bounds()))
+            continue;
         e->draw(rt);
+    }
 }
 
+void EntityManager::shutdown()
+{
+//    Engine::instance().log().print(Log::Info, "Destroying entities...\n");
+    for(Entity* e : m_entities)
+    {
+        if (e)
+        {
+            delete e;
+            e = NULL;
+        }
+    }
+
+    m_entities.clear();
+}
 
 
 bool EntityManager::checkNames(const std::string& name)

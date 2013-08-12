@@ -13,7 +13,7 @@ void Killable::takeHp(int amount, Entity* e)
         return;
 
     m_hp -= amount;
-    std::cout << "Health: " << m_hp << std::endl;
+
     onDamage(e);
 
     if (m_hp <= 0)

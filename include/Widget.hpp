@@ -6,7 +6,7 @@
 #include <string>
 #include <functional>
 #include <SFML/Graphics.hpp>
-class UIManager;
+class Container;
 
 
 
@@ -29,8 +29,8 @@ public:
     Widget(const std::string& name, Group group, const sf::Vector2f& position, const sf::Vector2f& size);
     virtual ~Widget();
 
-    void setOwner(UIManager* owner);
-    UIManager* owner() const;
+    void setOwner(Container* owner);
+    Container* owner() const;
 
     std::string name() const;
     void setPosition(const sf::Vector2f& position);
@@ -58,7 +58,7 @@ public:
     virtual void draw(sf::RenderTarget& rt)=0;
 
 private:
-    UIManager*        m_owner;
+    Container*        m_owner;
     std::string       m_name;
     Group             m_group;
     bool              m_visible;

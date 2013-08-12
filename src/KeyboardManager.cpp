@@ -1,9 +1,10 @@
 #include "KeyboardManager.hpp"
 
 
+
 KeyboardManager::KeyboardManager()
 {
-    for (int i = 0; i < sf::Keyboard::KeyCount; i++)
+    for (int i = 0; i < sf::Keyboard::KeyCount - 1; i++)
     {
         m_pressedKeys[(sf::Keyboard::Key)i] = false;
     }
@@ -11,7 +12,7 @@ KeyboardManager::KeyboardManager()
 
 void KeyboardManager::update()
 {
-    for (int i = 0; i < sf::Keyboard::KeyCount; i++)
+    for (int i = 0; i < sf::Keyboard::KeyCount - 1; i++)
     {
         sf::Keyboard::Key key = (sf::Keyboard::Key)i;
         m_pressedKeys[key] = sf::Keyboard::isKeyPressed(key);

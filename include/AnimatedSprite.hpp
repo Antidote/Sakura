@@ -53,6 +53,8 @@ public:
     void setFrame(std::size_t newFrame, bool resetTime = true);
 
     sf::Color color() const;
+
+    const sf::Texture* getTexture() const;
 private:
     const Animation* m_animation;
     sf::Time m_frameTime;

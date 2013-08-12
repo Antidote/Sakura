@@ -38,6 +38,11 @@ void Animation::setSpriteSheet(const sf::Texture& texture)
     m_texture = &texture;
 }
 
+void Animation::setSpriteSheet(sf::Texture* texture)
+{
+    m_texture = texture;
+}
+
 const sf::Texture* Animation::getSpriteSheet() const
 {
     return m_texture;
@@ -50,5 +55,8 @@ std::size_t Animation::getSize() const
 
 const sf::IntRect& Animation::getFrame(std::size_t n) const
 {
+    if (n > m_frames.size() - 1)
+        return sf::IntRect(0, 0, 1, 1);
+
     return m_frames[n];
 }

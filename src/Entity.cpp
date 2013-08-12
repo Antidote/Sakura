@@ -1,4 +1,7 @@
 #include "Entity.hpp"
+#include "Engine.hpp"
+#include "ResourceManager.hpp"
+#include "FontResource.hpp"
 #include <sstream>
 #include <iostream>
 
@@ -11,12 +14,20 @@ Entity::Entity(const std::string& name, Type type)
       m_lastFacing(North)
 {
     getUniqueName();
-    std::cout << "Entity created: " << m_name << std::endl;
+
+    if (Engine::instance().resourceManager().fontExists("fonts/debug"))
+    {
+        m_debugInfo.setFont(*Engine::instance().resourceManager().font("fonts/debug"));
+        m_debugInfo.setCharacterSize(10);
+        //m_debugInfo.setStyle(sf::Text::Bold);
+        ((sf::Texture&)m_debugInfo.getFont()->getTexture(10)).setSmooth(false);
+    }
+
+    //std::cout << "Entity created: " << m_name << std::endl;
 }
 
 Entity::~Entity()
 {
-    std::cout << "Entity destroyed: " << m_name << std::endl;
 }
 
 void Entity::setPosition(const float x, const float y)
@@ -81,12 +92,17 @@ Entity::Type Entity::type() const
 
 void Entity::update(sf::Time delta)
 {
-    ((void)delta);
+    std::stringstream debugInfo;
+    debugInfo << "Name: " << m_name << "\nX: " << m_pos.x << "\nY: " << m_pos.y;
+    debugInfo << "\nV.x: " << m_velocity.x << "\nV.y: " << m_velocity.y;
+
+    m_debugInfo.setString(debugInfo.str());
+    m_debugInfo.setPosition((m_pos.x + m_size.y/2)- m_debugInfo.getLocalBounds().width/2, m_pos.y - (m_debugInfo.getLocalBounds().height));
 }
 
 void Entity::draw(sf::RenderTarget& rt)
 {
-    ((void)rt);
+    rt.draw(m_debugInfo);
 }
 
 void Entity::getUniqueName()

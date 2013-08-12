@@ -1,20 +1,64 @@
 #include "ResourceManager.hpp"
 #include "Resource.hpp"
 #include "SoundResource.hpp"
+#include "MusicResource.hpp"
 #include "TextureResource.hpp"
+#include "FontResource.hpp"
+#include "Engine.hpp"
+#include "Log.hpp"
 #include <iostream>
+#include <physfs.h>
 
+const std::string ResourceManager::BASEDIR = std::string("data");
+const std::string ResourceManager::SPRITEDIR = std::string("sprites/");
+const std::string ResourceManager::BACKGROUNDDIR = std::string("backgrounds/");
+const std::string ResourceManager::MAPDIR = std::string("maps/");
+const std::string ResourceManager::SOUNDDIR = std::string("sounds/");
+const std::string ResourceManager::MUSICDIR = std::string("music/");
+const std::string ResourceManager::FONTDIR = std::string("fonts/");
 
 ResourceManager::~ResourceManager()
 {
-    purgeResources();
+}
+
+void ResourceManager::initialize(const char* argv0)
+{
+    PHYSFS_init(argv0);
+    PHYSFS_mount("data", "/", 0);
+
+    char** listBegin = PHYSFS_enumerateFiles("/");
+    std::vector<std::string> archives;
+    for (char** file = listBegin; *file != NULL; file++)
+    {
+        if (PHYSFS_isDirectory(*file))
+            continue;
+
+        std::string fileName(*file);
+        fileName.insert(0, std::string(PHYSFS_getRealDir(*file)) + "/");
+        std::string extension = fileName.substr(fileName.find_last_of(".") + 1, fileName.length() - (fileName.find_last_of(".") + 1));
+        if ((!extension.compare("zip") || !extension.compare("pak")))
+            archives.push_back(fileName);
+    }
+
+    PHYSFS_freeList(listBegin);
+
+    // Sort files in descending order
+    std::sort(archives.begin(), archives.end(), std::greater<std::string>());
+
+    for (std::string archive : archives)
+    {
+        Engine::instance().log().print(Log::Info, "Mounting archive: %s\n", archive.c_str());
+        PHYSFS_mount(archive.c_str(), NULL, 1);
+    }
 }
 
 bool ResourceManager::loadSound(const std::string &name, SoundResource *sound)
 {
-    if (sound->isLoaded())
+    if (sound->exists())
     {
-        m_soundResources.insert(std::make_pair(name, sound));
+        m_soundBufferResources[name] =  sound;
+        if (sound->isPrecached())
+            m_sounds[name] = new sf::Sound(*sound->data());
         return true;
     }
 
@@ -23,22 +67,78 @@ bool ResourceManager::loadSound(const std::string &name, SoundResource *sound)
     return false;
 }
 
-sf::Sound* ResourceManager::sound(const std::string &name)
+void ResourceManager::playSound(const std::string &name)
 {
-    if (((SoundResource*)m_soundResources[name]) != NULL)
+    if (((SoundResource*)m_soundBufferResources[name]) != NULL)
     {
-        sf::Sound* sound = new sf::Sound;
-        sound->setBuffer(*((SoundResource*)m_soundResources[name])->data());
-        return sound;
+        if (!m_soundBufferResources[name]->isLoaded())
+        {
+            m_soundBufferResources[name]->load();
+            m_sounds[name] = new sf::Sound(*m_soundBufferResources[name]->data());
+        }
+        m_sounds[name]->play();
     }
+}
 
-    return NULL;
+void ResourceManager::removeSound(const std::string &name)
+{
+    SoundResource* resource = m_soundBufferResources[name];
+    sf::Sound* sound = m_sounds[name];
+    m_soundBufferResources.erase(m_soundBufferResources.find(name));
+    m_sounds.erase(m_sounds.find(name));
+    delete sound;
+    sound = NULL;
+    delete resource;
+    resource = NULL;
 }
 
 bool ResourceManager::soundExists(const std::string &name)
 {
-    std::unordered_map<std::string, SoundResource*>::const_iterator iter = m_soundResources.begin();
-    for (; iter != m_soundResources.end(); ++iter)
+    std::unordered_map<std::string, SoundResource*>::const_iterator iter = m_soundBufferResources.begin();
+    for (; iter != m_soundBufferResources.end(); ++iter)
+        if (iter->first == name)
+            return true;
+
+    return false;
+}
+
+bool ResourceManager::loadMusic(const std::string& name, MusicResource* music)
+{
+    if (music->exists())
+    {
+        m_musicResources[name] = music;
+        return true;
+    }
+
+    delete music;
+    music = NULL;
+    return false;
+}
+
+void ResourceManager::playMusic(const std::string& name)
+{
+    if (((MusicResource*)m_musicResources[name]) != NULL)
+    {
+        if (!m_musicResources[name]->isLoaded())
+        {
+            m_musicResources[name]->load();
+        }
+        m_musicResources[name]->data()->play();
+    }
+}
+
+void ResourceManager::removeMusic(const std::string &name)
+{
+    MusicResource* resource = m_musicResources[name];
+    m_musicResources.erase(m_musicResources.find(name));
+    delete resource;
+    resource = NULL;
+}
+
+bool ResourceManager::musicExists(const std::string& name)
+{
+    std::unordered_map<std::string, MusicResource*>::const_iterator iter = m_musicResources.begin();
+    for (; iter != m_musicResources.end(); ++iter)
         if (iter->first == name)
             return true;
 
@@ -47,9 +147,9 @@ bool ResourceManager::soundExists(const std::string &name)
 
 bool ResourceManager::loadTexture(const std::string &name, TextureResource *texture)
 {
-    if (texture->isLoaded())
+    if (texture->exists())
     {
-        m_textureResources.insert(std::make_pair(name, texture));
+        m_textureResources[name] = texture;
         return true;
     }
 
@@ -61,9 +161,22 @@ bool ResourceManager::loadTexture(const std::string &name, TextureResource *text
 sf::Texture* ResourceManager::texture(const std::string &name)
 {
     if (textureExists(name))
+    {
+        if (!m_textureResources[name]->isLoaded())
+            m_textureResources[name]->load();
+
         return ((TextureResource*)m_textureResources[name])->data();
+    }
 
     return NULL;
+}
+
+void ResourceManager::removeTexture(const std::string &name)
+{
+    TextureResource* resource = m_textureResources[name];
+    m_textureResources.erase(m_textureResources.find(name));
+    delete resource;
+    resource = NULL;
 }
 
 bool ResourceManager::textureExists(const std::string &name)
@@ -77,8 +190,60 @@ bool ResourceManager::textureExists(const std::string &name)
     return false;
 }
 
+bool ResourceManager::loadFont(const std::string& name, FontResource* font)
+{
+    if (font->exists())
+    {
+        m_fontResources.insert(std::make_pair(name, font));
+        return true;
+    }
+
+    delete font;
+    font = NULL;
+    return false;
+}
+
+sf::Font* ResourceManager::font(const std::string& name)
+{
+    if (fontExists(name))
+    {
+        if (!m_fontResources[name]->isLoaded())
+            m_fontResources[name]->load();
+        return ((FontResource*)m_fontResources[name])->data();
+    }
+
+    return NULL;
+}
+
+void ResourceManager::removeFont(const std::string &name)
+{
+    FontResource* resource = m_fontResources[name];
+    m_fontResources.erase(m_fontResources.find(name));
+    delete resource;
+    resource = NULL;
+}
+
+bool ResourceManager::fontExists(const std::string& name)
+{
+    std::unordered_map<std::string, FontResource*>::const_iterator iter = m_fontResources.begin();
+
+    for (; iter != m_fontResources.end(); ++iter)
+        if (iter->first == name)
+            return true;
+
+    return false;
+}
+
+void ResourceManager::shutdown()
+{
+    Engine::instance().log().print(Log::Info, "Shutting down PHYSFS...\n");
+    PHYSFS_deinit();
+    purgeResources();
+}
+
 void ResourceManager::purgeResources()
 {
+    Engine::instance().log().print(Log::Info, "Purging resources...\n");
     std::unordered_map<std::string, TextureResource*>::iterator textureIter = m_textureResources.begin();
     for (; textureIter != m_textureResources.end(); ++textureIter)
     {
@@ -87,15 +252,45 @@ void ResourceManager::purgeResources()
     }
     m_textureResources.clear();
 
-    std::unordered_map<std::string, SoundResource*>::iterator soundIter = m_soundResources.begin();
+    std::unordered_map<std::string, sf::Sound*>::iterator soundIter = m_sounds.begin();
 
-    for (; soundIter != m_soundResources.end(); ++soundIter)
+    for (; soundIter != m_sounds.end(); ++soundIter)
     {
         delete soundIter->second;
         soundIter->second = NULL;
     }
 
-    m_soundResources.clear();
+    m_sounds.clear();
 
+
+    std::unordered_map<std::string, SoundResource*>::iterator soundBufferIter = m_soundBufferResources.begin();
+
+
+    for (; soundBufferIter != m_soundBufferResources.end(); ++soundBufferIter)
+    {
+        delete soundBufferIter->second;
+        soundBufferIter->second = NULL;
+    }
+
+    m_soundBufferResources.clear();
+
+    std::unordered_map<std::string, FontResource*>::iterator fontIter = m_fontResources.begin();
+
+    for (; fontIter != m_fontResources.end(); ++fontIter)
+    {
+        delete fontIter->second;
+        fontIter->second = NULL;
+    }
+
+    m_fontResources.clear();
+
+    std::unordered_map<std::string, MusicResource*>::iterator musicIter = m_musicResources.begin();
+    for (; musicIter != m_musicResources.end(); ++musicIter)
+    {
+        delete musicIter->second;
+        musicIter->second = NULL;
+    }
+
+    m_musicResources.clear();
 }
 

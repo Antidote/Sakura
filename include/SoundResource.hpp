@@ -7,13 +7,16 @@
 class SoundResource : public Resource<sf::SoundBuffer>
 {
 public:
-    SoundResource(const std::string& filename);
+    SoundResource(const std::string& filename, bool precache = true);
     ~SoundResource();
 
+    sf::SoundBuffer* data() const;
     std::string filename() const;
-    sf::SoundBuffer* data();
 
     bool isLoaded() const;
+    bool exists() const;
+    bool isPrecached();
+    void load();
 private:
     void setData(sf::SoundBuffer *data);
 };

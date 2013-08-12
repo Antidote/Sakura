@@ -1,11 +1,12 @@
 #ifndef KEYBOARDMANAGER_HPP
 #define KEYBOARDMANAGER_HPP
 
+#include "InputBase.hpp"
 #include <SFML/Window/Keyboard.hpp>
 #include <map>
 #include <vector>
 
-class KeyboardManager
+class KeyboardManager : public InputBase
 {
 public:
     KeyboardManager();

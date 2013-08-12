@@ -4,7 +4,7 @@
 
 MouseManager::MouseManager()
 {
-    for (int i = 0; i < sf::Mouse::ButtonCount; i++)
+    for (int i = 0; i < sf::Mouse::ButtonCount - 1; i++)
     {
         m_pressedButtons[(sf::Mouse::Button)i] = false;
     }
@@ -12,7 +12,7 @@ MouseManager::MouseManager()
 
 void MouseManager::update()
 {
-    for (int i = 0; i < sf::Mouse::ButtonCount; i++)
+    for (int i = 0; i < sf::Mouse::ButtonCount - 1; i++)
     {
         sf::Mouse::Button btn = (sf::Mouse::Button)i;
         m_pressedButtons[btn] = sf::Mouse::isButtonPressed(btn);

@@ -1,5 +1,6 @@
 #include "Link.hpp"
 #include "Engine.hpp"
+#include "Log.hpp"
 #include "SoundResource.hpp"
 #include "TextureResource.hpp"
 #include "Collideable.hpp"
@@ -16,84 +17,95 @@ Link::Link()
     m_hp = 4*3;
     m_takeDamage = true;
 
-    if (!Engine::instance().resourceManger().soundExists("player/wavs/linkhurt"))
-        Engine::instance().resourceManger().loadSound("player/wavs/linkhurt", new SoundResource("LTTP_Link_Hurt.wav"));
+    if (!Engine::instance().resourceManager().soundExists("player/wavs/linkhurt"))
+        Engine::instance().resourceManager().loadSound("player/wavs/linkhurt", new SoundResource("sounds/LTTP_Link_Hurt.wav"));
 
 
 
-    if (!Engine::instance().resourceManger().textureExists("player/png/greentunic"))
+    if (!Engine::instance().resourceManager().textureExists("player/png/greentunic"))
     {
-        Engine::instance().resourceManger().loadTexture("player/png/greentunic", new TextureResource("link.png"));
-        m_linkAnimations = Engine::instance().resourceManger().texture("player/png/greentunic");
+        Engine::instance().resourceManager().loadTexture("player/png/greentunic", new TextureResource("sprites/link.png", true));
+        m_linkAnimations = Engine::instance().resourceManager().texture("player/png/greentunic");
     }
 
     setSize(sf::Vector2f(16, 8));
 
-    for (int i = 0; i < (int)FacingSize; i++)
+    if (m_linkAnimations)
     {
-        Animation animation;
-        animation.setSpriteSheet(*m_linkAnimations);
-        m_animations.push_back(animation);
-        for (int x = 0; x < (int)m_linkAnimations->getSize().x; x += 16)
+        for (int i = 0; i < (int)FacingSize; i++)
         {
-            m_animations[i].addFrame(sf::IntRect(x, (i*24), 16, 24));
+            Animation animation;
+            animation.setSpriteSheet(*m_linkAnimations);
+            m_animations.push_back(animation);
+            for (int x = 0; x < (int)m_linkAnimations->getSize().x; x += 16)
+                m_animations[i].addFrame(sf::IntRect(x, (i*24), 16, 24));
         }
-
     }
 
     m_sprite.setAnimation(m_animations[m_facing]);
     m_sprite.setFrameTime(sf::seconds(0.075f));
     m_sprite.setLooped(true);
-    m_sprite.setOrigin(0, (m_sprite.getLocalBounds().height/2) + 4);
+    if (m_animations.size() > 0)
+        m_sprite.setOrigin(0, (m_sprite.getLocalBounds().height/2) + 4);
 }
 
-void Link::update(sf::Time delta)
+void Link::update(sf::Time dt)
 {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+    if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Left) ||
+        Engine::instance().inputManager().joystick().isButtonPressed(0, 7))
     {
-        m_velocity.x -= 4.f*delta.asSeconds();
+        if (m_velocity.x > 0)
+            m_velocity.x = 0;
+        m_velocity.x -= 4.f*dt.asSeconds();
         m_facing = West;
         m_state = Moving;
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+    else if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Right) ||
+             Engine::instance().inputManager().joystick().isButtonPressed(0, 5))
     {
-        m_velocity.x += 4.f*delta.asSeconds();
+        if (m_velocity.x < 0)
+            m_velocity.x = 0;
+        m_velocity.x += 4.f*dt.asSeconds();
         m_facing = East;
         m_state = Moving;
     }
     else
         m_velocity.x = 0;
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+    if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Up)||
+        Engine::instance().inputManager().joystick().isButtonPressed(0, 4))
     {
-        m_velocity.y -= 4.f*delta.asSeconds();
+        m_velocity.y -= 4.f*dt.asSeconds();
         m_facing = North;
         m_state = Moving;
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+    else if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Down)||
+             Engine::instance().inputManager().joystick().isButtonPressed(0, 6))
     {
-        m_velocity.y += 4.f*delta.asSeconds();
+        m_velocity.y += 4.f*dt.asSeconds();
         m_facing = South;
         m_state = Moving;
     }
     else
         m_velocity.y = 0;
 
-    if((sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-       && (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down)))
+    if(((Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Left) || Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Right))
+        && (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Up) || Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Down)))
+       || ((Engine::instance().inputManager().joystick().isButtonPressed(0, 7) || Engine::instance().inputManager().joystick().isButtonPressed(0, 5))
+          && (Engine::instance().inputManager().joystick().isButtonPressed(0, 4) || Engine::instance().inputManager().joystick().isButtonPressed(0, 6))))
     {
-       m_velocity *= .95f;
+        m_velocity *= .95f;
     }
 
-    if (m_velocity.x > 64.f*delta.asSeconds())
-        m_velocity.x = 64.f*delta.asSeconds();
-    if (m_velocity.x < -64.f*delta.asSeconds())
-        m_velocity.x = -64.f*delta.asSeconds();
+    if (m_velocity.x > 64.f*dt.asSeconds())
+        m_velocity.x = 64.f*dt.asSeconds();
+    if (m_velocity.x < -64.f*dt.asSeconds())
+        m_velocity.x = -64.f*dt.asSeconds();
 
-    if (m_velocity.y > 64.f*delta.asSeconds())
-        m_velocity.y = 64.f*delta.asSeconds();
-    if (m_velocity.y < -64.f*delta.asSeconds())
-        m_velocity.y = -64.f*delta.asSeconds();
+    if (m_velocity.y > 64.f*dt.asSeconds())
+        m_velocity.y = 64.f*dt.asSeconds();
+    if (m_velocity.y < -64.f*dt.asSeconds())
+        m_velocity.y = -64.f*dt.asSeconds();
 
     if (m_lastFacing != m_facing)
     {
@@ -103,7 +115,7 @@ void Link::update(sf::Time delta)
 
     if (m_state != Idle)
     {
-        if (!m_sprite.isPlaying())
+        if (!m_sprite.isPlaying() && m_animations.size() > 0)
             m_sprite.setAnimation(m_animations[m_facing]);
         m_sprite.play();
     }
@@ -128,19 +140,25 @@ void Link::update(sf::Time delta)
         m_sprite.setColor(sf::Color::White);
         m_takeDamage = true;
     }
-
+    Entity::update(dt);
     doCollision();
     m_pos += m_velocity;
 
-    m_sprite.update(delta);
+    m_sprite.update(dt);
+
     m_sprite.setPosition(m_pos);
-    m_sprite.setOrigin(0, (m_sprite.getLocalBounds().height/2) + 4);
+
+    if (m_sprite.getTexture())
+        m_sprite.setOrigin(0, (m_sprite.getLocalBounds().height/2) + 4);
     m_lastFacing = m_facing;
+
 }
 
 void Link::draw(sf::RenderTarget& rt)
 {
-    rt.draw(m_sprite);
+    Entity::draw(rt);
+    if (m_sprite.getTexture())
+        rt.draw(m_sprite);
 }
 
 void Link::onDamage(Entity *e)
@@ -148,20 +166,34 @@ void Link::onDamage(Entity *e)
     if (m_takeDamage)
     {
         m_takeDamage = false;
-        if (Engine::instance().resourceManger().sound("player/wavs/linkhurt"))
-            Engine::instance().resourceManger().sound("player/wavs/linkhurt")->play();
+        if (Engine::instance().resourceManager().soundExists("player/wavs/linkhurt"))
+            Engine::instance().resourceManager().playSound("player/wavs/linkhurt");
         m_invincibilityTimer.restart();
         m_blinkTimer.restart();
 
-        if (e->position().y < position().y)
-            m_velocity.y += 8.f;
-        else if (e->position().y > position().y)
-            m_velocity.y -= 8.f;
-
-        if (position().x < e->position().x)
-            m_velocity.x += 8.f;
-        else if (position().x > e->position().x)
-            m_velocity.x -= 8.f;
+        switch(m_facing)
+        {
+            case North:
+            case South:
+            {
+                if (e->position().y < position().y)
+                    m_velocity.y += 10.f;
+                else if (e->position().y > position().y)
+                    m_velocity.y -= 10.f;
+            }
+                break;
+            case East:
+            case West:
+            {
+                if (e->position().x < position().x)
+                    m_velocity.x += 10.f;
+                else if (e->position().x > position().x)
+                    m_velocity.x -= 10.f;
+                break;
+            }
+            default:
+                break;
+        }
     }
 }
 
@@ -169,8 +201,28 @@ void Link::onDeath()
 {
 }
 
+void Link::giveRupees(int num)
+{
+    if (m_rupees == m_maxRupees)
+        return;
+
+    m_rupees += num;
+}
+
+void Link::takeRupees(int num)
+{
+    m_rupees -= num;
+
+    if (m_rupees < 0)
+    {
+        m_rupees = 0;
+    }
+
+}
+
 void Link::doCollision()
 {
+
     for(Entity* entity : Engine::instance().entityManager().entities())
     {
         Collideable* collide = dynamic_cast<Collideable*>(entity);

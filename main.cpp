@@ -1,11 +1,9 @@
+#include "Engine.hpp"
 #include <iostream>
-#include <Engine.hpp>
 
-int main()
+int main(int argc, char* argv[])
 {
     Engine& engine = Engine::instance();
-    engine.initialize(640, 480, "Test");
-
+    engine.initialize(argc, argv, 640, 480, "Sakura ALPHA BUILD");
     return engine.run();
 }
-

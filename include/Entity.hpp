@@ -60,6 +60,8 @@ protected:
     Facing       m_facing;
     Facing       m_lastFacing;
     sf::Vector2f m_velocity;
+
+    sf::Text     m_debugInfo;
 };
 
 #endif // ENTITY_HPP
