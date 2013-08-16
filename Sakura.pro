@@ -1,10 +1,20 @@
 TEMPLATE = app
 CONFIG += console
 
+CONFIG(release, release|debug){
+    DEFINES -= DEBUG
+    OBJECTS_DIR += release.objs
+}
+
+CONFIG(debug, debug|release){
+    DEFINES += DEBUG
+    OBJECTS_DIR += debug.objs
+}
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-DEFINES += GLEW_STATIC
+DEFINES += GLEW_STATIC\
+    INTERNAL
 
 win32:LIBS += \
     -Lextlibs/GLEW/lib \
@@ -21,8 +31,9 @@ LIBS += -lsfml-graphics \
         -lsfml-audio \
         -lsfml-system \
         -lphysfs \
-
-
+        -L../libzelda/lib \
+        -lzelda-d\
+         -lz
 
 unix:LIBS += \
     -lGL \
@@ -59,13 +70,21 @@ SOURCES += \
     src/Tile.cpp \
     main.cpp \
     src/JoystickManager.cpp \
-    src/Log.cpp \
     src/memorysize.c \
     src/MusicResource.cpp \
     src/x86cpuinfo.cpp \
-    src/cpuinfo.cpp
+    src/cpuinfo.cpp \
+    src/Console.cpp \
+    src/ConsoleCommandBase.cpp \
+    src/Config.cpp \
+    src/GameState.cpp \
+    src/MapFileReader.cpp \
+    src/Map.cpp \
+    src/Layer.cpp
 
-INCLUDEPATH += include
+INCLUDEPATH +=  \
+    ../libzelda/include \
+    include
 win32:INCLUDEPATH += \
     extlibs/physfs/include \
     extlibs/SFML/include \
@@ -103,13 +122,21 @@ HEADERS += \
     include/Tile.hpp \
     include/Rupee.hpp \
     include/JoystickManager.hpp \
-    include/Log.hpp \
     include/memorysize.h \
     include/MusicResource.hpp \
     include/x86cpuinfo.h \
     include/cpuinfo.h \
     include/SpriteFont.h \
     include/teebuf.hpp \
-    include/teestream.hpp
+    include/teestream.hpp \
+    include/Console.hpp \
+    include/ConsoleCommandBase.hpp \
+    include/Config.hpp \
+    include/Keys.hpp \
+    include/RunState.hpp \
+    include/GameState.hpp \
+    include/MapFileReader.hpp \
+    include/Map.hpp \
+    include/Layer.hpp
 
 

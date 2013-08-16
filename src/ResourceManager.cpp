@@ -5,7 +5,6 @@
 #include "TextureResource.hpp"
 #include "FontResource.hpp"
 #include "Engine.hpp"
-#include "Log.hpp"
 #include <iostream>
 #include <physfs.h>
 
@@ -47,7 +46,7 @@ void ResourceManager::initialize(const char* argv0)
 
     for (std::string archive : archives)
     {
-        Engine::instance().log().print(Log::Info, "Mounting archive: %s\n", archive.c_str());
+        Engine::instance().console().print(Console::Info, "Mounting archive: %s", archive.c_str());
         PHYSFS_mount(archive.c_str(), NULL, 1);
     }
 }
@@ -102,6 +101,16 @@ bool ResourceManager::soundExists(const std::string &name)
     return false;
 }
 
+int ResourceManager::soundCount() const
+{
+    return m_soundBufferResources.size();
+}
+
+int ResourceManager::liveSoundCount() const
+{
+    return m_sounds.size();
+}
+
 bool ResourceManager::loadMusic(const std::string& name, MusicResource* music)
 {
     if (music->exists())
@@ -143,6 +152,11 @@ bool ResourceManager::musicExists(const std::string& name)
             return true;
 
     return false;
+}
+
+int ResourceManager::musicCount() const
+{
+    return m_musicResources.size();
 }
 
 bool ResourceManager::loadTexture(const std::string &name, TextureResource *texture)
@@ -190,6 +204,11 @@ bool ResourceManager::textureExists(const std::string &name)
     return false;
 }
 
+int ResourceManager::textureCount() const
+{
+    return m_textureResources.size();
+}
+
 bool ResourceManager::loadFont(const std::string& name, FontResource* font)
 {
     if (font->exists())
@@ -234,16 +253,21 @@ bool ResourceManager::fontExists(const std::string& name)
     return false;
 }
 
+int ResourceManager::fontCount() const
+{
+    return m_fontResources.size();
+}
+
 void ResourceManager::shutdown()
 {
-    Engine::instance().log().print(Log::Info, "Shutting down PHYSFS...\n");
+    Engine::instance().console().print(Console::Info, "Shutting down PHYSFS...");
     PHYSFS_deinit();
     purgeResources();
 }
 
 void ResourceManager::purgeResources()
 {
-    Engine::instance().log().print(Log::Info, "Purging resources...\n");
+    Engine::instance().console().print(Console::Info, "Purging resources...");
     std::unordered_map<std::string, TextureResource*>::iterator textureIter = m_textureResources.begin();
     for (; textureIter != m_textureResources.end(); ++textureIter)
     {

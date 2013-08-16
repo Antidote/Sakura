@@ -2,7 +2,7 @@
 #include "Entity.hpp"
 
 Camera::Camera(const sf::Vector2f &pos, const sf::Vector2f &size)
-    : m_world(size),
+    : m_world(sf::Vector2f(1024, 1024)),
       m_pos(pos),
       m_size(size),
       m_virtualSize(size), // This should never be changed
@@ -13,6 +13,11 @@ Camera::Camera(const sf::Vector2f &pos, const sf::Vector2f &size)
 
 Camera::~Camera()
 {
+}
+
+void Camera::setWorld(int w, int h)
+{
+    setWorld(sf::Vector2i(w, h));
 }
 
 void Camera::setWorld(const sf::Vector2i &world)
@@ -60,11 +65,16 @@ sf::FloatRect Camera::viewRect() const
     return sf::FloatRect(m_pos.x, m_pos.y, m_size.x, m_size.y);
 }
 
-void Camera::resize(int width, int height)
+sf::Vector2f Camera::virtualSize() const
 {
-    ((void)width);
-    ((void)height);
+    return m_virtualSize;
 }
+
+float Camera::aspect() const
+{
+    return m_virtualSize.x/m_virtualSize.y;
+}
+
 
 Entity* Camera::lockedOn() const
 {

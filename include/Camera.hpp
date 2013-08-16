@@ -13,6 +13,7 @@ public:
 
     virtual ~Camera();
 
+    void setWorld(int w, int h);
     void setWorld(const sf::Vector2i& world);
     sf::Vector2i world() const;
 
@@ -34,7 +35,10 @@ public:
 
     sf::FloatRect viewRect() const;
 
-    void resize(int width, int height);
+    sf::Vector2f virtualSize() const;
+
+    float aspect() const;
+
 protected:
 private:
     sf::Vector2i m_world;

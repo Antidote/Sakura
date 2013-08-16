@@ -7,150 +7,253 @@
 #include <SFML/Config.hpp>
 
 #include "Link.hpp"
-#include "Octorok.hpp"
-#include "HeartPickup.hpp"
 #include <iostream>
-#include "Widget.hpp"
+#include <iomanip>
 #include "x86cpuinfo.h"
 #include "FontResource.hpp"
 #include "MusicResource.hpp"
 #include "TextureResource.hpp"
 #include "SoundResource.hpp"
 #include "memorysize.h"
+
+#include "MapFileReader.hpp"
+#include "Map.hpp"
 #include <sstream>
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <mutex>
+
+
+const std::string Engine::SAKURA_VERSION = "v0.1a";
+
+void InputThread()
+{
+    while(Engine::instance().window().isOpen())
+        Engine::instance().inputManager().update();
+}
 
 Engine::Engine()
-    : m_log("log.txt"),
-      m_camera(sf::Vector2f(0, 0), sf::Vector2f(320, 240)),
+    : m_console("log.txt"),
+      m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
       m_lastTime(sf::seconds(0)),
       m_fps(0),
-      m_isClosing(0),
-      m_drawWire(false),
       m_paused(false),
-      m_state(StateSplash),
+      m_state(StateGame),
       m_currentLogo(LogoSFML),
       m_splashTime(sf::seconds(3.5f)),
       m_fade(0.0f),
       m_rotation(-90.f),
-      m_fadeOut(false)
+      m_fadeOut(false),
+      m_clearColor(sf::Color::Black),
+      m_inputThreadInitialized(false)
 {
-    log().print(Log::Info, "Sakura Engine ALPHA Initializing\n");
-    log().print(Log::Info, "Built with SFML %i.%i\n", SFML_VERSION_MAJOR , SFML_VERSION_MINOR);
-    log().print(Log::Info, "Build date %s %s\n", __DATE__, __TIME__);
+    console().print(Console::Info, "Sakura Engine " + version() + ": Initializing");
+    console().print(Console::Info, "Built with SFML %i.%i", SFML_VERSION_MAJOR , SFML_VERSION_MINOR);
+    console().print(Console::Info, "Build date %s %s", __DATE__, __TIME__);
+
+
+    zelda::io::MapFileReader reader("data/maps/EasternPalace.zmap");
+    m_currentMap = reader.read();
+    m_colShape.setSize(sf::Vector2f(m_currentMap->tileWidth(), m_currentMap->tileHeight()));
+
 }
 
 Engine::~Engine()
 {
-    log().print(Log::Info, "Shutdown complete\n");
-    std::cout << "Test" << std::endl;
+    console().print(Console::Info, "Shutdown complete");
+    m_inputThreadInitialized = false;
 }
 
-void Engine::initialize(int argc, char* argv[], int width, int height, const std::string &title)
+void Engine::initialize(int argc, char* argv[])
 {
-    ((void)argc);
-    log().print(Log::Info, "Creating context...\n");
-    m_window.create(sf::VideoMode(width, height), title);
+    m_argc = argc;
+    m_argv = argv;
 
-    log().print(Log::Info, "Polling Hardware...\n");
+    config().initialize("config.cfg");
+
+    m_title = config().settingLiteral("sys_title", "Sakura Engine " + Engine::version());
+    m_size = sf::Vector2u(config().settingInt("vid_width", 640), config().settingInt("vid_height", 480));
+    console().print(Console::Info, "Creating context...");
+    setFullscreen(config().settingBoolean("r_fullscreen", false));
+
+
+    camera().setWorld(m_currentMap->width(), m_currentMap->height());
+    //window().setFramerateLimit(config().settingInt("sys_framelimit", 60));
+    // QUICK GRAB THE VIEW!!!
+    m_defaultView = window().getDefaultView();
+
+    console().print(Console::Info, "Polling Hardware...");
     printSysInfo();
-    log().print(Log::Info, "End Hardware poll\n");
+    console().print(Console::Info, "End Hardware poll");
     // Initailize the ResourceManager
-    m_resourceManager.initialize(argv[0]);
-
-    // Set state to StateSplash just to be sure and load the resources
-    m_state = StateSplash;
-    loadSplashResources();
-
-    m_resourceManager.loadFont("fonts/debug", new FontResource("RetGanon.ttf", true));
-    m_fpsString.setFont(*resourceManager().font("fonts/debug"));
-    m_fpsString.setCharacterSize(16);
-    m_fpsString.setColor(sf::Color::White);
-    m_fpsBack.setOutlineColor(sf::Color(162, 108, 145));
-    m_fpsBack.setOutlineThickness(1.f);
-    m_fpsBack.setFillColor(sf::Color(183, 169, 199, 240));
-    m_fpsBack.setSize(sf::Vector2f(m_fpsString.getLocalBounds().width + 16, m_fpsString.getLocalBounds().height + 16));
-    ((sf::Texture&)m_fpsString.getFont()->getTexture(16)).setSmooth(false);
-}
-
-void Engine::doGameState()
-{
-    m_entityManager.think(m_lastTime);
-    m_entityManager.update(m_lastTime);
+    resourceManager().initialize(argv[0]);
+    resourceManager().loadFont("fonts/debug", new FontResource("courbd.ttf", true));
+    m_clearColor = config().settingColor("r_clearcolor", sf::Color::Black);
 
 
-    m_window.clear(sf::Color::Magenta);
-
-    if (m_drawWire)
+    // only initialize the inputthread if it's not already intialized
+    // Don't want to have stray threads littering the place
+    if (!m_inputThreadInitialized)
     {
-        glDisable(GL_TEXTURE_2D);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        m_entityManager.draw(m_window);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_TEXTURE_2D);
+        m_inputThread = std::thread(&InputThread);
+        m_inputThread.detach();
+        m_inputThreadInitialized = true;
     }
 
-    m_entityManager.draw(m_window);
+    // Initialize the console
+    m_console.initialize();
+
+    // Set state to StateSplash just to be sure and load the resources
+    //m_state = StateSplash;
+    //loadSplashResources();
+
+
+    if (resourceManager().fontExists("fonts/debug"))
+    {
+        m_fpsString.setFont(*resourceManager().font("fonts/debug"));
+        m_fpsString.setCharacterSize(20);
+        m_fpsString.setColor(sf::Color::White);
+        ((sf::Texture&)m_fpsString.getFont()->getTexture(20)).setSmooth(false);
+        m_statsString.setFont(*resourceManager().font("fonts/debug"));
+        m_statsString.setCharacterSize(20);
+        m_statsString.setColor(sf::Color::White);
+        ((sf::Texture&)m_statsString.getFont()->getTexture(20)).setSmooth(false);
+    }
+
+    Link* link = new Link;
+    link->setPosition(100, 32);
+    camera().setLockedOn(link);
+    entityManager().addEntity(link);
+}
+
+void Engine::restart()
+{
+    // This function is a bit of a hack,
+    // It checks for fullscreen and goes back to windowed
+    // if it was. Then it shuts everything down and runs intialize
+    // again
+
+    bool wasFullscreen = config().settingBoolean("r_fullscreen", false);
+    if (wasFullscreen)
+        setFullscreen(false);
+
+    shutdown();
+    initialize(m_argc, m_argv);
+
+    if (wasFullscreen)
+        setFullscreen(true);
 }
 
 int Engine::run()
 {
-    log().print(Log::Info, "Entering main loop...\n");
-    while(m_window.isOpen())
+    console().print(Console::Info, "Entering main loop...");
+    while(window().isOpen())
     {
         sf::Time currentTime = m_clock.restart();
         m_fps = 1.f / currentTime.asSeconds();
 
-        std::stringstream title;
-        title << "FPS: " << m_fps;
-        m_fpsString.setString(title.str());
-        m_fpsBack.setSize(sf::Vector2f(72, m_fpsString.getLocalBounds().height + 8));
-
-        //std::cout << '\xd' << "FPS: " << m_fps;
-
-        if (m_isClosing)
-            m_window.close();
+        std::stringstream fpsStr;
+        fpsStr << std::setprecision(4) << "FPS: " << m_fps;
+        m_fpsString.setString(fpsStr.str());
 
         sf::Event event;
         while(m_window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
-                m_isClosing = true;
+                window().close();
             if (event.type == sf::Event::GainedFocus)
                 m_paused = false;
             if (event.type == sf::Event::LostFocus)
                 m_paused = true;
-            if (event.type == sf::Event::Resized)
-                m_camera.resize(event.size.width, event.size.height);
+            if (event.type == sf::Event::TextEntered)
+                m_console.handleText(event.text.unicode);
+            if (event.type == sf::Event::KeyPressed)
+                m_console.handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
+            if (event.type == sf::Event::MouseWheelMoved)
+                m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
         }
 
         m_lastTime = currentTime;
-        m_camera.update();
-        m_inputManager.update();
-        m_fpsString.setColor(sf::Color::White);
-        m_fpsString.setPosition(m_camera.position().x + 8.f, (m_camera.position().y  + m_camera.size().y) - (m_fpsString.getLocalBounds().height*2));
-        m_fpsBack.setPosition(m_camera.position().x + 6.f, (m_camera.position().y  + m_camera.size().y) - ((m_fpsString.getLocalBounds().height*2) + 2));
-        m_window.setView(m_camera.view());
+        camera().update();
 
-        switch(m_state)
+        m_console.update(m_lastTime);
+        m_fpsString.setColor(sf::Color::White);
+        m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
+
+        if (config().settingBoolean("sys_showstats", false))
         {
-            case StateSplash:
-                doSplashState(m_lastTime);
-                break;
-            case StateMenu:
-                doMenuState();
-                break;
-            case StateGame:
-                doGameState();
-                break;
+            std::stringstream stats;
+            stats << "Entity Count: " << entityManager().entities().size() << std::endl;
+            stats << "Texture Count: " << resourceManager().textureCount() << std::endl;
+            stats << "Sound Count: " << resourceManager().soundCount() << std::endl;
+            stats << "Live Sounds: " << resourceManager().liveSoundCount() << std::endl;
+            stats << "Music Count: " << resourceManager().musicCount() << std::endl;
+            stats << "Font Count: " << resourceManager().fontCount() << std::endl;
+            stats << "Current State: " << stateString() << std::endl;
+            stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
+            stats << "Camera Size: " << camera().size().x << " " << camera().size().y << std::endl;
+            stats << "World Size: " << camera().world().x << " " << camera().world().y << std::endl;
+            if (camera().lockedOn())
+            {
+                stats << "Camera Target: " << camera().lockedOn()->name() << std::endl;
+            }
+
+            m_statsString.setString(stats.str());
         }
 
-        m_window.draw(m_fpsBack);
-        m_window.draw(m_fpsString);
-        m_window.display();
+
+        window().clear(m_clearColor);
+
+        if (m_state == StateGame)
+        {
+            entityManager().think(m_lastTime);
+            entityManager().update(m_lastTime);
+        }
+
+        for (int i = 0; i < (config().settingBoolean("r_drawwire", false) ? 2 : 1); i++)
+        {
+            window().setView(m_camera.view());
+            if (config().settingBoolean("r_drawwire", false) && i == 1)
+            {
+                glDisable(GL_TEXTURE_2D);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            }
+
+            switch(m_state)
+            {
+                case StateSplash:
+                    doSplashState(m_lastTime);
+                    break;
+                case StateMenu:
+                    doMenuState();
+                    break;
+                case StateGame:
+                    doGameState(config().settingBoolean("r_drawwire", false), i);
+                    break;
+            }
+
+            // Reset the view to the default
+            // Draw the console over everything
+            window().setView(m_defaultView);
+
+            if (config().settingBoolean("sys_showstats", false))
+                window().draw(m_statsString);
+
+            console().draw(window());
+            if (config().settingBoolean("r_showfps", false))
+                window().draw(m_fpsString);
+
+            if (config().settingBoolean("r_drawwire", false) && i == 1)
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glEnable(GL_TEXTURE_2D);
+            }
+        }
+
+        window().display();
+
     }
-    log().print(Log::Info, "Quit main loop performing preshutdown maintenance...\n");
+    console().print(Console::Info, "Quit main loop performing preshutdown maintenance...");
     shutdown();
     return 0;
 }
@@ -180,9 +283,14 @@ UIManager& Engine::uiManager()
     return m_uiManager;
 }
 
-Log& Engine::log()
+Config& Engine::config()
 {
-    return m_log;
+    return m_config;
+}
+
+Console& Engine::console()
+{
+    return m_console;
 }
 
 Engine& Engine::instance()
@@ -194,6 +302,17 @@ Engine& Engine::instance()
 sf::RenderWindow& Engine::window()
 {
     return m_window;
+}
+
+void Engine::setClearColor(const sf::Color& color)
+{
+    config().setSettingColor("r_clearcolor", color);
+    m_clearColor = color;
+}
+
+sf::Color Engine::clearColor() const
+{
+    return m_clearColor;
 }
 
 void Engine::loadSplashResources()
@@ -213,6 +332,8 @@ void Engine::loadSplashResources()
 
 void Engine::destroySplashResources()
 {
+    console().print(Console::Info, "Clearing logo resources...");
+    resourceManager().removeMusic  ("sounds/items/rupeeCollect");
     resourceManager().removeTexture("splash/SFML");
     resourceManager().removeTexture("splash/NintendoLogo");
     resourceManager().removeTexture("splash/Wiiking");
@@ -220,103 +341,239 @@ void Engine::destroySplashResources()
 
 void Engine::shutdown()
 {
-    log().print(Log::Info, "Killing Entity Manager...\n");
-    m_entityManager.shutdown();
-    log().print(Log::Info, "Killing Resource Manager...\n");
-    m_resourceManager.shutdown();
-    log().print(Log::Info, "Maintenance complete...\n");
+    if (window().isOpen())
+        window().close();
+
+
+    console().print(Console::Info, "Killing Entity Manager...");
+    entityManager().shutdown();
+    console().print(Console::Info, "Killing Resource Manager...");
+    entityManager().shutdown();
+    console().print(Console::Info, "Maintenance complete...");
+    resourceManager().shutdown();
+    console().shutdown();
+    config().shutdown();
+    // Reset everything
+    m_state = Engine::StateGame;
+    m_logoSprite = sf::Sprite();
+    m_fade = 0.0f;
+    m_fadeOut = false;
+    m_currentSplashTime = sf::seconds(0.0f);
+    m_currentLogo = 0;
 }
 
 void Engine::doSplashState(sf::Time dt)
 {
-    if (m_paused) return;
-
-    m_currentSplashTime += dt;
-
-    if (m_currentSplashTime > m_splashTime)
+    if (!m_paused && !m_console.isOpen())
     {
-        m_currentSplashTime = sf::seconds(0.f);
-        if (m_fade <= 0)
+        //setClearColor(sf::Color::Transparent);
+        m_currentSplashTime += dt;
+
+        if (m_currentSplashTime > m_splashTime)
         {
-            m_currentLogo++;
-            if (m_currentLogo == LogoWiiking)
-                m_rotation = -180.f;
+            m_currentSplashTime = sf::seconds(0.f);
+            if (m_fade <= 0)
+            {
+                m_currentLogo++;
+                if (m_currentLogo == LogoWiiking)
+                    m_rotation = -180.f;
+            }
+
+
+            m_fadeOut ^= 1;
         }
 
+        if (m_currentLogo >= LogoCount)
+        {
+            m_state = StateMenu;
+            destroySplashResources();
+            return;
+        }
 
-        m_fadeOut ^= 1;
-    }
+        if (!m_fadeOut && m_fade < 255)
+            m_fade += 90.f*dt.asSeconds();
+        else if (m_fadeOut && m_fade > 0)
+            m_fade -= 90.f*dt.asSeconds();
 
-    if (m_currentLogo >= LogoCount)
-    {
-        m_state = StateMenu;
-        destroySplashResources();
-        return;
-    }
+        // Fixes flashing
+        // Since m_fade is a float it can go over 255 and overflow the Uint8
+        // resonsible for Alpha, Ask Laurent to add float values for color?
+        if (m_fade < 0)
+            m_fade = 0.f;
+        if (m_fade > 255.f)
+            m_fade = 255.f;
 
-    if (!m_fadeOut && m_fade < 255)
-        m_fade += 90.f*dt.asSeconds();
-    else if (m_fadeOut && m_fade > 0)
-        m_fade -= 90.f*dt.asSeconds();
+        if (m_currentLogo == LogoWiiking && m_rotation < 0)
+            m_rotation += 48.f*dt.asSeconds();
 
-    if (m_currentLogo == LogoWiiking && m_rotation < 0)
-        m_rotation += 48.f*dt.asSeconds();
+        if (m_rotation > 0)
+        {
+            resourceManager().playSound("sounds/items/rupeeCollect");
+            m_rotation = 0;
+        }
 
-    if (m_rotation > 0)
-    {
-        resourceManager().playSound("sounds/items/rupeeCollect");
-        m_rotation = 0;
-    }
+        m_logoSprite.setPosition((camera().position().x + (camera().size().x / 2)),
+                                 (camera().position().y + (camera().size().y / 2)));
 
-    m_logoSprite.setPosition((camera().position().x + (camera().size().x / 2)),
-                             (camera().position().y + (camera().size().y / 2)));
-
-    if ((Logo)m_currentLogo == LogoSFML)
-    {
-        if (resourceManager().textureExists("splash/SFML") &&
+        if ((Logo)m_currentLogo == LogoSFML)
+        {
+            if (resourceManager().textureExists("splash/SFML") &&
                 m_logoSprite.getTexture() != resourceManager().texture("splash/SFML"))
-        {
-            m_logoSprite.setTexture(*resourceManager().texture("splash/SFML"));
-            m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
+            {
+                m_logoSprite.setTexture(*resourceManager().texture("splash/SFML"), true);
+                m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
 
+            }
         }
-    }
 
-    if ((Logo)m_currentLogo == LogoNintendo)
-    {
-        if (resourceManager().textureExists("splash/NintendoLogo") &&
+        if ((Logo)m_currentLogo == LogoNintendo)
+        {
+            if (resourceManager().textureExists("splash/NintendoLogo") &&
                 m_logoSprite.getTexture() != resourceManager().texture("splash/NintendoLogo"))
-        {
-            m_logoSprite.setTexture(*resourceManager().texture("splash/NintendoLogo"), true);
-            m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
+            {
+                m_logoSprite.setTexture(*resourceManager().texture("splash/NintendoLogo"), true);
+                m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
 
+            }
         }
-    }
 
-    if ((Logo)m_currentLogo == LogoWiiking)
-    {
-        if (resourceManager().textureExists("splash/Wiiking") &&
+        if ((Logo)m_currentLogo == LogoWiiking)
+        {
+            if (resourceManager().textureExists("splash/Wiiking") &&
                 m_logoSprite.getTexture() != resourceManager().texture("splash/Wiiking"))
-        {
-            m_logoSprite.setTexture(*resourceManager().texture("splash/Wiiking"), true);
-            m_logoSprite.setScale(.5f, .5f);
-            m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
-            ((sf::Texture*)m_logoSprite.getTexture())->setSmooth(true);
+            {
+                m_logoSprite.setTexture(*resourceManager().texture("splash/Wiiking"), true);
+                m_logoSprite.setScale(.5f, .5f);
+                m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
+                ((sf::Texture*)m_logoSprite.getTexture())->setSmooth(true);
+            }
+
+            m_logoSprite.setRotation(m_rotation);
         }
 
-        m_logoSprite.setRotation(m_rotation);
+        m_logoSprite.setColor(sf::Color(255, 255, 255, m_fade));
     }
 
-    m_logoSprite.setColor(sf::Color(255, 255, 255, m_fade));
-    m_window.clear();
-
-    m_window.draw(m_logoSprite);
+    window().draw(m_logoSprite);
 }
 
 void Engine::doMenuState()
 {
-    log().print(Log::Warning, "In doMenuState() IMPLEMENT ME\n");
-    m_state = StateGame;
+}
+
+void Engine::doGameState(bool wireframe, int pass)
+{
+    setClearColor(sf::Color(m_currentMap->backgroundColor().R, m_currentMap->backgroundColor().G, m_currentMap->backgroundColor().B, m_currentMap->backgroundColor().A));
+
+    if (wireframe && pass == 1)
+    {
+        for (int y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
+        {
+            if ((y * m_currentMap->tileHeight()) < camera().position().y - m_currentMap->tileHeight() ||
+                (y * m_currentMap->tileHeight()) > camera().position().y + camera().size().y)
+                continue;
+
+            for (int x = 0; x < m_currentMap->width()/m_currentMap->tileWidth(); x++)
+            {
+                if ((x * m_currentMap->tileWidth()) < camera().position().x - m_currentMap->tileWidth() ||
+                    (x * m_currentMap->tileWidth()) > camera().position().x + camera().size().x)
+                    continue;
+                Cell* cell = m_currentMap->collision(x, y);
+                if (cell)
+                {
+                    if (cell->CollisionType == ColTypeNone)
+                        continue;
+
+                    if ((cell->CollisionType & ColTypeAngle45) == ColTypeAngle45)
+                        m_colShape.setFillColor(sf::Color::Yellow);
+                    else if ((cell->CollisionType & ColTypeJump) == ColTypeJump)
+                        m_colShape.setFillColor(sf::Color::Green);
+                    else if ((cell->CollisionType & ColTypeWaterShallow) == ColTypeWaterShallow)
+                        m_colShape.setFillColor(sf::Color(200, 24, 255));
+                    else if ((cell->CollisionType & ColTypeWaterDeep) == ColTypeWaterDeep)
+                        m_colShape.setFillColor(sf::Color::Blue);
+                    else if ((cell->CollisionType & ColTypeDamage) == ColTypeDamage)
+                        m_colShape.setFillColor(sf::Color::Red);
+                    else if ((cell->CollisionType & ColTypeStair) == ColTypeStair)
+                        m_colShape.setFillColor(sf::Color(100, 68, 255));
+                    else
+                        m_colShape.setFillColor(sf::Color::Black);
+
+                    m_colShape.setPosition(x * m_currentMap->tileWidth(), y * m_currentMap->tileHeight());
+
+
+                    window().draw(m_colShape);
+                }
+            }
+        }
+    }
+    entityManager().draw(window());
+}
+
+void Engine::setWireframe(bool mode)
+{
+    config().setSettingBoolean("r_drawwire", mode);
+}
+
+void Engine::setFullscreen(bool isFullscreen)
+{
+    // Don't toggle if it's the same
+    if (isFullscreen == config().settingBoolean("r_fullscreen", false) && window().isOpen())
+        return;
+
+    window().close();
+    config().setSettingBoolean("r_fullscreen", isFullscreen);
+    if (isFullscreen)
+        window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Fullscreen);
+    else
+        window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Titlebar | sf::Style::Close);
+}
+
+Map* Engine::currentMap() const
+{
+    return m_currentMap;
+}
+
+std::string Engine::stateString()
+{
+    switch(m_state)
+    {
+        case StateSplash:
+            return "Splash";
+
+        case StateMenu:
+            return "Menu";
+
+        case StateGame:
+            return "Game";
+    }
+
+    return "Unknown";
+}
+
+void Engine::toggleFullscreen()
+{
+    // Default it to true so it will automatically be fullscreen
+    setFullscreen(!config().settingBoolean("r_fullscreen", true));
+}
+
+bool Engine::consoleInitialized()
+{
+    return console().isInitialized();
+}
+
+void Engine::quit()
+{
+    window().close();
+}
+
+std::string Engine::version()
+{
+#ifndef INTERNAL
+    return SAKURA_VERSION;
+#else
+    return SAKURA_VERSION + " Internal";
+#endif
 }
 
 std::string prettySize(size_t size)
@@ -340,39 +597,38 @@ void Engine::printSysInfo()
     AsmJit::x86CpuDetect(cpuinfo);
     sf::ContextSettings context = m_window.getSettings();
 
-    log().print(Log::Message, "***********************************************************\n");
-    log().print(Log::Info, "CPU\t\t\t%s\n",         cpuinfo->getBrandString());
-    log().print(Log::Info, "CPU Vendor\t\t%s\n",    cpuinfo->getVendorString());
-    log().print(Log::Info, "CPU Cores\t\t%i\n",     cpuinfo->getNumberOfProcessors());
-    log().print(Log::Info, "CPU Max Threads\t%i\n", cpuinfo->getMaxLogicalProcessors());
-    log().print(Log::Info, "System RAM\t\t%s\n",    prettySize(getMemorySize()).c_str());
-    log().print(Log::Info, "GL_VENDOR\t\t%s\n",     glGetString(GL_VENDOR));
-    log().print(Log::Info, "GL_RENDERER\t\t%s\n",   glGetString(GL_RENDERER));
-    log().print(Log::Info, "GL_VERSION\t\t%s\n",    glGetString(GL_VERSION));
+    console().print(Console::Message, "***********************************************************");
+    console().print(Console::Info, "CPU                  %s", cpuinfo->getBrandString());
+    console().print(Console::Info, "CPU Vendor           %s", cpuinfo->getVendorString());
+    console().print(Console::Info, "CPU Cores            %i", cpuinfo->getNumberOfProcessors());
+    console().print(Console::Info, "CPU Max Threads      %i", cpuinfo->getMaxLogicalProcessors());
+    console().print(Console::Info, "System RAM           %s", prettySize(getMemorySize()).c_str());
+    console().print(Console::Info, "GL_VENDOR            %s", glGetString(GL_VENDOR));
+    console().print(Console::Info, "GL_RENDERER          %s", glGetString(GL_RENDERER));
+    console().print(Console::Info, "GL_VERSION           %s", glGetString(GL_VERSION));
 
     std::string extension((const char*)glGetString(GL_EXTENSIONS));
     std::replace(extension.begin(), extension.end(), ' ', '\n');
-    extension.erase(extension.end() - 1, extension.end());
 
-    log().print(Log::Info, "GL_EXTENSIONS:\n%s\n",        extension.c_str());
-    log().print(Log::Info, "GL_DEPTH_BUFFER_BIT\t%i\n", context.depthBits);
+    console().print(Console::Info, "GL_EXTENSIONS:\n%s",        extension.c_str());
+    console().print(Console::Info, "GL_DEPTH_BUFFER_BIT  %i", context.depthBits);
     if (alGetString(AL_VENDOR))
-        log().print(Log::Info, "AL_VENDOR\t\t%s\n", alGetString(AL_VENDOR));
+        console().print(Console::Info, "AL_VENDOR            %s", alGetString(AL_VENDOR));
 
-    log().print(Log::Info, "ALC_DEVICE_SPECIFIER\t%s\n", alcGetString(NULL, ALC_DEVICE_SPECIFIER));
+    console().print(Console::Info, "ALC_DEVICE_SPECIFIER %s", alcGetString(NULL, ALC_DEVICE_SPECIFIER));
     char* str;
     extension.clear();
     str =  (char*)alcGetString(NULL, ALC_EXTENSIONS);
     if (str)
     {
         extension = std::string((const char*)str);
-        std::replace(extension.begin(), extension.end(), ' ', '\n');
     }
     if (alGetString(AL_VERSION))
-        log().print(Log::Info, "AL_VERSION\t%s\n", alGetString(AL_VERSION));
+        console().print(Console::Info, "AL_VERSION           %s", alGetString(AL_VERSION));
 
+    std::replace(extension.begin(), extension.end(), ' ', '\n');
     if (!extension.empty())
-        log().print(Log::Info, "ALC_EXTENSIONS:\n%s\n", extension.c_str());
+        console().print(Console::Info, "ALC_EXTENSIONS:\n%s", extension.c_str());
 
-    log().print(Log::Message, "***********************************************************\n");
+    console().print(Console::Message, "***********************************************************");
 }

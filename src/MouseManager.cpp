@@ -12,6 +12,8 @@ MouseManager::MouseManager()
 
 void MouseManager::update()
 {
+    static std::mutex mutex;
+    mutex.lock();
     for (int i = 0; i < sf::Mouse::ButtonCount - 1; i++)
     {
         sf::Mouse::Button btn = (sf::Mouse::Button)i;
@@ -23,6 +25,7 @@ void MouseManager::update()
         if (m_pressedButtons[btn])
             m_lastButtonPressed = (sf::Mouse::Button)i;
     }
+    mutex.unlock();
 }
 
 std::vector<sf::Mouse::Button> MouseManager::pressedButtons()

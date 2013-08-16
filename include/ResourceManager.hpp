@@ -29,22 +29,26 @@ public:
     void playSound(const std::string& name);
     void removeSound(const std::string& name);
     bool soundExists(const std::string& name);
+    int soundCount() const;
+    int liveSoundCount() const;
 
     bool loadMusic(const std::string& name, MusicResource* sound);
     void playMusic(const std::string& name);
     void removeMusic(const std::string& name);
     bool musicExists(const std::string& name);
+    int musicCount() const;
 
     bool loadTexture(const std::string& name, TextureResource* texture);
     sf::Texture* texture(const std::string& name);
     void removeTexture(const std::string& name);
     bool textureExists(const std::string& name);
+    int textureCount() const;
 
     bool loadFont(const std::string& name, FontResource* font);
     sf::Font* font(const std::string& name);
     void removeFont(const std::string& name);
     bool fontExists(const std::string& name);
-
+    int fontCount() const;
     void shutdown();
     void purgeResources();
 private:

@@ -2,21 +2,21 @@
 #include <iostream>
 #include <physfs.h>
 #include "Engine.hpp"
-#include "Log.hpp"
+
 
 TextureResource::TextureResource(const std::string &filename, bool precache)
     : Resource(filename, precache)
 {
     if (precache)
     {
-        Engine::instance().log().print(Log::Info, "Precaching texture %s...", m_filename.c_str());
+        Engine::instance().console().print(Console::Info, "Precaching texture %s...", m_filename.c_str());
         load();
     }
 }
 
 TextureResource::~TextureResource()
 {
-    Engine::instance().log().print(Log::Info, "Texture destroyed %s\n", m_filename.c_str());
+    Engine::instance().console().print(Console::Info, "Texture destroyed %s", m_filename.c_str());
     delete m_data;
 }
 
@@ -33,7 +33,7 @@ sf::Texture* TextureResource::data()
 void TextureResource::load()
 {
     if (!m_precached)
-        Engine::instance().log().print(Log::Info, "Loading texture %s...", m_filename.c_str());
+        Engine::instance().console().print(Console::Info, "Loading texture %s...", m_filename.c_str());
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
     {
@@ -46,12 +46,12 @@ void TextureResource::load()
             if (m_data->loadFromMemory(data, PHYSFS_fileLength(file)))
             {
                 m_isLoaded = true;
-                Engine::instance().log().print(Log::Message, "done.\n");
+                Engine::instance().console().print(Console::Message, "done.");
             }
             else
             {
                 m_isLoaded = false;
-                Engine::instance().log().print(Log::Warning, "failed!\n");
+                Engine::instance().console().print(Console::Warning, "failed!");
             }
         }
 
@@ -61,10 +61,7 @@ void TextureResource::load()
     }
     else
     {
-
-        // Push it to a new line
-        Engine::instance().log().print(Log::Message, "\n");
-        Engine::instance().log().print(Log::Warning, "Texture %s does not exist\n", m_filename.c_str());
+        Engine::instance().console().print(Console::Warning, "Texture %s does not exist", m_filename.c_str());
     }
 }
 

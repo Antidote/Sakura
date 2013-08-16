@@ -12,13 +12,15 @@ EntityManager::EntityManager()
 
 EntityManager::~EntityManager()
 {
+    // Clear any stragglers
+    shutdown();
 }
 
 void EntityManager::addEntity(Entity* e)
 {
     if (checkNames(e->name()))
     {
-        std::cout << "Entity with name " << e->name() << " already exists" << std::endl;
+        Engine::instance().console().print(Console::Warning, "Entity with name %s already exists\n", e->name().c_str());
         delete e;
         e = NULL;
         return;
@@ -28,7 +30,7 @@ void EntityManager::addEntity(Entity* e)
     {
         if (m_playerSpawned)
         {
-            std::cout << "Only one player entity may exist in the world" << std::endl;
+            Engine::instance().console().print(Console::Error, "Only one player entity may exist in the world\n");
             delete e;
             e = NULL;
             return;
@@ -74,7 +76,6 @@ Entity* EntityManager::entity(const std::string& name)
     return NULL;
 }
 
-// Should probably do collision here and cull out entities
 std::vector<Entity*> EntityManager::entities() const
 {
     return m_entities;
@@ -146,17 +147,22 @@ void EntityManager::draw(sf::RenderTarget& rt)
 
 void EntityManager::shutdown()
 {
-//    Engine::instance().log().print(Log::Info, "Destroying entities...\n");
-    for(Entity* e : m_entities)
+    if (m_entities.size() > 0)
     {
-        if (e)
+        Engine::instance().console().print(Console::Info, "Destroying entities...\n");
+        for(Entity* e : m_entities)
         {
-            delete e;
-            e = NULL;
+            if (e)
+            {
+                delete e;
+                e = NULL;
+            }
         }
+
     }
 
     m_entities.clear();
+    m_playerSpawned = false;
 }
 
 

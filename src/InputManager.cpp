@@ -1,6 +1,6 @@
 #include "InputManager.hpp"
 #include "Engine.hpp"
-
+#include <iostream>
 
 
 InputManager::InputManager()

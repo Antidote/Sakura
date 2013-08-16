@@ -1,15 +1,58 @@
 #include "Tile.hpp"
 
-Tile::Tile(const sf::Vector2f& position, const sf::Vector2f size, const Tile::CollisionType colType)
-    : m_position(position),
-      m_size(size),
-      m_collisionType(colType)
+Tile::Tile()
 {
+
 }
 
-sf::FloatRect Tile::bounds() const
+void Tile::setId(Uint32 id)
 {
-    return sf::FloatRect(m_position, m_size);
+    m_id = id;
+}
+
+Uint32 Tile::id() const
+{
+    return m_id;
+}
+
+void Tile::setFlippedHor(bool flipped)
+{
+    m_flippedHor = flipped;
+}
+
+bool Tile::flippedHor() const
+{
+    return m_flippedHor;
+}
+
+void Tile::setFlippedVer(bool flipped)
+{
+    m_flippedVer = flipped;
+}
+
+bool Tile::flippedVer() const
+{
+    return m_flippedVer;
+}
+
+void Tile::setFlippedDiag(bool flipped)
+{
+    m_flippedDiag = flipped;
+}
+
+bool Tile::flippedDiag() const
+{
+    return m_flippedDiag;
+}
+
+void Tile::setPosition(float x, float y)
+{
+    setPosition(sf::Vector2f(x, y));
+}
+
+void Tile::setPosition(const sf::Vector2f& position)
+{
+    m_position = position;
 }
 
 sf::Vector2f Tile::position() const
@@ -17,12 +60,12 @@ sf::Vector2f Tile::position() const
     return m_position;
 }
 
-sf::Vector2f Tile::size() const
+void Tile::setTileset(int id)
 {
-    return m_size;
+    m_tileset = id;
 }
 
-Tile::CollisionType Tile::collisionType() const
+Uint32 Tile::tileset() const
 {
-    return m_collisionType;
+    return m_tileset;
 }

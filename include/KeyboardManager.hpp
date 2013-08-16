@@ -24,6 +24,7 @@ public:
     sf::Keyboard::Key lastReleased() const;
 private:
     std::map<sf::Keyboard::Key, bool> m_pressedKeys;
+    std::map<sf::Keyboard::Key, bool> m_releasedKeys;
     sf::Keyboard::Key       m_lastKeyPressed;
     sf::Keyboard::Key       m_lastKeyReleased;
 };

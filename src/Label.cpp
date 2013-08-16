@@ -14,7 +14,7 @@ void Label::update(sf::Time dt)
 
 void Label::draw(sf::RenderTarget& rt)
 {
-
+    Label::draw(rt);
 }
 
 

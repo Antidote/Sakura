@@ -1,4 +1,5 @@
 #include "JoystickManager.hpp"
+#include "Engine.hpp"
 #include <iostream>
 
 JoystickManager::JoystickManager()
@@ -14,6 +15,7 @@ void JoystickManager::update()
 {
     for (Joystick* jstick : m_joysticks)
         jstick->update();
+
 }
 
 bool JoystickManager::isButtonPressed(int joystick, int button) const
@@ -60,16 +62,14 @@ void JoystickManager::Joystick::update()
 {
     if (!sf::Joystick::isConnected(m_id))
         return;
+    static std::mutex mutex;
+    mutex.lock();
 
     for (int i = 0; i < sf::Joystick::AxisCount; i++)
     {
         m_hasAxis[i] = sf::Joystick::hasAxis(m_id, (sf::Joystick::Axis)i);
         if (m_hasAxis[i])
-        {
-
             m_axisPos[i] = sf::Joystick::getAxisPosition(m_id, (sf::Joystick::Axis)i);
-
-        }
     }
 
     for (int i = 0; i < (int)sf::Joystick::getButtonCount(m_id); i++)
@@ -77,6 +77,8 @@ void JoystickManager::Joystick::update()
         m_releasedButtons[i] = (m_buttons[i] && !sf::Joystick::isButtonPressed(m_id, i));
         m_buttons[i] = sf::Joystick::isButtonPressed(m_id, i);
     }
+
+    mutex.unlock();
 }
 
 bool JoystickManager::Joystick::hasAxis(sf::Joystick::Axis axis) const
