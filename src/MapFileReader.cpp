@@ -92,16 +92,19 @@ Map* MapFileReader::read()
 
         for (int j = 0; j < tileCount; j++)
         {
-            Tile* tile = new Tile();
-            tile->setId(base::readUInt32());
-            tile->setTileset(base::readUInt32());
-            tile->setFlippedHor(base::readBit());
-            tile->setFlippedVer(base::readBit());
-            tile->setFlippedDiag(base::readBit());
+            for (int k = 0; k < ret->width()/ret->tileWidth(), j < tileCount; k++, j++)
+            {
+                Tile* tile = new Tile();
+                tile->setId(base::readUInt32());
+                tile->setTileset(base::readUInt32());
+                tile->setFlippedHor(base::readBit());
+                tile->setFlippedVer(base::readBit());
+                tile->setFlippedDiag(base::readBit());
 
-            tile->setPosition(base::readUInt16(), base::readUInt16());
+                tile->setPosition(base::readUInt16(), base::readUInt16());
 
-            layer->addTile(tile);
+                layer->addTile(tile);
+            }
         }
         base::seek((base::position() + 0x1F) & ~0x1F, base::Beginning);
         ret->addLayer(layer);

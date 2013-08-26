@@ -139,7 +139,7 @@ void EntityManager::draw(sf::RenderTarget& rt)
     for (Entity* e : m_entities)
     {
         // clip all entites that aren't in view
-        if (!Engine::instance().camera().intersects(e->bounds()))
+        if (!Engine::instance().camera().intersects(e->bounds()) && e->type() != Entity::Player)
             continue;
         e->draw(rt);
     }

@@ -84,7 +84,7 @@ Entity* Camera::lockedOn() const
 void Camera::update()
 {
     if (m_lock)
-        m_pos = m_lock->position() - (m_size / 2.f);
+        m_pos = m_lock->position() - (m_size * .5f);
 
     if (m_pos.x < 0)
         m_pos.x = 0;

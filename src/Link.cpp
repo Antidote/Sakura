@@ -12,13 +12,14 @@ Link::Link()
       m_state(Idle),
       m_blinkTime(sf::milliseconds(2)),
       m_blinkColor(sf::Color(255, 200, 200, 155)),
-      m_invincibilityTime(sf::seconds(1.025))
+      m_invincibilityTime(sf::seconds(1.025)),
+      target(NULL)
 {
     m_hp = 4*3;
     m_takeDamage = true;
 
     if (!Engine::instance().resourceManager().soundExists("player/wavs/linkhurt"))
-        Engine::instance().resourceManager().loadSound("player/wavs/linkhurt", new SoundResource("sounds/LTTP_Link_Hurt.wav"));
+        Engine::instance().resourceManager().loadSound("player/wavs/linkhurt", new SoundResource("sounds/LTTP_Link_Hurt.wav", false));
 
 
 
@@ -33,7 +34,7 @@ Link::Link()
 
     }
 
-    setSize(sf::Vector2f(8, 8));
+    setSize(sf::Vector2f(9, 9));
 
     if (m_linkAnimations)
     {
@@ -51,66 +52,79 @@ Link::Link()
     m_sprite.setFrameTime(sf::seconds(0.075f));
     m_sprite.setLooped(true);
     if (m_animations.size() > 0)
-        m_sprite.setOrigin(0, (m_sprite.getLocalBounds().height/2) + 4);
+        m_sprite.setOrigin(m_sprite.getLocalBounds().width/2, (m_sprite.getLocalBounds().height) - m_size.y/2);
 }
 
 void Link::update(sf::Time dt)
 {
-    if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Left) ||
+    if (Engine::instance().config().keyForAction("walkup", sf::Keyboard::W) != m_walkup)
+        m_walkup = Engine::instance().config().keyForAction("walkup", sf::Keyboard::W);
+    if (Engine::instance().config().keyForAction("walkdown", sf::Keyboard::S) != m_walkdown)
+        m_walkdown = Engine::instance().config().keyForAction("walkdown", sf::Keyboard::S);
+    if (Engine::instance().config().keyForAction("walkleft", sf::Keyboard::A) != m_walkleft)
+        m_walkleft = Engine::instance().config().keyForAction("walkleft", sf::Keyboard::A);
+    if (Engine::instance().config().keyForAction("walkright", sf::Keyboard::D) != m_walkright)
+        m_walkright = Engine::instance().config().keyForAction("walkright", sf::Keyboard::D);
+    m_currentTime = dt;
+
+    if (Engine::instance().inputManager().keyboard().isKeyDown(m_walkup)||
+        Engine::instance().inputManager().joystick().isButtonPressed(0, 4))
+    {
+        if (m_velocity.y > 0)
+            m_velocity.y = 0;
+        m_velocity.y -= 16.f*dt.asSeconds();
+        m_facing = North;
+        m_state = Moving;
+    }
+    else if (Engine::instance().inputManager().keyboard().isKeyDown(m_walkdown)||
+             Engine::instance().inputManager().joystick().isButtonPressed(0, 6))
+    {
+        if (m_velocity.x < 0)
+            m_velocity.x = 0;
+        m_velocity.y += 16.f*dt.asSeconds();
+        m_facing = South;
+        m_state = Moving;
+    }
+    else
+        m_velocity.y = 0;
+    if (Engine::instance().inputManager().keyboard().isKeyDown(m_walkleft) ||
         Engine::instance().inputManager().joystick().isButtonPressed(0, 7))
     {
         if (m_velocity.x > 0)
             m_velocity.x = 0;
-        m_velocity.x -= 4.f*dt.asSeconds();
+        m_velocity.x -= 16.f*dt.asSeconds();
         m_facing = West;
         m_state = Moving;
     }
-    else if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Right) ||
+    else if (Engine::instance().inputManager().keyboard().isKeyDown(m_walkright) ||
              Engine::instance().inputManager().joystick().isButtonPressed(0, 5))
     {
         if (m_velocity.x < 0)
             m_velocity.x = 0;
-        m_velocity.x += 4.f*dt.asSeconds();
+        m_velocity.x += 16.f*dt.asSeconds();
         m_facing = East;
         m_state = Moving;
     }
     else
         m_velocity.x = 0;
 
-    if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Up)||
-        Engine::instance().inputManager().joystick().isButtonPressed(0, 4))
-    {
-        m_velocity.y -= 4.f*dt.asSeconds();
-        m_facing = North;
-        m_state = Moving;
-    }
-    else if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Down)||
-             Engine::instance().inputManager().joystick().isButtonPressed(0, 6))
-    {
-        m_velocity.y += 4.f*dt.asSeconds();
-        m_facing = South;
-        m_state = Moving;
-    }
-    else
-        m_velocity.y = 0;
-
-    if(((Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Left) || Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Right))
-        && (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Up) || Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::Down)))
-       || ((Engine::instance().inputManager().joystick().isButtonPressed(0, 7) || Engine::instance().inputManager().joystick().isButtonPressed(0, 5))
-           && (Engine::instance().inputManager().joystick().isButtonPressed(0, 4) || Engine::instance().inputManager().joystick().isButtonPressed(0, 6))))
+    if(((Engine::instance().inputManager().keyboard().isKeyDown(m_walkleft)
+      || Engine::instance().inputManager().keyboard().isKeyDown(m_walkright))
+      && (Engine::instance().inputManager().keyboard().isKeyDown(m_walkup)
+      || Engine::instance().inputManager().keyboard().isKeyDown(m_walkdown))))
     {
         m_velocity *= .95f;
     }
 
-    if (m_velocity.x > 64.f*dt.asSeconds())
-        m_velocity.x = 64.f*dt.asSeconds();
-    if (m_velocity.x < -64.f*dt.asSeconds())
-        m_velocity.x = -64.f*dt.asSeconds();
+    if (m_velocity.x > 92.f*dt.asSeconds())
+        m_velocity.x = 92.f*dt.asSeconds();
+    if (m_velocity.x < -92.f*dt.asSeconds())
+        m_velocity.x = -92.f*dt.asSeconds();
 
-    if (m_velocity.y > 64.f*dt.asSeconds())
-        m_velocity.y = 64.f*dt.asSeconds();
-    if (m_velocity.y < -64.f*dt.asSeconds())
-        m_velocity.y = -64.f*dt.asSeconds();
+    if (m_velocity.y > 92.f*dt.asSeconds())
+        m_velocity.y = 92.f*dt.asSeconds();
+    if (m_velocity.y < -92.f*dt.asSeconds())
+        m_velocity.y = -92.f*dt.asSeconds();
 
     if (m_lastFacing != m_facing)
     {
@@ -160,9 +174,13 @@ void Link::update(sf::Time dt)
 
 void Link::draw(sf::RenderTarget& rt)
 {
-    Entity::draw(rt);
+    target = &rt;
+
+    rt.draw(m_colShape);
     if (m_sprite.getTexture())
         rt.draw(m_sprite);
+
+    Entity::draw(rt);
 }
 
 void Link::onDamage(Entity *e)
@@ -227,154 +245,79 @@ void Link::takeRupees(int num)
 
 }
 
+void Link::checkCell(Cell* cell, sf::IntRect cellBounds)
+{
+    m_colShape.setSize(sf::Vector2f(cellBounds.width, cellBounds.height));
+    m_colShape.setPosition(cellBounds.left, cellBounds.top);
+    if (cell)
+    {
+        if (cellBounds.contains(std::abs(m_pos.x + m_velocity.x), std::abs(m_pos.y + m_velocity.y)))
+        {
+            if ((cell->CollisionType & ColTypeSolid) == ColTypeSolid)
+            {
+
+                if ((cell->CollisionType & ColTypeAngle45) == ColTypeAngle45)
+                {
+                    // Flipped vertically
+                    if (m_velocity.x != 0)
+                    {
+                        if ((cell->FlippedAndDamage & 0x02) == 0x02)
+                        {
+                            m_pos.y -= 48.f*m_currentTime.asSeconds();
+                        }
+                        else
+                        {
+                            m_pos.y += 48.f*m_currentTime.asSeconds();
+                        }
+                    }
+
+                    if (m_velocity.y != 0)
+                    {
+                        // Flipped vertically
+                        if ((cell->FlippedAndDamage & 0x01) == 0x01)
+                        {
+                            m_pos.x -= 48.f*m_currentTime.asSeconds();
+                        }
+                        else
+                        {
+                            m_pos.x += 48.f*m_currentTime.asSeconds();
+                        }
+                    }
+                }
+                else
+                {
+                    if (m_velocity.x > 0)
+                        m_pos.x -= 1;
+                    else if (m_velocity.x < 0)
+                        m_pos.x += 1;
+                    if (m_velocity.y > 0)
+                        m_pos.y -= 1;
+                    else if (m_velocity.y < 0)
+                        m_pos.y += 1;
+
+                    m_velocity = sf::Vector2f(0, 0);
+                }
+            }
+            else if ((cell->CollisionType & ColTypeDamage) == ColTypeDamage)
+            {
+                takeHp((int)cell->FlippedAndDamage, NULL);
+            }
+        }
+    }
+}
+
+
 void Link::doCollision()
 {
     int tileW = Engine::instance().currentMap()->tileWidth();
     int tileH = Engine::instance().currentMap()->tileHeight();
-    int tile1X = std::floor(((m_pos.x)/tileW));
-    int tile1Y = std::floor(((m_pos.y)/tileH));
-    int tile2X = std::floor(((m_pos.x + m_size.x)/tileW));
-    int tile2Y = std::floor(((m_pos.y + m_size.y)/tileH));
-    Cell* cell1 = Engine::instance().currentMap()->collision(tile1X, tile1Y);
-    Cell* cell2 = Engine::instance().currentMap()->collision(tile2X, tile2Y);
-
-    sf::IntRect cell1Bounds(sf::Vector2i(tile1X * tileW , tile1Y * tileH), sf::Vector2i(tileW, tileH));
-    sf::IntRect cell2Bounds(sf::Vector2i(tile2X * tileW , tile2Y * tileH), sf::Vector2i(tileW, tileH));
-    if (cell1)
-    {
-        if (cell1Bounds.contains(std::abs(m_pos.x - (m_size.x/2)), std::abs(m_pos.y)))
-        {
-            if (m_velocity.x < 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.x = 0;
-                    m_pos.x += 2;
-                }
-            }
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-        if (cell1Bounds.contains(std::abs(m_pos.x + (m_size.x/2)), std::abs(m_pos.y)))
-        {
-            if (m_velocity.x > 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.x = 0;
-                    m_pos.x -= 2;
-                }
-            }
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-
-        if (cell1Bounds.contains(std::abs(m_pos.x), std::abs(m_pos.y - (m_size.y/2))))
-        {
-            if (m_velocity.y < 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.y = 0;
-                    m_pos.y += 2;
-                }
-            }
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-        if (cell1Bounds.contains(std::abs(m_pos.x), std::abs(m_pos.y + (m_size.y/2))))
-        {
-            if (m_velocity.y > 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.y = 0;
-                    m_pos.y -= 2;
-                }
-            }
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-    }
+    int tileX = std::abs(((m_pos.x)/tileW));
+    int tileY = std::abs(((m_pos.y)/tileH));
+    Cell* cell = Engine::instance().currentMap()->collision(tileX, tileY);
 
 
-
-    if (cell2)
-    {
-        if (cell2Bounds.contains(std::abs(m_pos.x - (m_size.x/2)), std::abs(m_pos.y)))
-        {
-            if (m_velocity.x < 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.x = 0;
-                    m_pos.x += 2;
-                }
-            }
-
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-        if (cell2Bounds.contains(std::abs(m_pos.x + (m_size.x/2)), std::abs(m_pos.y)))
-        {
-            if (m_velocity.x > 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.x = 0;
-                    m_pos.x -= 2;
-                }
-            }
-
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-
-        if (cell2Bounds.contains(std::abs(m_pos.x), std::abs(m_pos.y - (m_size.y/2))))
-        {
-            if (m_velocity.y < 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.y = 0;
-                    m_pos.y += 2;
-                }
-            }
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-        if (cell2Bounds.contains(std::abs(m_pos.x), std::abs(m_pos.y + (m_size.y/2))))
-        {
-            if (m_velocity.y > 0)
-            {
-                if ((cell1->CollisionType & ColTypeSolid) == ColTypeSolid)
-                {
-                    //m_velocity.y = 0;
-                    m_pos.y -= 2;
-                }
-            }
-
-            if ((cell1->CollisionType & ColTypeDamage) == ColTypeDamage)
-            {
-                takeHp((int)cell1->FlippedAndDamage, NULL);
-            }
-        }
-    }
-
+    sf::IntRect cellBounds(sf::Vector2i(tileX * tileW , tileY * tileH), sf::Vector2i(tileW, tileH));
+    checkCell(cell, cellBounds);
     for(Entity* entity : Engine::instance().entityManager().entities())
     {
         Collideable* collide = dynamic_cast<Collideable*>(entity);

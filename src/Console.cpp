@@ -92,9 +92,7 @@ void Console::initialize()
         ((sf::Texture*)m_consoleBg2.getTexture())->setRepeated(true);
         ((sf::Texture*)m_consoleBg2.getTexture())->setSmooth(false);
     }
-    else
-    {
-    }
+
     m_isInitialized = true;
 }
 
@@ -119,7 +117,7 @@ void Console::shutdown()
 
 bool Console::isOpen() const
 {
-    return m_state != Closed;
+    return m_state != Closed && m_state != Closing;
 }
 
 void Console::handleText(const sf::Uint32 unicode)
@@ -131,8 +129,8 @@ void Console::handleText(const sf::Uint32 unicode)
 #ifdef SFML_SYSTEM_LINUX
     if (unicode == XK_grave || unicode == XK_dead_grave)
     {
-        if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::LControl) ||
-            Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::RControl))
+        if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::LShift) ||
+            Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::RShift))
             m_conHeight = Engine::instance().config().settingInt("vid_height", 480);
         else
             m_conHeight = Engine::instance().config().settingInt("con_height", 320);
@@ -142,7 +140,7 @@ void Console::handleText(const sf::Uint32 unicode)
     }
 #endif
 
-    if (m_state == Opened)
+    if (m_state == Opened || m_state == Opening)
     {
         if (unicode > 0x1f && unicode != 0x7f)
         {
@@ -174,6 +172,7 @@ void Console::toggleConsole()
 
     m_commandString = "";
     m_cursorPosition = 0;
+    m_cursorX = 0;
 
     if (m_hadFatalError)
         Engine::instance().window().close();
@@ -199,14 +198,15 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
         Engine::instance().toggleFullscreen();
         return;
     }
-    if (code != sf::Keyboard::Unknown && code == Engine::instance().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
+    // This should probably be in the even loop not here
+    if (code == Engine::instance().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
     {
         Engine::instance().window().close();
         return;
     }
 
-    // if the console isn't open there isn't any need to process commands
-    if (m_state != Opened)
+    // if the console isn't open or opening there isn't any need to process commands
+    if (m_state == Closed || m_state == Closing)
         return;
 
     switch(code)
@@ -433,7 +433,7 @@ void Console::update(const sf::Time& dt)
                 m_cursorShape.setFillColor(Engine::instance().config().settingColor("con_textcolor", sf::Color::White));
             m_cursorShape.setOutlineColor(sf::Color::Transparent);
             m_cursorShape.setOutlineThickness(0.f);
-            m_cursorShape.setSize(sf::Vector2f(2, m_commandText.getCharacterSize()));
+            m_cursorShape.setSize(sf::Vector2f(1, m_commandText.getCharacterSize()));
         }
         else
         {
@@ -441,12 +441,12 @@ void Console::update(const sf::Time& dt)
                 m_cursorShape.setOutlineColor(sf::Color::Transparent);
             else
                 m_cursorShape.setOutlineColor(Engine::instance().config().settingColor("con_textcolor", sf::Color::White));
-            m_cursorShape.setOutlineThickness(2.f);
+            m_cursorShape.setOutlineThickness(1.f);
             m_cursorShape.setFillColor(sf::Color::Transparent);
-            m_cursorShape.setSize(sf::Vector2f(glyphW, m_commandText.getCharacterSize()));
+            m_cursorShape.setSize(sf::Vector2f(glyphW - 3, m_commandText.getCharacterSize()));
         }
 
-        m_cursorShape.setPosition(((m_commandText.getCharacterSize() / 2) + m_cursorX) + 2, (m_conY - 20)+ 4);
+        m_cursorShape.setPosition(((m_commandText.getCharacterSize() / 2) + m_cursorX) + 4, (m_conY - 20)+ 4);
     }
 }
 
@@ -494,7 +494,7 @@ void Console::draw(sf::RenderWindow& rt)
             int line = 0;
             for (; iter != m_history.rend(); ++iter)
             {
-                if (line > m_maxLines)
+                if (line > m_maxLines + 1)
                     break;
 
                 switch(((LogEntry)*iter).level)
@@ -635,18 +635,18 @@ void Console::resetCursor()
 
 void Console::parseCommand()
 {
+    m_currentCommand = 0;
     // If the string is empty don't bother processing it
     if (m_commandString.isEmpty())
         return;
 
     std::vector<std::string> args = zelda::utility::split(m_commandString.toAnsiString(), ' ');
 
-    m_commandHistory.push_back(m_commandString);
-
+    m_commandHistory.insert(m_commandHistory.begin(), m_commandString);
     // If the command history is full
-    // Erase the first entry
+    // Erase the end entry
     if (m_commandHistory.size() > 5)
-        m_commandHistory.erase(m_commandHistory.begin());
+        m_commandHistory.erase(m_commandHistory.end());
     print(Message, m_commandString.toAnsiString());
 
     if (args.size() > 0)
@@ -710,6 +710,6 @@ void Console::parseCommand()
 
 void Console::recalcMaxLines()
 {
-    m_maxLines = (m_conHeight / m_drawText.getCharacterSize()) - 3;
+    m_maxLines = (m_conHeight / m_drawText.getCharacterSize()) - 2;
 }
 

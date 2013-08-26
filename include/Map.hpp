@@ -82,7 +82,7 @@ private:
     std::string              m_name;
     std::vector<Layer*>      m_layers;
     std::vector<std::string> m_tilesets;
-    // Y -> X -> Cell
+    // X -> Y -> Cell
     std::unordered_map<int, std::unordered_map<int, Cell*> >    m_collisionData;
     RGBA                     m_bgColor;
 

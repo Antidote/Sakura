@@ -113,6 +113,7 @@ private:
     sf::Time         m_fadeTime;
     sf::Text         m_fpsString;
     sf::Text         m_statsString;
+    int              m_frameLimit;
     float            m_fps;
     bool             m_paused;
     sf::Sprite       m_logoSprite;

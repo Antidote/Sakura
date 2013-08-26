@@ -29,7 +29,10 @@ const std::string Engine::SAKURA_VERSION = "v0.1a";
 void InputThread()
 {
     while(Engine::instance().window().isOpen())
+    {
         Engine::instance().inputManager().update();
+        sf::sleep(sf::milliseconds(20));
+    }
 }
 
 Engine::Engine()
@@ -37,6 +40,7 @@ Engine::Engine()
       m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
       m_lastTime(sf::seconds(0)),
       m_fps(0),
+      m_frameLimit(0),
       m_paused(false),
       m_state(StateGame),
       m_currentLogo(LogoSFML),
@@ -78,7 +82,10 @@ void Engine::initialize(int argc, char* argv[])
 
 
     camera().setWorld(m_currentMap->width(), m_currentMap->height());
-    //window().setFramerateLimit(config().settingInt("sys_framelimit", 60));
+    m_frameLimit = config().settingInt("sys_framelimit", 60);
+    window().setFramerateLimit(m_frameLimit);
+
+    window().setVerticalSyncEnabled(config().settingBoolean("sys_vsync", true));
     // QUICK GRAB THE VIEW!!!
     m_defaultView = window().getDefaultView();
 
@@ -149,8 +156,13 @@ int Engine::run()
     console().print(Console::Info, "Entering main loop...");
     while(window().isOpen())
     {
-        sf::Time currentTime = m_clock.restart();
-        m_fps = 1.f / currentTime.asSeconds();
+        if (config().settingInt("sys_framelimit", 60) != m_frameLimit)
+        {
+            m_frameLimit = config().settingInt("sys_framelimit", 60);
+            window().setFramerateLimit(m_frameLimit);
+        }
+        m_lastTime = m_clock.restart();
+        m_fps = 1.f / m_lastTime.asSeconds();
 
         std::stringstream fpsStr;
         fpsStr << std::setprecision(4) << "FPS: " << m_fps;
@@ -173,10 +185,9 @@ int Engine::run()
                 m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
         }
 
-        m_lastTime = currentTime;
         camera().update();
 
-        m_console.update(m_lastTime);
+        console().update(m_lastTime);
         m_fpsString.setColor(sf::Color::White);
         m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
 
@@ -201,10 +212,10 @@ int Engine::run()
             m_statsString.setString(stats.str());
         }
 
+        if (config().settingBoolean("r_clear", false))
+            window().clear(m_clearColor);
 
-        window().clear(m_clearColor);
-
-        if (m_state == StateGame)
+        if (m_state == StateGame && !console().isOpen())
         {
             entityManager().think(m_lastTime);
             entityManager().update(m_lastTime);
@@ -465,7 +476,7 @@ void Engine::doGameState(bool wireframe, int pass)
 {
     setClearColor(sf::Color(m_currentMap->backgroundColor().R, m_currentMap->backgroundColor().G, m_currentMap->backgroundColor().B, m_currentMap->backgroundColor().A));
 
-    if (wireframe && pass == 1)
+    if (wireframe && pass == 1 || !wireframe)
     {
         for (int y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
         {

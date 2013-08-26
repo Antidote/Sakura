@@ -7,6 +7,8 @@
 #include "AnimatedSprite.hpp"
 #include "Collideable.hpp"
 
+class Cell;
+
 class Link : public Entity, public Killable, public Collideable
 {
 public:
@@ -29,9 +31,14 @@ public:
 
     void giveRupees(int num);
     void takeRupees(int num);
+    void checkCell(Cell* cell, sf::IntRect cellBounds);
 private:
-
     void doCollision();
+
+    sf::Keyboard::Key      m_walkup;
+    sf::Keyboard::Key      m_walkdown;
+    sf::Keyboard::Key      m_walkleft;
+    sf::Keyboard::Key      m_walkright;
     sf::Vector2f           m_velocity;
     sf::Texture*           m_linkAnimations;
     std::vector<Animation> m_animations;
@@ -42,9 +49,14 @@ private:
     sf::Time               m_blinkTime;
     sf::Color              m_blinkColor;
     sf::Time               m_invincibilityTime;
+    sf::Time               m_currentTime;
 
     int                    m_rupees;
     int                    m_maxRupees;
+
+    sf::RenderTarget* target;
+
+    sf::RectangleShape m_colShape;
 };
 
 #endif // LINK_HPP
