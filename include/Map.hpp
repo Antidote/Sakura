@@ -6,6 +6,7 @@ class Layer;
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <SFML/Graphics/RenderTarget.hpp>
 
 #include "Types.hpp"
 
@@ -78,6 +79,8 @@ public:
 
     void setCollisionData(std::unordered_map<int, std::unordered_map<int, Cell*> >  data);
     Cell* collision(int x, int y);
+
+    void draw(sf::RenderTarget& rt);
 private:
     std::string              m_name;
     std::vector<Layer*>      m_layers;

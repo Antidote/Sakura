@@ -1,5 +1,7 @@
 #include "Layer.hpp"
 #include "Tile.hpp"
+#include "Engine.hpp"
+#include "Console.hpp"
 
 Layer::Layer()
 {
@@ -41,7 +43,7 @@ Tile* Layer::tile(int x, int y)
     return tile(sf::Vector2f(x, y));
 }
 
-Tile*Layer::tile(const sf::Vector2f& position)
+Tile* Layer::tile(const sf::Vector2f& position)
 {
     for (Tile* tile : m_tiles)
     {
@@ -50,4 +52,10 @@ Tile*Layer::tile(const sf::Vector2f& position)
     }
 
     return NULL;
+}
+
+void Layer::setTiles(const std::vector<Tile*>& tiles)
+{
+    Engine::instance().console().print(Console::Info, "Got %i tiles", tiles.size());
+    m_tiles = tiles;
 }

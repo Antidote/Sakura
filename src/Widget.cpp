@@ -94,17 +94,17 @@ Widget::KeyboardSignal* Widget::keyRelese()
     return &m_keyReleaseSignal;
 }
 
-Widget::MouseButtonSignal*Widget::mousePressed()
+Widget::MouseButtonSignal* Widget::mousePressed()
 {
     return &m_mousePressSignal;
 }
 
-Widget::MouseMoveSignal*Widget::mouseEnter()
+Widget::MouseMoveSignal* Widget::mouseEnter()
 {
     return &m_mouseEnter;
 }
 
-Widget::MouseMoveSignal*Widget::mouseLeave()
+Widget::MouseMoveSignal* Widget::mouseLeave()
 {
     return &m_mouseLeave;
 }
@@ -127,10 +127,13 @@ void Widget::onMouseClick()
 void Widget::update(sf::Time dt)
 {
     ((void)dt);
-    if (contains((sf::Vector2f)Engine::instance().inputManager().mouse().mouseLocalPosition()) && !m_mouseIn)
+    if (contains((sf::Vector2f)Engine::instance().inputManager().mouse().mouseLocalPosition()))
     {
-        onMouseEnter();
-        m_mouseIn = true;
+        if (!m_mouseIn)
+        {
+            onMouseEnter();
+            m_mouseIn = true;
+        }
         if (Engine::instance().inputManager().mouse().isAnyButtonPressed())
             onMouseClick();
     }

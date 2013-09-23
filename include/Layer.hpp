@@ -22,6 +22,8 @@ public:
     void addTile(Tile* tile);
     Tile* tile(int x, int y);
     Tile* tile(const sf::Vector2f& position);
+
+    void setTiles(const std::vector<Tile*>& tiles);
 private:
     bool m_visible;
     Uint32 m_zOrder;

@@ -1,4 +1,7 @@
 #include "Map.hpp"
+#include "Engine.hpp"
+#include "ResourceManager.hpp"
+#include "TextureResource.hpp"
 #include <stdio.h>
 
 Map::Map()
@@ -126,4 +129,17 @@ Cell* Map::collision(int x, int y)
         return m_collisionData[x][y];
 
     return NULL;
+}
+
+void Map::draw(sf::RenderTarget& rt)
+{/*
+    static ResourceManager& resourceManager = Engine::instance().resourceManager();
+    for (int i = 0; i < m_tilesets.size(); ++i)
+    {
+        if (!resourceManager.textureExists(m_tilesets[i]))
+            resourceManager.loadTexture(m_tilesets[i], new TextureResource(m_tilesets[i], true));
+
+        for (Layer* layer : m_layers)
+            layer->draw(resourceManager.texture(m_tilesets[i]), rt);
+    }*/
 }

@@ -32,7 +32,7 @@ LIBS += -lsfml-graphics \
         -lsfml-system \
         -lphysfs \
         -L../libzelda/lib \
-        -lzelda-d\
+        -lzelda\
          -lz
 
 unix:LIBS += \

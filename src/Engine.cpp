@@ -49,17 +49,12 @@ Engine::Engine()
       m_rotation(-90.f),
       m_fadeOut(false),
       m_clearColor(sf::Color::Black),
-      m_inputThreadInitialized(false)
+      m_inputThreadInitialized(false),
+      m_currentMap(NULL)
 {
     console().print(Console::Info, "Sakura Engine " + version() + ": Initializing");
     console().print(Console::Info, "Built with SFML %i.%i", SFML_VERSION_MAJOR , SFML_VERSION_MINOR);
     console().print(Console::Info, "Build date %s %s", __DATE__, __TIME__);
-
-
-    zelda::io::MapFileReader reader("data/maps/EasternPalace.zmap");
-    m_currentMap = reader.read();
-    m_colShape.setSize(sf::Vector2f(m_currentMap->tileWidth(), m_currentMap->tileHeight()));
-
 }
 
 Engine::~Engine()
@@ -81,7 +76,7 @@ void Engine::initialize(int argc, char* argv[])
     setFullscreen(config().settingBoolean("r_fullscreen", false));
 
 
-    camera().setWorld(m_currentMap->width(), m_currentMap->height());
+
     m_frameLimit = config().settingInt("sys_framelimit", 60);
     window().setFramerateLimit(m_frameLimit);
 
@@ -127,6 +122,10 @@ void Engine::initialize(int argc, char* argv[])
         ((sf::Texture&)m_statsString.getFont()->getTexture(20)).setSmooth(false);
     }
 
+    zelda::io::MapFileReader reader("data/maps/EasternPalace.zmap");
+    m_currentMap = reader.read();
+    camera().setWorld(m_currentMap->width(), m_currentMap->height());
+    m_colShape.setSize(sf::Vector2f(m_currentMap->tileWidth(), m_currentMap->tileHeight()));
     Link* link = new Link;
     link->setPosition(100, 32);
     camera().setLockedOn(link);
@@ -478,42 +477,45 @@ void Engine::doGameState(bool wireframe, int pass)
 
     if (wireframe && pass == 1 || !wireframe)
     {
-        for (int y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
+        if (m_currentMap)
         {
-            if ((y * m_currentMap->tileHeight()) < camera().position().y - m_currentMap->tileHeight() ||
-                (y * m_currentMap->tileHeight()) > camera().position().y + camera().size().y)
-                continue;
-
-            for (int x = 0; x < m_currentMap->width()/m_currentMap->tileWidth(); x++)
+            for (int y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
             {
-                if ((x * m_currentMap->tileWidth()) < camera().position().x - m_currentMap->tileWidth() ||
-                    (x * m_currentMap->tileWidth()) > camera().position().x + camera().size().x)
+                if ((y * m_currentMap->tileHeight()) < camera().position().y - m_currentMap->tileHeight() ||
+                    (y * m_currentMap->tileHeight()) > camera().position().y + camera().size().y)
                     continue;
-                Cell* cell = m_currentMap->collision(x, y);
-                if (cell)
+
+                for (int x = 0; x < m_currentMap->width()/m_currentMap->tileWidth(); x++)
                 {
-                    if (cell->CollisionType == ColTypeNone)
+                    if ((x * m_currentMap->tileWidth()) < camera().position().x - m_currentMap->tileWidth() ||
+                        (x * m_currentMap->tileWidth()) > camera().position().x + camera().size().x)
                         continue;
+                    Cell* cell = m_currentMap->collision(x, y);
+                    if (cell)
+                    {
+                        if (cell->CollisionType == ColTypeNone)
+                            continue;
 
-                    if ((cell->CollisionType & ColTypeAngle45) == ColTypeAngle45)
-                        m_colShape.setFillColor(sf::Color::Yellow);
-                    else if ((cell->CollisionType & ColTypeJump) == ColTypeJump)
-                        m_colShape.setFillColor(sf::Color::Green);
-                    else if ((cell->CollisionType & ColTypeWaterShallow) == ColTypeWaterShallow)
-                        m_colShape.setFillColor(sf::Color(200, 24, 255));
-                    else if ((cell->CollisionType & ColTypeWaterDeep) == ColTypeWaterDeep)
-                        m_colShape.setFillColor(sf::Color::Blue);
-                    else if ((cell->CollisionType & ColTypeDamage) == ColTypeDamage)
-                        m_colShape.setFillColor(sf::Color::Red);
-                    else if ((cell->CollisionType & ColTypeStair) == ColTypeStair)
-                        m_colShape.setFillColor(sf::Color(100, 68, 255));
-                    else
-                        m_colShape.setFillColor(sf::Color::Black);
+                        if ((cell->CollisionType & ColTypeAngle45) == ColTypeAngle45)
+                            m_colShape.setFillColor(sf::Color::Yellow);
+                        else if ((cell->CollisionType & ColTypeJump) == ColTypeJump)
+                            m_colShape.setFillColor(sf::Color::Green);
+                        else if ((cell->CollisionType & ColTypeWaterShallow) == ColTypeWaterShallow)
+                            m_colShape.setFillColor(sf::Color(200, 24, 255));
+                        else if ((cell->CollisionType & ColTypeWaterDeep) == ColTypeWaterDeep)
+                            m_colShape.setFillColor(sf::Color::Blue);
+                        else if ((cell->CollisionType & ColTypeDamage) == ColTypeDamage)
+                            m_colShape.setFillColor(sf::Color::Red);
+                        else if ((cell->CollisionType & ColTypeStair) == ColTypeStair)
+                            m_colShape.setFillColor(sf::Color(100, 68, 255));
+                        else
+                            m_colShape.setFillColor(sf::Color::Black);
 
-                    m_colShape.setPosition(x * m_currentMap->tileWidth(), y * m_currentMap->tileHeight());
+                        m_colShape.setPosition(x * m_currentMap->tileWidth(), y * m_currentMap->tileHeight());
 
 
-                    window().draw(m_colShape);
+                        window().draw(m_colShape);
+                    }
                 }
             }
         }

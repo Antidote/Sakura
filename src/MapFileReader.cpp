@@ -88,29 +88,30 @@ Map* MapFileReader::read()
         layer->setVisible(base::readBool());
         layer->setZOrder(base::readUInt32());
         int tileCount = base::readUInt32();
+        std::vector<Tile*> tiles;
         base::seek((base::position() + 0x1F) & ~0x1F, base::Beginning);
 
         for (int j = 0; j < tileCount; j++)
         {
-            for (int k = 0; k < ret->width()/ret->tileWidth(), j < tileCount; k++, j++)
-            {
-                Tile* tile = new Tile();
-                tile->setId(base::readUInt32());
-                tile->setTileset(base::readUInt32());
-                tile->setFlippedHor(base::readBit());
-                tile->setFlippedVer(base::readBit());
-                tile->setFlippedDiag(base::readBit());
+            Tile* tile = new Tile();
+            tile->setId(base::readUInt32());
+            tile->setTileset(base::readUInt32());
+            tile->setFlippedHor(base::readBit());
+            tile->setFlippedVer(base::readBit());
+            tile->setFlippedDiag(base::readBit());
 
-                tile->setPosition(base::readUInt16(), base::readUInt16());
+            tile->setPosition(base::readUInt16(), base::readUInt16());
 
-                layer->addTile(tile);
-            }
+            tiles.push_back(tile);
+//            layer->addTile(tile);
         }
+        // this is the new method
+        layer->setTiles(tiles);
         base::seek((base::position() + 0x1F) & ~0x1F, base::Beginning);
         ret->addLayer(layer);
     }
     std::unordered_map<int, std::unordered_map<int, Cell*> > collision;
-    for (int y = 0; y < ret->height()/ret->tileHeight(); y++)
+    for (int y = 0; y < ret->height() / ret->tileHeight(); y++)
     {
         for (int x = 0; x < ret->width() / ret->tileWidth(); x++)
         {
