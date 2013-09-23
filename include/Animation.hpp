@@ -43,6 +43,7 @@ public:
 private:
     std::vector<sf::IntRect> m_frames;
     const sf::Texture* m_texture;
+    sf::IntRect m_noFrame;
 };
 
 #endif // ANIMATION_INCLUDE

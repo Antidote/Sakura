@@ -81,7 +81,7 @@ Map* MapFileReader::read()
         delete[] data;
     }
 
-    for (int i = 0; i < layerCount; i++)
+    for (Uint32 i = 0; i < layerCount; i++)
     {
         std::cout << "Layer " << (i + 1) << std::endl;
         Layer* layer = new Layer;
@@ -111,9 +111,9 @@ Map* MapFileReader::read()
         ret->addLayer(layer);
     }
     std::unordered_map<int, std::unordered_map<int, Cell*> > collision;
-    for (int y = 0; y < ret->height() / ret->tileHeight(); y++)
+    for (Uint32 y = 0; y < ret->height() / ret->tileHeight(); y++)
     {
-        for (int x = 0; x < ret->width() / ret->tileWidth(); x++)
+        for (Uint32 x = 0; x < ret->width() / ret->tileWidth(); x++)
         {
             Cell* cell = new Cell;
             cell->CollisionType = base::readByte();

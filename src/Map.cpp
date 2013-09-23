@@ -49,7 +49,7 @@ void Map::addLayer(Layer* layer)
 
 Layer* Map::layer(int id) const
 {
-    if (id <= 0 || id > m_layers.size())
+    if (id <= 0 || id > (int)m_layers.size())
         return NULL;
 
     return m_layers[id];
@@ -132,7 +132,9 @@ Cell* Map::collision(int x, int y)
 }
 
 void Map::draw(sf::RenderTarget& rt)
-{/*
+{
+    UNUSED(rt);
+    /*
     static ResourceManager& resourceManager = Engine::instance().resourceManager();
     for (int i = 0; i < m_tilesets.size(); ++i)
     {

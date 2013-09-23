@@ -72,15 +72,15 @@ private:
     bool m_showCursor;
     sf::String m_commandString;
     sf::Text   m_commandText;
-    sf::Text  m_drawText;
-    sf::Time m_totalWaitTime;
-    sf::Time m_waitTime;
+    sf::Text   m_drawText;
+    sf::Time   m_totalWaitTime;
+    sf::Time   m_waitTime;
     sf::RectangleShape m_borderShape;
 
-    sf::Time m_blinkTimeout;
-    sf::Time m_cursorTime;
-    sf::Time m_currentTime;
-    bool m_showError;
+    sf::Time   m_blinkTimeout;
+    sf::Time   m_cursorTime;
+    sf::Time   m_currentTime;
+    bool       m_showError;
 
     float      m_bgOffset;
     sf::Sprite m_consoleBg1;
@@ -96,6 +96,9 @@ private:
     int m_conHeight;
 
     float m_cursorX;
+    float m_conY;
+
+    sf::Color m_defaultConColor;
 
     std::ofstream m_log;
     // format is command name -> command class
@@ -106,9 +109,6 @@ private:
     // Command history remembers the last 5 commands
     std::vector<sf::String> m_commandHistory;
 
-    float m_conY;
-
-    sf::Color m_defaultConColor;
 };
 
 #endif // CONSOLE_HPP

@@ -47,7 +47,7 @@ void Config::shutdown()
         std::string val = settingLiteral(setting.first);
         if (val != std::string())
         {
-            if (val.find_first_of(' ') != -1)
+            if (val.find_first_of(' ') != std::string::npos)
             {
                 val.insert(val.begin(), '\"');
                 val += "\"";
@@ -466,7 +466,7 @@ sf::Color Config::settingColor(const std::string& setting, const sf::Color& def)
 
 void Config::setSettingLiteral(const std::string& setting, const std::string& val)
 {
-    if (val.find_first_of(' ') != -1 && val.find_first_of('"') == -1)
+    if (val.find_first_of(' ') != std::string::npos && val.find_first_of('"') == std::string::npos)
         m_settings[setting] = "\"" + val + "\"";
     else
         m_settings[setting] = val;
@@ -518,7 +518,7 @@ void Config::parse()
 
         bool done = false;
         // Remove comments
-        if (line.find_first_of("//") != -1)
+        if (line.find_first_of("//") != std::string::npos)
         {
             line.erase(line.find_first_of("//"), line.find_first_of("//") - line.size());
         }
@@ -635,7 +635,7 @@ void Config::parse()
 
                 int lastIndex;
 
-                if (val.find_last_of('"') == -1 || (zelda::utility::countChar(val, '"', lastIndex) % 2))
+                if (val.find_last_of('"') == std::string::npos || (zelda::utility::countChar(val, '"', lastIndex) % 2))
                     Engine::instance().console().print(Console::Warning, "Malformed literal at line %i", lineNum);
 
             }

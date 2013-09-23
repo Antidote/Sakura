@@ -20,17 +20,17 @@ Console::Console(const std::string &logfile)
     : m_state(Closed),
       m_showCursor(false),
       m_totalWaitTime(sf::seconds(0.5)),
-      m_cursorPosition(0),
       m_blinkTimeout(sf::seconds(.5f)),
-      m_isInitialized(false),
-      m_overwrite(false),
+      m_cursorPosition(0),
       m_startString(0),
       m_currentCommand(0),
-      m_log(logfile),
+      m_isInitialized(false),
+      m_overwrite(false),
       m_maxLines(15),
       m_conHeight(240),
       m_conY(0.0f),
-      m_defaultConColor(sf::Color(100, 180, 32, 100))
+      m_defaultConColor(sf::Color(100, 180, 32, 100)),
+      m_log(logfile)
 {
 }
 
@@ -140,14 +140,14 @@ void Console::handleText(const sf::Uint32 unicode)
     }
 #endif
 
-    if (m_state == Opened || m_state == Opening)
+    if (m_state == Opened)
     {
         if (unicode > 0x1f && unicode != 0x7f)
         {
             if(!m_overwrite)
                 m_commandString.insert(m_cursorPosition, unicode);
 
-            if (m_overwrite && (m_commandString.getSize() > 0 && m_cursorPosition < m_commandString.getSize()))
+            if (m_overwrite && (m_commandString.getSize() > 0 && m_cursorPosition < (int)m_commandString.getSize()))
                 m_commandString[m_cursorPosition] = unicode;
             else if (m_overwrite)
                 m_commandString += unicode;
@@ -190,7 +190,10 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     // Anything but linux should be safe
     // from bug mentioned in handleText
     if (code == sf::Keyboard::Tilde)
+    {
         toggleConsole();
+        return;
+    }
 
     // Handle toggling of fullscreen (is this the best place for this?)
     if (code == sf::Keyboard::Return && alt)
@@ -226,7 +229,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             if (m_commandString.getSize() > 0)
             {
                 // Don't try to delete if the cursor is at the end of the line
-                if (m_cursorPosition >= m_commandString.getSize())
+                if (m_cursorPosition >= (int)m_commandString.getSize())
                     break;
                 m_commandString.erase(m_cursorPosition);
             }
@@ -235,12 +238,12 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 
         case sf::Keyboard::PageUp:
         {
-            if (control && ((m_history.size()) - (m_startString + m_maxLines)) > m_maxLines)
+            if (control && (int)((m_history.size()) - (m_startString + m_maxLines)) > m_maxLines)
             {
                 m_startString += m_maxLines;
                 break;
             }
-            if (((m_history.size())  - m_startString) > m_maxLines)
+            if ((int)((m_history.size())  - m_startString) > m_maxLines)
                 m_startString++;
         }
             break;
@@ -274,7 +277,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             break;
         case sf::Keyboard::Right:
         {
-            if (m_cursorPosition >= m_commandString.getSize())
+            if (m_cursorPosition >= (int)m_commandString.getSize())
                 break;
             m_cursorPosition++;
             m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
@@ -288,7 +291,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             if (m_commandHistory.size() == 0)
                 break;
             m_currentCommand++;
-            if (m_currentCommand < m_commandHistory.size())
+            if (m_currentCommand < (int)m_commandHistory.size())
             {
                 m_commandString = m_commandHistory[m_currentCommand];
             }
@@ -343,7 +346,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             break;
     }
 
-    if (m_cursorPosition > m_commandString.getSize())
+    if (m_cursorPosition > (int)m_commandString.getSize())
         m_cursorPosition = m_commandString.getSize();
     if (m_cursorPosition < 0)
         m_cursorPosition = 0;
@@ -361,7 +364,7 @@ void Console::handleMouseWheel(int delta, int x, int y)
 
     if (delta < 0 && m_startString == 0)
         return;
-    if (delta > 0 && (m_history.size() - (m_startString + delta*4)) < m_maxLines)
+    if (delta > 0 && (int)(m_history.size() - (m_startString + delta*4)) < m_maxLines)
         return;
 
     m_startString += delta*4;
@@ -369,7 +372,7 @@ void Console::handleMouseWheel(int delta, int x, int y)
 
 void Console::update(const sf::Time& dt)
 {
-    m_maxLines = std::ceil((m_conY / m_drawText.getCharacterSize()) - 4);
+    m_maxLines = std::ceil((m_conY / m_drawText.getCharacterSize()) - 3);
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)

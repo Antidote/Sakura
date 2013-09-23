@@ -92,6 +92,7 @@ Entity::Type Entity::type() const
 
 void Entity::update(sf::Time delta)
 {
+    UNUSED(delta);
     std::stringstream debugInfo;
     debugInfo << "Name: " << m_name << "\nX: " << m_pos.x << "\nY: " << m_pos.y;
     debugInfo << "\nV.x: " << m_velocity.x << "\nV.y: " << m_velocity.y;

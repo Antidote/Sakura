@@ -23,9 +23,9 @@
 
 #include "Animation.hpp"
 
-Animation::Animation() : m_texture(NULL)
+Animation::Animation() : m_texture(NULL),
+    m_noFrame(sf::IntRect(0, 0, 1, 1))
 {
-
 }
 
 void Animation::addFrame(sf::IntRect rect)
@@ -56,7 +56,7 @@ std::size_t Animation::getSize() const
 const sf::IntRect& Animation::getFrame(std::size_t n) const
 {
     if (n > m_frames.size() - 1)
-        return sf::IntRect(0, 0, 1, 1);
+        return m_noFrame;
 
     return m_frames[n];
 }

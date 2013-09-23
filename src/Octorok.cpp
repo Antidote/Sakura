@@ -167,4 +167,5 @@ void Octorok::doRun(sf::Time dt)
 
 void Octorok::doShoot(sf::Time dt)
 {
+    UNUSED(dt);
 }

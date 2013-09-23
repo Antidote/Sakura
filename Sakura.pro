@@ -127,7 +127,6 @@ HEADERS += \
     include/MusicResource.hpp \
     include/x86cpuinfo.h \
     include/cpuinfo.h \
-    include/SpriteFont.h \
     include/teebuf.hpp \
     include/teestream.hpp \
     include/Console.hpp \

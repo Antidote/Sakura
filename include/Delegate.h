@@ -74,6 +74,11 @@
     #pragma once
 #endif // _MSC_VER > 1000
 
+// Unused macro
+#ifndef UNUSED
+#define UNUSED(x) ((void)x)
+#endif
+
 #include <memory.h> // to allow <,> comparisons
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +206,8 @@ inline OutputClass horrible_cast(const InputClass input){
     // unions which would prevent the cast from working.
     typedef int ERROR_CantUseHorrible_cast[sizeof(InputClass)==sizeof(u)
         && sizeof(InputClass)==sizeof(OutputClass) ? 1 : -1];
+    ERROR_CantUseHorrible_cast junk;
+    UNUSED(junk);
     u.in = input;
     return u.out;
 }
@@ -317,6 +324,8 @@ struct SimplifyMemFunc {
         // Unsupported member function type -- force a compile failure.
         // (it's illegal to have a array with negative size).
         typedef char ERROR_Unsupported_member_function_pointer_on_this_compiler[N-100];
+        ERROR_Unsupported_member_function_pointer_on_this_compiler junk;
+        UNUSED(junk);
         return 0;
     }
 };
@@ -803,6 +812,8 @@ public:
         // and data pointers have different sizes.
         // If you get this error, you need to #undef FASTDELEGATE_USESTATICFUNCTIONHACK.
         typedef int ERROR_CantUseEvilMethod[sizeof(GenericClass *)==sizeof(function_to_bind) ? 1 : -1];
+        ERROR_CantUseEvilMethod junk;
+        UNUSED(junk);
         m_pthis = horrible_cast<GenericClass *>(function_to_bind);
         // MSVC, SunC++ and DMC accept the following (non-standard) code:
 //		m_pthis = static_cast<GenericClass *>(static_cast<void *>(function_to_bind));
@@ -818,6 +829,8 @@ public:
         // and data pointers have different sizes.
         // If you get this error, you need to #undef FASTDELEGATE_USESTATICFUNCTIONHACK.
         typedef int ERROR_CantUseEvilMethod[sizeof(UnvoidStaticFuncPtr)==sizeof(this) ? 1 : -1];
+        ERROR_CantUseEvilMethod junk;
+        UNUSED(junk);
         return horrible_cast<UnvoidStaticFuncPtr>(this);
     }
 #endif // !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
@@ -2132,5 +2145,6 @@ Delegate8<Param1, Param2, Param3, Param4, Param5, Param6, Param7, Param8, FASTDL
 #undef FASTDLGT_RETTYPE
 
 } // namespace
+#undef UNUSED
 
 #endif //_DELEGATES_H_

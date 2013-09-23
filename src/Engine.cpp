@@ -39,17 +39,17 @@ Engine::Engine()
     : m_console("log.txt"),
       m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
       m_lastTime(sf::seconds(0)),
-      m_fps(0),
+      m_splashTime(sf::seconds(3.5f)),
       m_frameLimit(0),
+      m_fps(0),
       m_paused(false),
       m_state(StateGame),
       m_currentLogo(LogoSFML),
-      m_splashTime(sf::seconds(3.5f)),
       m_fade(0.0f),
       m_rotation(-90.f),
       m_fadeOut(false),
-      m_clearColor(sf::Color::Black),
       m_inputThreadInitialized(false),
+      m_clearColor(sf::Color::Black),
       m_currentMap(NULL)
 {
     console().print(Console::Info, "Sakura Engine " + version() + ": Initializing");
@@ -211,7 +211,7 @@ int Engine::run()
             m_statsString.setString(stats.str());
         }
 
-        if (config().settingBoolean("r_clear", false))
+        if (config().settingBoolean("r_clear", true))
             window().clear(m_clearColor);
 
         if (m_state == StateGame && !console().isOpen())
@@ -428,7 +428,7 @@ void Engine::doSplashState(sf::Time dt)
         if ((Logo)m_currentLogo == LogoSFML)
         {
             if (resourceManager().textureExists("splash/SFML") &&
-                m_logoSprite.getTexture() != resourceManager().texture("splash/SFML"))
+                    m_logoSprite.getTexture() != resourceManager().texture("splash/SFML"))
             {
                 m_logoSprite.setTexture(*resourceManager().texture("splash/SFML"), true);
                 m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
@@ -439,7 +439,7 @@ void Engine::doSplashState(sf::Time dt)
         if ((Logo)m_currentLogo == LogoNintendo)
         {
             if (resourceManager().textureExists("splash/NintendoLogo") &&
-                m_logoSprite.getTexture() != resourceManager().texture("splash/NintendoLogo"))
+                    m_logoSprite.getTexture() != resourceManager().texture("splash/NintendoLogo"))
             {
                 m_logoSprite.setTexture(*resourceManager().texture("splash/NintendoLogo"), true);
                 m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
@@ -450,7 +450,7 @@ void Engine::doSplashState(sf::Time dt)
         if ((Logo)m_currentLogo == LogoWiiking)
         {
             if (resourceManager().textureExists("splash/Wiiking") &&
-                m_logoSprite.getTexture() != resourceManager().texture("splash/Wiiking"))
+                    m_logoSprite.getTexture() != resourceManager().texture("splash/Wiiking"))
             {
                 m_logoSprite.setTexture(*resourceManager().texture("splash/Wiiking"), true);
                 m_logoSprite.setScale(.5f, .5f);
@@ -475,20 +475,20 @@ void Engine::doGameState(bool wireframe, int pass)
 {
     setClearColor(sf::Color(m_currentMap->backgroundColor().R, m_currentMap->backgroundColor().G, m_currentMap->backgroundColor().B, m_currentMap->backgroundColor().A));
 
-    if (wireframe && pass == 1 || !wireframe)
+    if ((wireframe && pass == 1) || !wireframe)
     {
         if (m_currentMap)
         {
-            for (int y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
+            for (Uint32 y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
             {
                 if ((y * m_currentMap->tileHeight()) < camera().position().y - m_currentMap->tileHeight() ||
-                    (y * m_currentMap->tileHeight()) > camera().position().y + camera().size().y)
+                        (y * m_currentMap->tileHeight()) > camera().position().y + camera().size().y)
                     continue;
 
-                for (int x = 0; x < m_currentMap->width()/m_currentMap->tileWidth(); x++)
+                for (Uint32 x = 0; x < m_currentMap->width()/m_currentMap->tileWidth(); x++)
                 {
                     if ((x * m_currentMap->tileWidth()) < camera().position().x - m_currentMap->tileWidth() ||
-                        (x * m_currentMap->tileWidth()) > camera().position().x + camera().size().x)
+                            (x * m_currentMap->tileWidth()) > camera().position().x + camera().size().x)
                         continue;
                     Cell* cell = m_currentMap->collision(x, y);
                     if (cell)

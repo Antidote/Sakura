@@ -15,4 +15,5 @@ void Hud::update()
 
 void Hud::draw(sf::RenderTarget& rt)
 {
+    UNUSED(rt);
 }

@@ -148,5 +148,6 @@ void RestartCommand::usage()
 
 void RestartCommand::execute(std::vector<std::string> args)
 {
+    UNUSED(args);
     Engine::instance().restart();
 }

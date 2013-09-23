@@ -8,6 +8,7 @@
 class ConsoleCommandBase
 {
 public:
+    virtual ~ConsoleCommandBase(){}
     virtual void usage() = 0;
     virtual void execute(std::vector<std::string> args) = 0;
 };
