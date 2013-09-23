@@ -88,7 +88,8 @@ INCLUDEPATH +=  \
 win32:INCLUDEPATH += \
     extlibs/physfs/include \
     extlibs/SFML/include \
-    extlibs/AL/include
+    extlibs/AL/include \
+    extlibs/GLEW/include
 
 HEADERS += \
     include/Engine.hpp \
