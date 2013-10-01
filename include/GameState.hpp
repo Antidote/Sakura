@@ -7,7 +7,6 @@ class GameState : public RunState
 {
 public:
     GameState();
-
 };
 
 #endif // GAMESTATE_HPP

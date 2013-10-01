@@ -11,7 +11,8 @@ Entity::Entity(const std::string& name, Type type)
       m_id(0),
       m_type(type),
       m_facing(North),
-      m_lastFacing(North)
+      m_lastFacing(North),
+      m_velocity(sf::Vector2f(0, 0))
 {
     getUniqueName();
 
@@ -78,6 +79,11 @@ sf::FloatRect Entity::bounds() const
 std::string Entity::name() const
 {
     return m_name;
+}
+
+void Entity::setName(const std::string& name)
+{
+    m_name = name;
 }
 
 int Entity::id() const

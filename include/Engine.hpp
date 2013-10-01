@@ -35,9 +35,9 @@ public:
 
     virtual ~Engine();
 
-    void initialize(int argc, char* argv[]);
-    void restart();
-    int run();
+    virtual void initialize(int argc, char* argv[]);
+    virtual void restart();
+    virtual int run();
 
 
     Camera& camera();
@@ -55,13 +55,7 @@ public:
     void setClearColor(const sf::Color& color);
     sf::Color clearColor() const;
 
-    void loadSplashResources();
-    void destroySplashResources();
-
     void shutdown();
-    void doSplashState(sf::Time dt);
-    void doMenuState();
-    void doGameState(bool wireframe, int pass);
 
     void setWireframe(bool mode);
     void toggleFullscreen();
@@ -75,18 +69,6 @@ public:
     Map* currentMap() const;
 protected:
 private:
-    std::string stateString();
-    enum Logo
-    {
-        LogoSFML,
-        LogoWiiking,
-        // Add more logos here
-
-        // This must be last
-        LogoCount,
-        LogoNintendo,
-    };
-
     RunState*       m_currentState;
     void printSysInfo();
     void operator =(const Engine&);
@@ -108,20 +90,12 @@ private:
     sf::View         m_defaultView;
     sf::Clock        m_clock;
     sf::Time         m_lastTime;
-    sf::Time         m_splashTime;
-    sf::Time         m_currentSplashTime;
     sf::Time         m_fadeTime;
     sf::Text         m_fpsString;
     sf::Text         m_statsString;
     int              m_frameLimit;
     float            m_fps;
     bool             m_paused;
-    sf::Sprite       m_logoSprite;
-    State            m_state;
-    sf::Uint32       m_currentLogo;
-    float            m_fade;
-    float            m_rotation;
-    bool             m_fadeOut;
     bool             m_inputThreadInitialized;
     sf::Color        m_clearColor;
 
@@ -134,7 +108,6 @@ private:
     // e.g m_states["game"] = new GameState;
     std::unordered_map<std::string, RunState*> m_states;
 
-    sf::RectangleShape m_colShape;
     Map* m_currentMap;
 };
 

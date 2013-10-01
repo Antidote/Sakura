@@ -6,7 +6,7 @@
 
 #include <SFML/Config.hpp>
 
-#include "Link.hpp"
+#include <Entity.hpp>
 #include <iostream>
 #include <iomanip>
 #include "x86cpuinfo.h"
@@ -39,15 +39,9 @@ Engine::Engine()
     : m_console("log.txt"),
       m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
       m_lastTime(sf::seconds(0)),
-      m_splashTime(sf::seconds(3.5f)),
       m_frameLimit(0),
       m_fps(0),
       m_paused(false),
-      m_state(StateGame),
-      m_currentLogo(LogoSFML),
-      m_fade(0.0f),
-      m_rotation(-90.f),
-      m_fadeOut(false),
       m_inputThreadInitialized(false),
       m_clearColor(sf::Color::Black),
       m_currentMap(NULL)
@@ -121,15 +115,6 @@ void Engine::initialize(int argc, char* argv[])
         m_statsString.setColor(sf::Color::White);
         ((sf::Texture&)m_statsString.getFont()->getTexture(20)).setSmooth(false);
     }
-
-    zelda::io::MapFileReader reader("data/maps/EasternPalace.zmap");
-    m_currentMap = reader.read();
-    camera().setWorld(m_currentMap->width(), m_currentMap->height());
-    m_colShape.setSize(sf::Vector2f(m_currentMap->tileWidth(), m_currentMap->tileHeight()));
-    Link* link = new Link;
-    link->setPosition(100, 32);
-    camera().setLockedOn(link);
-    entityManager().addEntity(link);
 }
 
 void Engine::restart()
@@ -199,7 +184,6 @@ int Engine::run()
             stats << "Live Sounds: " << resourceManager().liveSoundCount() << std::endl;
             stats << "Music Count: " << resourceManager().musicCount() << std::endl;
             stats << "Font Count: " << resourceManager().fontCount() << std::endl;
-            stats << "Current State: " << stateString() << std::endl;
             stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
             stats << "Camera Size: " << camera().size().x << " " << camera().size().y << std::endl;
             stats << "World Size: " << camera().world().x << " " << camera().world().y << std::endl;
@@ -214,7 +198,7 @@ int Engine::run()
         if (config().settingBoolean("r_clear", true))
             window().clear(m_clearColor);
 
-        if (m_state == StateGame && !console().isOpen())
+        if (!console().isOpen())
         {
             entityManager().think(m_lastTime);
             entityManager().update(m_lastTime);
@@ -227,19 +211,6 @@ int Engine::run()
             {
                 glDisable(GL_TEXTURE_2D);
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            }
-
-            switch(m_state)
-            {
-                case StateSplash:
-                    doSplashState(m_lastTime);
-                    break;
-                case StateMenu:
-                    doMenuState();
-                    break;
-                case StateGame:
-                    doGameState(config().settingBoolean("r_drawwire", false), i);
-                    break;
             }
 
             // Reset the view to the default
@@ -325,30 +296,6 @@ sf::Color Engine::clearColor() const
     return m_clearColor;
 }
 
-void Engine::loadSplashResources()
-{
-    if (!resourceManager().soundExists("sounds/items/rupeeCollect"))
-        resourceManager().loadSound("sounds/items/rupeeCollect", new SoundResource("sounds/LTTP_Rupee1.wav"));
-
-    if (!resourceManager().textureExists("splash/SFML"))
-        resourceManager().loadTexture("splash/SFML", new TextureResource("splash/SFML.png", true));
-
-    if (!resourceManager().textureExists("splash/NintendoLogo"))
-        resourceManager().loadTexture("splash/NintendoLogo", new TextureResource("splash/NintendoLogo.png", true));
-
-    if (!resourceManager().textureExists("splash/Wiiking"))
-        resourceManager().loadTexture("splash/Wiiking", new TextureResource("splash/Wiiking.png", true));
-}
-
-void Engine::destroySplashResources()
-{
-    console().print(Console::Info, "Clearing logo resources...");
-    resourceManager().removeMusic  ("sounds/items/rupeeCollect");
-    resourceManager().removeTexture("splash/SFML");
-    resourceManager().removeTexture("splash/NintendoLogo");
-    resourceManager().removeTexture("splash/Wiiking");
-}
-
 void Engine::shutdown()
 {
     if (window().isOpen())
@@ -363,164 +310,6 @@ void Engine::shutdown()
     resourceManager().shutdown();
     console().shutdown();
     config().shutdown();
-    // Reset everything
-    m_state = Engine::StateGame;
-    m_logoSprite = sf::Sprite();
-    m_fade = 0.0f;
-    m_fadeOut = false;
-    m_currentSplashTime = sf::seconds(0.0f);
-    m_currentLogo = 0;
-}
-
-void Engine::doSplashState(sf::Time dt)
-{
-    if (!m_paused && !m_console.isOpen())
-    {
-        //setClearColor(sf::Color::Transparent);
-        m_currentSplashTime += dt;
-
-        if (m_currentSplashTime > m_splashTime)
-        {
-            m_currentSplashTime = sf::seconds(0.f);
-            if (m_fade <= 0)
-            {
-                m_currentLogo++;
-                if (m_currentLogo == LogoWiiking)
-                    m_rotation = -180.f;
-            }
-
-
-            m_fadeOut ^= 1;
-        }
-
-        if (m_currentLogo >= LogoCount)
-        {
-            m_state = StateMenu;
-            destroySplashResources();
-            return;
-        }
-
-        if (!m_fadeOut && m_fade < 255)
-            m_fade += 90.f*dt.asSeconds();
-        else if (m_fadeOut && m_fade > 0)
-            m_fade -= 90.f*dt.asSeconds();
-
-        // Fixes flashing
-        // Since m_fade is a float it can go over 255 and overflow the Uint8
-        // resonsible for Alpha, Ask Laurent to add float values for color?
-        if (m_fade < 0)
-            m_fade = 0.f;
-        if (m_fade > 255.f)
-            m_fade = 255.f;
-
-        if (m_currentLogo == LogoWiiking && m_rotation < 0)
-            m_rotation += 48.f*dt.asSeconds();
-
-        if (m_rotation > 0)
-        {
-            resourceManager().playSound("sounds/items/rupeeCollect");
-            m_rotation = 0;
-        }
-
-        m_logoSprite.setPosition((camera().position().x + (camera().size().x / 2)),
-                                 (camera().position().y + (camera().size().y / 2)));
-
-        if ((Logo)m_currentLogo == LogoSFML)
-        {
-            if (resourceManager().textureExists("splash/SFML") &&
-                    m_logoSprite.getTexture() != resourceManager().texture("splash/SFML"))
-            {
-                m_logoSprite.setTexture(*resourceManager().texture("splash/SFML"), true);
-                m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
-
-            }
-        }
-
-        if ((Logo)m_currentLogo == LogoNintendo)
-        {
-            if (resourceManager().textureExists("splash/NintendoLogo") &&
-                    m_logoSprite.getTexture() != resourceManager().texture("splash/NintendoLogo"))
-            {
-                m_logoSprite.setTexture(*resourceManager().texture("splash/NintendoLogo"), true);
-                m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
-
-            }
-        }
-
-        if ((Logo)m_currentLogo == LogoWiiking)
-        {
-            if (resourceManager().textureExists("splash/Wiiking") &&
-                    m_logoSprite.getTexture() != resourceManager().texture("splash/Wiiking"))
-            {
-                m_logoSprite.setTexture(*resourceManager().texture("splash/Wiiking"), true);
-                m_logoSprite.setScale(.5f, .5f);
-                m_logoSprite.setOrigin(m_logoSprite.getLocalBounds().width/2, m_logoSprite.getLocalBounds().height/2);
-                ((sf::Texture*)m_logoSprite.getTexture())->setSmooth(true);
-            }
-
-            m_logoSprite.setRotation(m_rotation);
-        }
-
-        m_logoSprite.setColor(sf::Color(255, 255, 255, m_fade));
-    }
-
-    window().draw(m_logoSprite);
-}
-
-void Engine::doMenuState()
-{
-}
-
-void Engine::doGameState(bool wireframe, int pass)
-{
-    setClearColor(sf::Color(m_currentMap->backgroundColor().R, m_currentMap->backgroundColor().G, m_currentMap->backgroundColor().B, m_currentMap->backgroundColor().A));
-
-    if ((wireframe && pass == 1) || !wireframe)
-    {
-        if (m_currentMap)
-        {
-            for (Uint32 y = 0; y < m_currentMap->height()/m_currentMap->tileHeight(); y++)
-            {
-                if ((y * m_currentMap->tileHeight()) < camera().position().y - m_currentMap->tileHeight() ||
-                        (y * m_currentMap->tileHeight()) > camera().position().y + camera().size().y)
-                    continue;
-
-                for (Uint32 x = 0; x < m_currentMap->width()/m_currentMap->tileWidth(); x++)
-                {
-                    if ((x * m_currentMap->tileWidth()) < camera().position().x - m_currentMap->tileWidth() ||
-                            (x * m_currentMap->tileWidth()) > camera().position().x + camera().size().x)
-                        continue;
-                    Cell* cell = m_currentMap->collision(x, y);
-                    if (cell)
-                    {
-                        if (cell->CollisionType == ColTypeNone)
-                            continue;
-
-                        if ((cell->CollisionType & ColTypeAngle45) == ColTypeAngle45)
-                            m_colShape.setFillColor(sf::Color::Yellow);
-                        else if ((cell->CollisionType & ColTypeJump) == ColTypeJump)
-                            m_colShape.setFillColor(sf::Color::Green);
-                        else if ((cell->CollisionType & ColTypeWaterShallow) == ColTypeWaterShallow)
-                            m_colShape.setFillColor(sf::Color(200, 24, 255));
-                        else if ((cell->CollisionType & ColTypeWaterDeep) == ColTypeWaterDeep)
-                            m_colShape.setFillColor(sf::Color::Blue);
-                        else if ((cell->CollisionType & ColTypeDamage) == ColTypeDamage)
-                            m_colShape.setFillColor(sf::Color::Red);
-                        else if ((cell->CollisionType & ColTypeStair) == ColTypeStair)
-                            m_colShape.setFillColor(sf::Color(100, 68, 255));
-                        else
-                            m_colShape.setFillColor(sf::Color::Black);
-
-                        m_colShape.setPosition(x * m_currentMap->tileWidth(), y * m_currentMap->tileHeight());
-
-
-                        window().draw(m_colShape);
-                    }
-                }
-            }
-        }
-    }
-    entityManager().draw(window());
 }
 
 void Engine::setWireframe(bool mode)
@@ -545,23 +334,6 @@ void Engine::setFullscreen(bool isFullscreen)
 Map* Engine::currentMap() const
 {
     return m_currentMap;
-}
-
-std::string Engine::stateString()
-{
-    switch(m_state)
-    {
-        case StateSplash:
-            return "Splash";
-
-        case StateMenu:
-            return "Menu";
-
-        case StateGame:
-            return "Game";
-    }
-
-    return "Unknown";
 }
 
 void Engine::toggleFullscreen()

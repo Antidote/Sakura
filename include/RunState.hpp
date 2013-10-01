@@ -7,10 +7,18 @@
 class RunState
 {
 public:
+    enum Type
+    {
+        Logo,
+        Menu,
+        Game
+    };
+
     virtual void initialize() =0;
     virtual void update(sf::Time dt)=0;
     virtual void draw(sf::RenderTarget& rt)=0;
     virtual bool isInitialized() const=0;
+    virtual Type type() const=0;
 };
 
 #endif // RUNSTATE_HPP

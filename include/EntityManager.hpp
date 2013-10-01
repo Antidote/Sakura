@@ -18,7 +18,7 @@ public:
     Entity* entity(const std::string& name);
     std::vector<Entity*> entities() const;
 
-    Entity* player() const;
+    Entity* player(const std::string& name) const;
 
     void addEntity(Entity* e);
     void removeEntity(Entity* e);

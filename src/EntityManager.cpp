@@ -28,14 +28,7 @@ void EntityManager::addEntity(Entity* e)
 
     if (e->type() == Entity::Player)
     {
-        if (m_playerSpawned)
-        {
-            Engine::instance().console().print(Console::Error, "Only one player entity may exist in the world\n");
-            delete e;
-            e = NULL;
-            return;
-        }
-        m_playerSpawned = true;
+        Engine::instance().console().print(Console::Info, "Spawned player with name %s\n", e->name().c_str());
     }
 
     m_entities.push_back(e);
@@ -81,13 +74,13 @@ std::vector<Entity*> EntityManager::entities() const
     return m_entities;
 }
 
-Entity* EntityManager::player() const
+Entity* EntityManager::player(const std::string& name) const
 {
     for(Entity* e : m_entities)
     {
         if (e)
         {
-            if (e->type() == Entity::Player)
+            if (e->type() == Entity::Player && e->name() == name)
                 return e;
         }
     }

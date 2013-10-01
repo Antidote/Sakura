@@ -39,6 +39,7 @@ public:
 
     sf::FloatRect bounds() const;
     std::string name() const;
+    void setName(const std::string& name);
     int id() const;
 
     Type type() const;

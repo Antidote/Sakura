@@ -48,14 +48,10 @@ SOURCES += \
     src/Camera.cpp \
     src/EntityManager.cpp \
     src/Entity.cpp \
-    src/Link.cpp \
     src/Animation.cpp \
     src/AnimatedSprite.cpp \
     src/Killable.cpp \
-    src/Octorok.cpp \
-    src/Hud.cpp \
     src/Collideable.cpp \
-    src/HeartPickup.cpp \
     src/SoundResource.cpp \
     src/ResourceManager.cpp \
     src/TextureResource.cpp \
@@ -80,7 +76,8 @@ SOURCES += \
     src/GameState.cpp \
     src/MapFileReader.cpp \
     src/Map.cpp \
-    src/Layer.cpp
+    src/Layer.cpp \
+    src/Player.cpp
 
 INCLUDEPATH +=  \
     ../libzelda/include \
@@ -96,13 +93,9 @@ HEADERS += \
     include/Camera.hpp \
     include/EntityManager.hpp \
     include/Entity.hpp \
-    include/Link.hpp \
     include/Animation.hpp \
     include/AnimatedSprite.hpp \
     include/Killable.hpp \
-    include/Octorok.hpp \
-    include/Hud.hpp \
-    include/HeartPickup.hpp \
     include/Collideable.hpp \
     include/SoundResource.hpp \
     include/Resource.hpp \
@@ -137,6 +130,7 @@ HEADERS += \
     include/GameState.hpp \
     include/MapFileReader.hpp \
     include/Map.hpp \
-    include/Layer.hpp
+    include/Layer.hpp \
+    include/Player.hpp
 
 
