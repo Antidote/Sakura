@@ -11,6 +11,7 @@
 #include <iomanip>
 #include "x86cpuinfo.h"
 #include "FontResource.hpp"
+#include "RunState.hpp"
 #include "MusicResource.hpp"
 #include "TextureResource.hpp"
 #include "SoundResource.hpp"
@@ -137,6 +138,11 @@ void Engine::restart()
 
 int Engine::run()
 {
+    if (!m_currentState && m_states.size() <= 0)
+    {
+        console().print(Console::Fatal, "No states specified!!!");
+    }
+
     console().print(Console::Info, "Entering main loop...");
     while(window().isOpen())
     {
@@ -170,7 +176,6 @@ int Engine::run()
         }
 
         camera().update();
-
         console().update(m_lastTime);
         m_fpsString.setColor(sf::Color::White);
         m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
@@ -202,6 +207,17 @@ int Engine::run()
         {
             entityManager().think(m_lastTime);
             entityManager().update(m_lastTime);
+
+            if (m_currentState->isDone())
+            {
+                m_states.erase(m_currentState->name());
+                RunState* oldState = m_currentState;
+                m_currentState = oldState->nextState();
+
+                delete oldState;
+            }
+
+            m_currentState->update(m_lastTime);
         }
 
         for (int i = 0; i < (config().settingBoolean("r_drawwire", false) ? 2 : 1); i++)
@@ -219,6 +235,9 @@ int Engine::run()
 
             if (config().settingBoolean("sys_showstats", false))
                 window().draw(m_statsString);
+
+            m_currentState->draw(window());
+            entityManager().draw(window());
 
             console().draw(window());
             if (config().settingBoolean("r_showfps", false))
@@ -329,6 +348,28 @@ void Engine::setFullscreen(bool isFullscreen)
         window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Fullscreen);
     else
         window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Titlebar | sf::Style::Close);
+}
+
+void Engine::setCurrentState(const std::string& state)
+{
+    if (m_states.find(state) == m_states.end())
+    {
+        console().print(Console::Warning, "No such state %s", state.c_str());
+        return;
+    }
+
+    m_currentState = m_states[state];
+}
+
+RunState* Engine::state(const std::string& state)
+{
+    if (m_states.find(state) == m_states.end())
+    {
+        console().print(Console::Warning, "No such state %s", state.c_str());
+        return NULL;
+    }
+
+    return m_states[state];
 }
 
 Map* Engine::currentMap() const

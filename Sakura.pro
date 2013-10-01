@@ -1,5 +1,5 @@
-TEMPLATE = app
-CONFIG += console
+TEMPLATE = lib
+CONFIG += static
 
 CONFIG(release, release|debug){
     DEFINES -= DEBUG
@@ -29,6 +29,7 @@ win32:LIBS += \
 LIBS += -lsfml-graphics \
         -lsfml-window \
         -lsfml-audio \
+        -lsfml-network \
         -lsfml-system \
         -lphysfs \
         -L../libzelda/lib \
@@ -64,7 +65,6 @@ SOURCES += \
     src/UIManager.cpp \
     src/FontResource.cpp \
     src/Tile.cpp \
-    main.cpp \
     src/JoystickManager.cpp \
     src/memorysize.c \
     src/MusicResource.cpp \

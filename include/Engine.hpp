@@ -66,6 +66,8 @@ public:
     static std::string version();
     void setFullscreen(bool isFullscreen);
 
+    void setCurrentState(const std::string& state);
+    RunState* state(const std::string& state);
     Map* currentMap() const;
 protected:
 private:

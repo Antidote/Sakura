@@ -16,7 +16,7 @@ public:
 protected:
     int  m_hp;
     int  m_maxHp;
-    int  m_hpCounter; // Mostly for link
+    int  m_hpCounter;
     bool m_takeDamage;
 };
 
