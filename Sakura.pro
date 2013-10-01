@@ -1,15 +1,6 @@
 TEMPLATE = lib
 CONFIG += static
-
-CONFIG(release, release|debug){
-    DEFINES -= DEBUG
-    OBJECTS_DIR += release.objs
-}
-
-CONFIG(debug, debug|release){
-    DEFINES += DEBUG
-    OBJECTS_DIR += debug.objs
-}
+DESTDIR = lib
 
 QMAKE_CXXFLAGS += -std=c++0x
 
@@ -33,8 +24,7 @@ LIBS += -lsfml-graphics \
         -lsfml-system \
         -lphysfs \
         -L../libzelda/lib \
-        -lzelda\
-         -lz
+        -lz
 
 unix:LIBS += \
     -lGL \
@@ -43,6 +33,19 @@ unix:LIBS += \
     -lX11 \
     -lopenal
 
+CONFIG(release, release|debug){
+    DEFINES -= DEBUG
+    OBJECTS_DIR += release.objs
+    TARGET = sakura
+    LIBS += -lzelda
+}
+
+CONFIG(debug, debug|release){
+    DEFINES += DEBUG
+    OBJECTS_DIR += debug.objs
+    TARGET = sakura-d
+    LIBS += -lzelda-d
+}
 
 SOURCES += \
     src/Engine.cpp \
