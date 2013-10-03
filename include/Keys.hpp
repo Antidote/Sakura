@@ -1,5 +1,6 @@
 #ifndef KEYS_HPP
 #define KEYS_HPP
+#ifndef DOXYGEN
 
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -149,4 +150,5 @@ static const JoyAxis AxisInfo[8] =
     {"povy", sf::Joystick::PovY},
 };
 
+#endif // DOXYGEN
 #endif // KEYS_HPP

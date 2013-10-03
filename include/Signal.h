@@ -9,6 +9,7 @@
 
 #ifndef _Signal_H_
 #define _Signal_H_
+#ifndef DOXYGEN
 
 #include "Delegate.h"
 #include <set>
@@ -656,4 +657,5 @@ public:
 
 } // namespace
 
+#endif // DOXYGEN
 #endif //_SIGNAL_H_

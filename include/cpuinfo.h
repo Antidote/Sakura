@@ -7,6 +7,7 @@
 // [Guard]
 #ifndef _ASMJIT_CORE_CPUINFO_H
 #define _ASMJIT_CORE_CPUINFO_H
+#ifndef DOXYGEN
 #include <SFML/Config.hpp>
 
 
@@ -103,4 +104,5 @@ struct CpuInfo
 } // AsmJit namespace
 
 // [Guard]
+#endif // DOXYGEN
 #endif // _ASMJIT_CORE_CPUINFO_H

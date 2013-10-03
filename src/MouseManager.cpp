@@ -77,7 +77,7 @@ sf::Mouse::Button MouseManager::lastReleased() const
 
 sf::Vector2i MouseManager::mouseLocalPosition()
 {
-    return sf::Mouse::getPosition(Engine::instance().window());
+    return sf::Mouse::getPosition(sEngineRef().window());
 }
 
 sf::Vector2i MouseManager::mouseGlobalPosition()

@@ -117,7 +117,6 @@ HEADERS += \
     include/UIManager.hpp \
     include/FontResource.hpp \
     include/Tile.hpp \
-    include/Rupee.hpp \
     include/JoystickManager.hpp \
     include/memorysize.h \
     include/MusicResource.hpp \

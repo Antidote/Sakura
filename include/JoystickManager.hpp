@@ -8,10 +8,29 @@
 class JoystickManager : public InputBase
 {
 public:
+    /*!
+     * \brief JoystickManager
+     */
     JoystickManager();
+    /*!
+     * \brief update
+     */
     void update();
 
+    /*!
+     * \brief isButtonPressed
+     * \param joystick
+     * \param button
+     * \return
+     */
     bool isButtonPressed(int joystick, int button) const;
+
+    /*!
+     * \brief wasButtonReleased
+     * \param joystick
+     * \param button
+     * \return
+     */
     bool wasButtonReleased(int joystick, int button) const;
 private:
 

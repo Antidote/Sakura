@@ -11,13 +11,35 @@ class Container;
 class UIManager
 {
 public:
+
+    /*!
+     * \brief UIManager
+     */
     UIManager();
     ~UIManager();
 
+    /*!
+     * \brief addContainer
+     * \param c
+     */
     void addContainer(Container* c);
+
+    /*!
+     * \brief removeContainer
+     * \param c
+     */
     void removeContainer(Container* c);
 
+    /*!
+     * \brief update
+     * \param dt
+     */
     void update(sf::Time dt);
+
+    /*!
+     * \brief draw
+     * \param rt
+     */
     void draw(sf::RenderTarget& rt);
 
 private:

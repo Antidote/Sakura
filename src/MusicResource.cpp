@@ -6,18 +6,18 @@
 
 
 MusicResource::MusicResource(const std::string& filename, bool precache)
-    : Resource(ResourceManager::MUSICDIR + filename, precache)
+    : Resource(filename, precache)
 {
     if (precache)
     {
-        Engine::instance().console().print(Console::Info, "Precaching song %s...", m_filename.c_str());
+        sEngineRef().console().print(Console::Info, "Precaching song %s...", m_filename.c_str());
         load();
     }
 }
 
 MusicResource::~MusicResource()
 {
-    Engine::instance().console().print(Console::Info, "Song destroyed %s\n", m_filename.c_str());
+    sEngineRef().console().print(Console::Info, "Song destroyed %s\n", m_filename.c_str());
     delete m_data;
 }
 
@@ -34,7 +34,7 @@ sf::Music* MusicResource::data()
 void MusicResource::load()
 {
     if (!m_precached)
-        Engine::instance().console().print(Console::Info, "Loading song %s...", m_filename.c_str());
+        sEngineRef().console().print(Console::Info, "Loading song %s...", m_filename.c_str());
 
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
@@ -48,12 +48,12 @@ void MusicResource::load()
             if (m_data->openFromMemory(data, PHYSFS_fileLength(file)))
             {
                 m_isLoaded = true;
-                Engine::instance().console().print(Console::Message, "done.");
+                sEngineRef().console().print(Console::Message, "done.");
             }
             else
             {
                 m_isLoaded = false;
-                Engine::instance().console().print(Console::Warning, "failed!\n");
+                sEngineRef().console().print(Console::Warning, "failed!\n");
             }
         }
 

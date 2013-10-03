@@ -2,7 +2,7 @@
 #include "Entity.hpp"
 
 Camera::Camera(const sf::Vector2f &pos, const sf::Vector2f &size)
-    : m_world(sf::Vector2f(1024, 1024)),
+    : m_world(size),
       m_pos(pos),
       m_size(size),
       m_virtualSize(size), // This should never be changed

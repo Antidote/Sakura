@@ -7,6 +7,7 @@
 #include <SFML/Config.hpp>
 
 #include <Entity.hpp>
+#include <Player.hpp>
 #include <iostream>
 #include <iomanip>
 #include "x86cpuinfo.h"
@@ -19,6 +20,7 @@
 
 #include "MapFileReader.hpp"
 #include "Map.hpp"
+#include <utility.hpp>
 #include <sstream>
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -26,12 +28,13 @@
 
 
 const std::string Engine::SAKURA_VERSION = "v0.1a";
+Engine* Engine::m_instance = NULL;
 
 void InputThread()
 {
-    while(Engine::instance().window().isOpen())
+    while(sEngineRef().window().isOpen())
     {
-        Engine::instance().inputManager().update();
+        sEngineRef().inputManager().update();
         sf::sleep(sf::milliseconds(20));
     }
 }
@@ -45,8 +48,10 @@ Engine::Engine()
       m_paused(false),
       m_inputThreadInitialized(false),
       m_clearColor(sf::Color::Black),
-      m_currentMap(NULL)
+      m_currentMap(NULL),
+      m_currentState(NULL)
 {
+    m_instance = this;
     console().print(Console::Info, "Sakura Engine " + version() + ": Initializing");
     console().print(Console::Info, "Built with SFML %i.%i", SFML_VERSION_MAJOR , SFML_VERSION_MINOR);
     console().print(Console::Info, "Build date %s %s", __DATE__, __TIME__);
@@ -84,7 +89,7 @@ void Engine::initialize(int argc, char* argv[])
     console().print(Console::Info, "End Hardware poll");
     // Initailize the ResourceManager
     resourceManager().initialize(argv[0]);
-    resourceManager().loadFont("fonts/debug", new FontResource("courbd.ttf", true));
+    resourceManager().loadFont("fonts/debug.ttf", true);
     m_clearColor = config().settingColor("r_clearcolor", sf::Color::Black);
 
 
@@ -100,18 +105,14 @@ void Engine::initialize(int argc, char* argv[])
     // Initialize the console
     m_console.initialize();
 
-    // Set state to StateSplash just to be sure and load the resources
-    //m_state = StateSplash;
-    //loadSplashResources();
 
-
-    if (resourceManager().fontExists("fonts/debug"))
+    if (resourceManager().fontExists("fonts/debug.ttf"))
     {
-        m_fpsString.setFont(*resourceManager().font("fonts/debug"));
+        m_fpsString.setFont(*resourceManager().font("fonts/debug.ttf"));
         m_fpsString.setCharacterSize(20);
         m_fpsString.setColor(sf::Color::White);
         ((sf::Texture&)m_fpsString.getFont()->getTexture(20)).setSmooth(false);
-        m_statsString.setFont(*resourceManager().font("fonts/debug"));
+        m_statsString.setFont(*resourceManager().font("fonts/debug.ttf"));
         m_statsString.setCharacterSize(20);
         m_statsString.setColor(sf::Color::White);
         ((sf::Texture&)m_statsString.getFont()->getTexture(20)).setSmooth(false);
@@ -124,7 +125,6 @@ void Engine::restart()
     // It checks for fullscreen and goes back to windowed
     // if it was. Then it shuts everything down and runs intialize
     // again
-
     bool wasFullscreen = config().settingBoolean("r_fullscreen", false);
     if (wasFullscreen)
         setFullscreen(false);
@@ -189,30 +189,40 @@ int Engine::run()
             stats << "Live Sounds: " << resourceManager().liveSoundCount() << std::endl;
             stats << "Music Count: " << resourceManager().musicCount() << std::endl;
             stats << "Font Count: " << resourceManager().fontCount() << std::endl;
+            stats << "Current State: " << m_currentState->name() << std::endl;
             stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
             stats << "Camera Size: " << camera().size().x << " " << camera().size().y << std::endl;
             stats << "World Size: " << camera().world().x << " " << camera().world().y << std::endl;
             if (camera().lockedOn())
             {
                 stats << "Camera Target: " << camera().lockedOn()->name() << std::endl;
-            }
+                Player* player = dynamic_cast<Player*>(camera().lockedOn());
 
+                if (player)
+                    stats << "Player Id: " << player->playerId() << std::endl;
+            }
             m_statsString.setString(stats.str());
         }
 
         if (config().settingBoolean("r_clear", true))
             window().clear(m_clearColor);
 
-        if (!console().isOpen())
+        if (m_currentState->type() == RunState::Game && !console().isOpen())
         {
             entityManager().think(m_lastTime);
             entityManager().update(m_lastTime);
+        }
 
-            if (m_currentState->isDone())
+
+        if (!console().isOpen())
+        {
+            if (m_currentState->isDone() && m_currentState->nextState() != NULL)
             {
                 m_states.erase(m_currentState->name());
                 RunState* oldState = m_currentState;
                 m_currentState = oldState->nextState();
+                if (!m_currentState->isInitialized())
+                    m_currentState->initialize();
 
                 delete oldState;
             }
@@ -233,13 +243,15 @@ int Engine::run()
             // Draw the console over everything
             window().setView(m_defaultView);
 
+            m_currentState->draw(window());
+            if (m_currentState->type() == RunState::Game)
+                entityManager().draw(window());
+
             if (config().settingBoolean("sys_showstats", false))
                 window().draw(m_statsString);
 
-            m_currentState->draw(window());
-            entityManager().draw(window());
-
             console().draw(window());
+
             if (config().settingBoolean("r_showfps", false))
                 window().draw(m_fpsString);
 
@@ -293,10 +305,14 @@ Console& Engine::console()
     return m_console;
 }
 
-Engine& Engine::instance()
+Engine& Engine::instanceRef()
 {
-    static Engine engine;
-    return engine;
+    return *m_instance;
+}
+
+Engine* Engine::instancePtr()
+{
+    return m_instance;
 }
 
 sf::RenderWindow& Engine::window()
@@ -321,12 +337,19 @@ void Engine::shutdown()
         window().close();
 
 
+    console().print(Console::Info, "Clearing states");
+    for (std::pair<std::string, RunState*> pair : m_states)
+    {
+        delete pair.second;
+        pair.second = NULL;
+    }
+    m_states.clear();
+
     console().print(Console::Info, "Killing Entity Manager...");
     entityManager().shutdown();
     console().print(Console::Info, "Killing Resource Manager...");
-    entityManager().shutdown();
-    console().print(Console::Info, "Maintenance complete...");
     resourceManager().shutdown();
+    console().print(Console::Info, "Maintenance complete...");
     console().shutdown();
     config().shutdown();
 }
@@ -350,6 +373,12 @@ void Engine::setFullscreen(bool isFullscreen)
         window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Titlebar | sf::Style::Close);
 }
 
+void Engine::setWindowTitle(const std::string& title)
+{
+    config().setSettingLiteral("sys_title", title);
+    window().setTitle(title);
+}
+
 void Engine::setCurrentState(const std::string& state)
 {
     if (m_states.find(state) == m_states.end())
@@ -359,17 +388,35 @@ void Engine::setCurrentState(const std::string& state)
     }
 
     m_currentState = m_states[state];
+    if (!m_currentState->isInitialized())
+        m_currentState->initialize();
 }
 
-RunState* Engine::state(const std::string& state)
+RunState* Engine::state(const std::string& name)
 {
-    if (m_states.find(state) == m_states.end())
+    if (m_states.find(name) == m_states.end())
     {
-        console().print(Console::Warning, "No such state %s", state.c_str());
+        console().print(Console::Warning, "No such state %s", name.c_str());
         return NULL;
     }
 
-    return m_states[state];
+    return m_states[name];
+}
+
+void Engine::addState(RunState* newState)
+{
+    if (m_states.find(newState->name()) != m_states.end())
+    {
+        console().print(Console::Warning, "State %s already exists\n", newState->name().c_str());
+        return;
+    }
+
+    m_states[newState->name()] = newState;
+
+    // If there is no current state specified
+    // go ahead and assign it to the new state
+    if (m_currentState == NULL)
+        m_currentState = newState;
 }
 
 Map* Engine::currentMap() const
@@ -437,6 +484,8 @@ void Engine::printSysInfo()
     std::replace(extension.begin(), extension.end(), ' ', '\n');
 
     console().print(Console::Info, "GL_EXTENSIONS:\n%s",        extension.c_str());
+    int lastOccur;
+    console().print(Console::Info, "Found %i GL Extensions", zelda::utility::countChar(extension, '\n', lastOccur));
     console().print(Console::Info, "GL_DEPTH_BUFFER_BIT  %i", context.depthBits);
     if (alGetString(AL_VENDOR))
         console().print(Console::Info, "AL_VENDOR            %s", alGetString(AL_VENDOR));

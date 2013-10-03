@@ -4,6 +4,9 @@
 class InputBase
 {
 public:
+    /*!
+     * \brief update
+     */
     virtual void update()=0;
 };
 

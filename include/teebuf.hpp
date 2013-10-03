@@ -1,5 +1,6 @@
 #ifndef TEEBUF_HPP
 #define TEEBUF_HPP
+#ifndef DOXYGEN
 
 #include <streambuf>
 
@@ -42,4 +43,5 @@ private:
     std::streambuf * sb2;
 };
 
+#endif // DOXYGEN
 #endif // TEEBUF_HPP

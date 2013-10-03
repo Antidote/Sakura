@@ -6,18 +6,18 @@
 
 
 FontResource::FontResource(const std::string& filepath, bool precache)
-    : Resource(ResourceManager::FONTDIR + filepath, precache)
+    : Resource(filepath, precache)
 {
     if (precache)
     {
-        Engine::instance().console().print(Console::Info, "Precaching font %s...", m_filename.c_str());
+        sEngineRef().console().print(Console::Info, "Precaching font %s...", m_filename.c_str());
         load();
     }
 }
 
 FontResource::~FontResource()
 {
-    Engine::instance().console().print(Console::Info, "Font destroyed %s", m_filename.c_str());
+    sEngineRef().console().print(Console::Info, "Font destroyed %s", m_filename.c_str());
     delete m_data;
 }
 
@@ -34,7 +34,7 @@ sf::Font* FontResource::data()
 void FontResource::load()
 {
     if (!m_precached)
-        Engine::instance().console().print(Console::Info, "Loading font %s...", m_filename.c_str());
+        sEngineRef().console().print(Console::Info, "Loading font %s...", m_filename.c_str());
 
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
@@ -48,12 +48,12 @@ void FontResource::load()
             if (m_data->loadFromMemory(data, PHYSFS_fileLength(file)))
             {
                 m_isLoaded = true;
-                Engine::instance().console().print(Console::Message, "done.");
+                sEngineRef().console().print(Console::Message, "done.");
             }
             else
             {
                 m_isLoaded = false;
-                Engine::instance().console().print(Console::Warning, "failed!");
+                sEngineRef().console().print(Console::Warning, "failed!");
             }
         }
 

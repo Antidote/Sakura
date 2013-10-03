@@ -56,6 +56,6 @@ Tile* Layer::tile(const sf::Vector2f& position)
 
 void Layer::setTiles(const std::vector<Tile*>& tiles)
 {
-    Engine::instance().console().print(Console::Info, "Got %i tiles", tiles.size());
+    sEngineRef().console().print(Console::Info, "Got %i tiles", tiles.size());
     m_tiles = tiles;
 }

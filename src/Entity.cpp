@@ -16,9 +16,9 @@ Entity::Entity(const std::string& name, Type type)
 {
     getUniqueName();
 
-    if (Engine::instance().resourceManager().fontExists("fonts/debug"))
+    if (sEngineRef().resourceManager().fontExists("fonts/debug"))
     {
-        m_debugInfo.setFont(*Engine::instance().resourceManager().font("fonts/debug"));
+        m_debugInfo.setFont(*sEngineRef().resourceManager().font("fonts/debug"));
         m_debugInfo.setCharacterSize(10);
         //m_debugInfo.setStyle(sf::Text::Bold);
         ((sf::Texture&)m_debugInfo.getFont()->getTexture(10)).setSmooth(false);
@@ -114,9 +114,12 @@ void Entity::draw(sf::RenderTarget& rt)
 
 void Entity::getUniqueName()
 {
-    static int id = 0;
+    static int EntityCount = 0;
     std::stringstream ss;
-    ss << m_name << "_" << id++;
-    m_id = id;
-    m_name = ss.str();
+    if (sEngineRef().entityManager().entity(m_name) != NULL && sEngineRef().entityManager().entity(m_name) != this)
+    {
+        ss << m_name << "_" << EntityCount++;
+        m_id = EntityCount;
+        m_name = ss.str();
+    }
 }

@@ -8,6 +8,8 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#ifndef DOXYGEN
+
 #include <limits.h>
 
 #ifdef __cplusplus
@@ -17,4 +19,6 @@ size_t getMemorySize();
 #ifdef __cplusplus
 }
 #endif
+
+#endif // DOXYGEN
 #endif // MEMORY_H

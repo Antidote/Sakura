@@ -7,6 +7,11 @@ template <typename T>
 class Resource
 {
 public:
+    /*!
+     * \brief Resource
+     * \param filename
+     * \param precache
+     */
     Resource(const std::string& filename, bool precache = false)
       : m_filename(filename),
         m_isLoaded(false),
@@ -15,13 +20,45 @@ public:
     {}
 
 
+    /*!
+     * \brief filename
+     * \return
+     */
     std::string filename() const;
+
+    /*!
+     * \brief setData
+     * \param data
+     */
     void setData(T* data);
+
+    /*!
+     * \brief data
+     * \return
+     */
     T* data();
 
+    /*!
+     * \brief load
+     */
     void load();
+
+    /*!
+     * \brief exists
+     * \return
+     */
     bool exists() const;
+
+    /*!
+     * \brief isLoaded
+     * \return
+     */
     bool isLoaded() const;
+
+    /*!
+     * \brief isPrecached
+     * \return
+     */
     bool isPrecached() const;
 protected:
     std::string m_filename;

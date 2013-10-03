@@ -1,5 +1,6 @@
 #include "EntityManager.hpp"
 #include "Entity.hpp"
+#include "Player.hpp"
 #include "Engine.hpp"
 #include "Camera.hpp"
 #include "iostream"
@@ -20,7 +21,7 @@ void EntityManager::addEntity(Entity* e)
 {
     if (checkNames(e->name()))
     {
-        Engine::instance().console().print(Console::Warning, "Entity with name %s already exists\n", e->name().c_str());
+        sEngineRef().console().print(Console::Warning, "Entity with name %s already exists\n", e->name().c_str());
         delete e;
         e = NULL;
         return;
@@ -28,7 +29,7 @@ void EntityManager::addEntity(Entity* e)
 
     if (e->type() == Entity::Player)
     {
-        Engine::instance().console().print(Console::Info, "Spawned player with name %s\n", e->name().c_str());
+        sEngineRef().console().print(Console::Info, "Spawned player with name %s\n", e->name().c_str());
     }
 
     m_entities.push_back(e);
@@ -74,14 +75,31 @@ std::vector<Entity*> EntityManager::entities() const
     return m_entities;
 }
 
-Entity* EntityManager::player(const std::string& name) const
+Player* EntityManager::player(int id) const
 {
+    if (id < 1)
+    {
+        sEngineRef().console().print(Console::Warning, "Invalid player id %i", id);
+        return NULL;
+    }
+
     for(Entity* e : m_entities)
     {
         if (e)
         {
-            if (e->type() == Entity::Player && e->name() == name)
-                return e;
+            if (e->type() == Entity::Player)
+            {
+                Player* p = dynamic_cast<Player*>(e);
+                if (!p)
+                {
+                    sEngineRef().console().print(Console::Fatal, "Entity claims to be player but dynamic_cast failed");
+                    break;
+                }
+                else if (p->playerId() == id)
+                {
+                    return p;
+                }
+            }
         }
     }
 
@@ -99,7 +117,7 @@ void EntityManager::update(sf::Time dt)
 
     for (Entity* e : m_entities)
     {
-        if (!Engine::instance().camera().intersects(e->bounds()) && e->type() != Entity::Player)
+        if (!sEngineRef().camera().intersects(e->bounds()) && e->type() != Entity::Player)
             continue;
         e->update(dt);
     }
@@ -109,7 +127,7 @@ void EntityManager::think(sf::Time dt)
 {
     for (Entity* e : m_entities)
     {
-        if (!Engine::instance().camera().intersects(e->bounds()))
+        if (!sEngineRef().camera().intersects(e->bounds()))
             continue;
         AI* ai = dynamic_cast<AI*>(e);
         // clip all entites that aren't in view
@@ -132,7 +150,7 @@ void EntityManager::draw(sf::RenderTarget& rt)
     for (Entity* e : m_entities)
     {
         // clip all entites that aren't in view
-        if (!Engine::instance().camera().intersects(e->bounds()) && e->type() != Entity::Player)
+        if (!sEngineRef().camera().intersects(e->bounds()) && e->type() != Entity::Player)
             continue;
         e->draw(rt);
     }
@@ -142,7 +160,7 @@ void EntityManager::shutdown()
 {
     if (m_entities.size() > 0)
     {
-        Engine::instance().console().print(Console::Info, "Destroying entities...\n");
+        sEngineRef().console().print(Console::Info, "Destroying entities...\n");
         for(Entity* e : m_entities)
         {
             if (e)

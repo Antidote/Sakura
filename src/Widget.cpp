@@ -121,20 +121,20 @@ void Widget::onMouseLeave()
 
 void Widget::onMouseClick()
 {
-    m_mousePressSignal.Emit(this, Engine::instance().inputManager().mouse().lastPressed());
+    m_mousePressSignal.Emit(this, sEngineRef().inputManager().mouse().lastPressed());
 }
 
 void Widget::update(sf::Time dt)
 {
     ((void)dt);
-    if (contains((sf::Vector2f)Engine::instance().inputManager().mouse().mouseLocalPosition()))
+    if (contains((sf::Vector2f)sEngineRef().inputManager().mouse().mouseLocalPosition()))
     {
         if (!m_mouseIn)
         {
             onMouseEnter();
             m_mouseIn = true;
         }
-        if (Engine::instance().inputManager().mouse().isAnyButtonPressed())
+        if (sEngineRef().inputManager().mouse().isAnyButtonPressed())
             onMouseClick();
     }
     else if (m_mouseIn)

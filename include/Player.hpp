@@ -12,16 +12,20 @@ class Cell;
 class Player : public Entity, public Killable, public Collideable
 {
 public:
-    enum State
-    {
-        Idle,
-        Moving,
-        Lifting,
-        Pushing,
-        Pulling
-    };
-
+    /*!
+     * \brief Player
+     */
     Player();
+
+    /*!
+     * \brief playerId
+     * \return
+     */
+    int playerId() const;
+
+protected:
+    static int PlayerCount;
+    int m_playerId;
 };
 
 #endif // LINK_HPP

@@ -8,22 +8,42 @@
 #include <iostream>
 #include <physfs.h>
 
-const std::string ResourceManager::BASEDIR = std::string("data");
-const std::string ResourceManager::SPRITEDIR = std::string("sprites/");
-const std::string ResourceManager::BACKGROUNDDIR = std::string("backgrounds/");
-const std::string ResourceManager::MAPDIR = std::string("maps/");
-const std::string ResourceManager::SOUNDDIR = std::string("sounds/");
-const std::string ResourceManager::MUSICDIR = std::string("music/");
-const std::string ResourceManager::FONTDIR = std::string("fonts/");
+ResourceManager::ResourceManager()
+{
+    m_defaultTexture = new sf::Texture();
+    sf::Image tmp;
+    tmp.create(32, 32);
+
+    sf::Color fillColor;
+    for (int y = 0; y < 32; y ++)
+    {
+        for (int x = 0; x < 32; x++)
+        {
+            // if x is greater than the half width and y is still less than the half width
+            // as well as if the y is greater than the half width and x is less
+            // fill with red
+            // otherwise fill with transparent
+            if ((x > (32/2) && y < (32/2)) || (x < (32/2) && y > (32/2)))
+                fillColor = sf::Color::Red;
+            else
+                fillColor = sf::Color(255, 255, 255, 50);
+
+            tmp.setPixel(x, y, fillColor);
+        }
+    }
+
+    m_defaultTexture->loadFromImage(tmp);
+}
 
 ResourceManager::~ResourceManager()
 {
+    delete m_defaultTexture;
 }
 
 void ResourceManager::initialize(const char* argv0)
 {
     PHYSFS_init(argv0);
-    PHYSFS_mount("data", "/", 0);
+    PHYSFS_mount(sEngineRef().config().settingLiteral("fs_basepath", "data").c_str(), "/", 0);
 
     char** listBegin = PHYSFS_enumerateFiles("/");
     std::vector<std::string> archives;
@@ -46,13 +66,14 @@ void ResourceManager::initialize(const char* argv0)
 
     for (std::string archive : archives)
     {
-        Engine::instance().console().print(Console::Info, "Mounting archive: %s", archive.c_str());
+        sEngineRef().console().print(Console::Info, "Mounting archive: %s", archive.c_str());
         PHYSFS_mount(archive.c_str(), NULL, 1);
     }
 }
 
-bool ResourceManager::loadSound(const std::string &name, SoundResource *sound)
+bool ResourceManager::loadSound(const std::string &name, bool preload)
 {
+    SoundResource* sound = new SoundResource(name, preload);
     if (sound->exists())
     {
         m_soundBufferResources[name] =  sound;
@@ -76,7 +97,15 @@ void ResourceManager::playSound(const std::string &name)
             m_sounds[name] = new sf::Sound(*m_soundBufferResources[name]->data());
         }
         m_sounds[name]->play();
+        return;
     }
+    else if (loadSound(name, true))
+    {
+        m_sounds[name]->play();
+        return;
+    }
+
+    sEngineRef().console().print(Console::Warning, "Sound resource %s does not exist", name.c_str());
 }
 
 void ResourceManager::removeSound(const std::string &name)
@@ -111,8 +140,13 @@ int ResourceManager::liveSoundCount() const
     return m_sounds.size();
 }
 
-bool ResourceManager::loadMusic(const std::string& name, MusicResource* music)
+bool ResourceManager::loadMusic(const std::string& name, bool preload)
 {
+    if (musicExists(name))
+        return true;
+
+    MusicResource* music = new MusicResource(name, preload);
+
     if (music->exists())
     {
         m_musicResources[name] = music;
@@ -159,8 +193,12 @@ int ResourceManager::musicCount() const
     return m_musicResources.size();
 }
 
-bool ResourceManager::loadTexture(const std::string &name, TextureResource *texture)
+bool ResourceManager::loadTexture(const std::string &name, bool preload)
 {
+    if (textureExists(name))
+        return true;
+
+    TextureResource* texture = new TextureResource(name, preload);
     if (texture->exists())
     {
         m_textureResources[name] = texture;
@@ -172,17 +210,23 @@ bool ResourceManager::loadTexture(const std::string &name, TextureResource *text
     return false;
 }
 
-sf::Texture* ResourceManager::texture(const std::string &name)
+sf::Texture& ResourceManager::texture(const std::string &name)
 {
     if (textureExists(name))
     {
         if (!m_textureResources[name]->isLoaded())
             m_textureResources[name]->load();
 
-        return ((TextureResource*)m_textureResources[name])->data();
+        return *((TextureResource*)m_textureResources[name])->data();
+    }
+    else if (loadTexture(name, true))
+    {
+        return *((TextureResource*)m_textureResources[name])->data();
     }
 
-    return NULL;
+    sEngineRef().console().print(Console::Warning, "Texture %s does not exist", name.c_str());
+    // Draw the default invalid texture.
+    return *m_defaultTexture;
 }
 
 void ResourceManager::removeTexture(const std::string &name)
@@ -209,8 +253,12 @@ int ResourceManager::textureCount() const
     return m_textureResources.size();
 }
 
-bool ResourceManager::loadFont(const std::string& name, FontResource* font)
+bool ResourceManager::loadFont(const std::string& name, bool preload)
 {
+    if (fontExists(name))
+        return true;
+
+    FontResource* font = new FontResource(name, preload);
     if (font->exists())
     {
         m_fontResources.insert(std::make_pair(name, font));
@@ -228,6 +276,10 @@ sf::Font* ResourceManager::font(const std::string& name)
     {
         if (!m_fontResources[name]->isLoaded())
             m_fontResources[name]->load();
+        return ((FontResource*)m_fontResources[name])->data();
+    }
+    else if (loadFont(name, true))
+    {
         return ((FontResource*)m_fontResources[name])->data();
     }
 
@@ -260,14 +312,14 @@ int ResourceManager::fontCount() const
 
 void ResourceManager::shutdown()
 {
-    Engine::instance().console().print(Console::Info, "Shutting down PHYSFS...");
-    PHYSFS_deinit();
     purgeResources();
+    sEngineRef().console().print(Console::Info, "Shutting down PHYSFS...");
+    PHYSFS_deinit();
 }
 
 void ResourceManager::purgeResources()
 {
-    Engine::instance().console().print(Console::Info, "Purging resources...");
+    sEngineRef().console().print(Console::Info, "Purging resources...");
     std::unordered_map<std::string, TextureResource*>::iterator textureIter = m_textureResources.begin();
     for (; textureIter != m_textureResources.end(); ++textureIter)
     {

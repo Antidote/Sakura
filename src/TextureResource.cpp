@@ -9,14 +9,14 @@ TextureResource::TextureResource(const std::string &filename, bool precache)
 {
     if (precache)
     {
-        Engine::instance().console().print(Console::Info, "Precaching texture %s...", m_filename.c_str());
+        sEngineRef().console().print(Console::Info, "Precaching texture %s...", m_filename.c_str());
         load();
     }
 }
 
 TextureResource::~TextureResource()
 {
-    Engine::instance().console().print(Console::Info, "Texture destroyed %s", m_filename.c_str());
+    sEngineRef().console().print(Console::Info, "Texture destroyed %s", m_filename.c_str());
     delete m_data;
 }
 
@@ -33,7 +33,7 @@ sf::Texture* TextureResource::data()
 void TextureResource::load()
 {
     if (!m_precached)
-        Engine::instance().console().print(Console::Info, "Loading texture %s...", m_filename.c_str());
+        sEngineRef().console().print(Console::Info, "Loading texture %s...", m_filename.c_str());
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
     {
@@ -46,12 +46,12 @@ void TextureResource::load()
             if (m_data->loadFromMemory(data, PHYSFS_fileLength(file)))
             {
                 m_isLoaded = true;
-                Engine::instance().console().print(Console::Message, "done.");
+                sEngineRef().console().print(Console::Message, "done.");
             }
             else
             {
                 m_isLoaded = false;
-                Engine::instance().console().print(Console::Warning, "failed!");
+                sEngineRef().console().print(Console::Warning, "failed!");
             }
         }
 
@@ -61,7 +61,7 @@ void TextureResource::load()
     }
     else
     {
-        Engine::instance().console().print(Console::Warning, "Texture %s does not exist", m_filename.c_str());
+        sEngineRef().console().print(Console::Warning, "Texture %s does not exist", m_filename.c_str());
     }
 }
 

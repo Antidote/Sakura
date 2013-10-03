@@ -15,43 +15,170 @@ class FontResource;
 class ResourceManager
 {
 public:
-    static const std::string BASEDIR;
-    static const std::string SPRITEDIR;
-    static const std::string BACKGROUNDDIR;
-    static const std::string MAPDIR;
-    static const std::string SOUNDDIR;
-    static const std::string MUSICDIR;
-    static const std::string FONTDIR;
-
+    /*!
+     * \brief ResourceManager
+     */
+    ResourceManager();
     ~ResourceManager();
+
+    /*!
+     * \brief initialize Initializes the resource subsystem, starting PHYSFS, and mounting any archives (.pak or .zip) available
+     * \param argv0 Used by PHYSFS to determine the current working directory.
+     */
     void initialize(const char* argv0);
-    bool loadSound(const std::string& name, SoundResource* sound);
+
+    /*!
+     * \brief loadSound
+     * \param name
+     * \param preload
+     * \return
+     */
+    bool loadSound(const std::string& name, bool preload = false);
+
+    /*!
+     * \brief playSound Plays a sound, automatically loading it if it does not exist.
+     * \param name
+     */
     void playSound(const std::string& name);
+
+    /*!
+     * \brief removeSound
+     * \param name
+     */
     void removeSound(const std::string& name);
+
+    /*!
+     * \brief soundExists
+     * \param name
+     * \return
+     */
     bool soundExists(const std::string& name);
+
+    /*!
+     * \brief soundCount
+     * \return
+     */
     int soundCount() const;
+
+    /*!
+     * \brief liveSoundCount
+     * \return
+     */
     int liveSoundCount() const;
 
-    bool loadMusic(const std::string& name, MusicResource* sound);
+    /*!
+     * \brief loadMusic
+     * \param name
+     * \param preload
+     * \return
+     */
+    bool loadMusic(const std::string& name, bool preload = false);
+
+    /*!
+     * \brief playMusic
+     * \param name
+     */
     void playMusic(const std::string& name);
+
+    /*!
+     * \brief removeMusic
+     * \param name
+     */
     void removeMusic(const std::string& name);
+
+    /*!
+     * \brief musicExists
+     * \param name
+     * \return
+     */
     bool musicExists(const std::string& name);
+
+    /*!
+     * \brief musicCount
+     * \return
+     */
     int musicCount() const;
 
-    bool loadTexture(const std::string& name, TextureResource* texture);
-    sf::Texture* texture(const std::string& name);
+    /*!
+     * \brief loadTexture
+     * \param name
+     * \param preload
+     * \return
+     */
+    bool loadTexture(const std::string& name, bool preload = false);
+
+    /*!
+     * \brief texture
+     * \param name
+     * \return
+     */
+    sf::Texture& texture(const std::string& name);
+
+    /*!
+     * \brief removeTexture
+     * \param name
+     */
     void removeTexture(const std::string& name);
+
+    /*!
+     * \brief textureExists
+     * \param name
+     * \return
+     */
     bool textureExists(const std::string& name);
+
+    /*!
+     * \brief textureCount
+     * \return
+     */
     int textureCount() const;
 
-    bool loadFont(const std::string& name, FontResource* font);
+    /*!
+     * \brief loadFont
+     * \param name
+     * \param preload
+     * \return
+     */
+    bool loadFont(const std::string& name, bool preload = false);
+
+    /*!
+     * \brief font
+     * \param name
+     * \return
+     */
     sf::Font* font(const std::string& name);
+
+    /*!
+     * \brief removeFont
+     * \param name
+     */
     void removeFont(const std::string& name);
+
+    /*!
+     * \brief fontExists
+     * \param name
+     * \return
+     */
     bool fontExists(const std::string& name);
+
+    /*!
+     * \brief fontCount
+     * \return
+     */
     int fontCount() const;
+
+    /*!
+     * \brief shutdown
+     */
     void shutdown();
+
+    /*!
+     * \brief purgeResources
+     */
     void purgeResources();
+
 private:
+    sf::Texture*                                      m_defaultTexture;
 
     std::unordered_map<std::string, SoundResource*>   m_soundBufferResources;
     std::unordered_map<std::string, sf::Sound*>       m_sounds;

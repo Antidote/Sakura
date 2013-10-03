@@ -70,6 +70,8 @@
 #ifndef _Delegate_H_
 #define _Delegate_H_
 
+#ifndef DOXYGEN
+
 #if _MSC_VER > 1000
     #pragma once
 #endif // _MSC_VER > 1000
@@ -2147,4 +2149,5 @@ Delegate8<Param1, Param2, Param3, Param4, Param5, Param6, Param7, Param8, FASTDL
 } // namespace
 #undef UNUSED
 
+#endif // DOXYGEN
 #endif //_DELEGATES_H_

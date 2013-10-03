@@ -8,8 +8,18 @@
 class ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief ~ConsoleCommandBase
+     */
     virtual ~ConsoleCommandBase(){}
+    /*!
+     * \brief usage
+     */
     virtual void usage() = 0;
+    /*!
+     * \brief execute
+     * \param args
+     */
     virtual void execute(std::vector<std::string> args) = 0;
 };
 
@@ -19,10 +29,21 @@ public:
 class QuitCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief QuitCommand
+     */
     QuitCommand() {}
     ~QuitCommand() {}
 
+    /*!
+     * \brief usage
+     */
     void usage();
+
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
@@ -32,20 +53,42 @@ public:
 class FullscreenCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief FullscreenCommand
+     */
     FullscreenCommand() {};
+
     ~FullscreenCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
 class ClearCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief ClearCommand
+     */
     ClearCommand() {};
     ~ClearCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
@@ -53,50 +96,103 @@ public:
 class WireframeCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief WireframeCommand
+     */
     WireframeCommand() {};
     ~WireframeCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
 class PlayCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief PlayCommand
+     */
     PlayCommand() {};
     ~PlayCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
 class BindCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief BindCommand
+     */
     BindCommand() {};
     ~BindCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
 class UnbindCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief UnbindCommand
+     */
     UnbindCommand() {};
     ~UnbindCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 
 class RestartCommand : public ConsoleCommandBase
 {
 public:
+    /*!
+     * \brief RestartCommand
+     */
     RestartCommand() {};
     ~RestartCommand() {};
 
+    /*!
+     * \brief usage
+     */
     void usage();
+
+    /*!
+     * \brief execute
+     * \param args
+     */
     void execute(std::vector<std::string> args);
 };
 

@@ -5,6 +5,7 @@
 // Zlib - See COPYING file in this package.
 
 #define ASMJIT_EXPORTS
+#ifndef DOXYGEN
 
 // [Dependencies - AsmJit]
 #include "x86cpuinfo.h"
@@ -296,3 +297,5 @@ void x86CpuDetect(X86CpuInfo* out)
 #endif
 
 } // AsmJit
+
+#endif // DOXYGEN

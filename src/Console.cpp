@@ -1,6 +1,7 @@
 #include "Console.hpp"
 #include "Engine.hpp"
 #include "TextureResource.hpp"
+#include "SoundResource.hpp"
 #include <iostream>
 
 #include <stdarg.h>
@@ -56,14 +57,14 @@ void Console::initialize()
     m_borderShape.setOutlineColor(sf::Color::Red);
     m_borderShape.setOutlineThickness(1.f);
 
-    m_conHeight = Engine::instance().config().settingInt("con_height", 240);
+    m_conHeight = sEngineRef().config().settingInt("con_height", 240);
 
-    if (Engine::instance().resourceManager().fontExists("fonts/debug"))
+    if (sEngineRef().resourceManager().fontExists("fonts/debug.ttf"))
     {
-        m_commandText.setFont(*Engine::instance().resourceManager().font("fonts/debug"));
+        m_commandText.setFont(*sEngineRef().resourceManager().font("fonts/debug.ttf"));
         m_commandText.setCharacterSize(15);
         ((sf::Texture&)m_commandText.getFont()->getTexture(m_commandText.getCharacterSize())).setSmooth(false);
-        m_drawText.setFont(*Engine::instance().resourceManager().font("fonts/debug"));
+        m_drawText.setFont(*sEngineRef().resourceManager().font("fonts/debug.ttf"));
         m_drawText.setCharacterSize(15);
         ((sf::Texture&)m_drawText.getFont()->getTexture(m_drawText.getCharacterSize())).setSmooth(false);
         recalcMaxLines();
@@ -73,25 +74,13 @@ void Console::initialize()
         print(Fatal, "Unable to access font resource!");
     }
 
-    if (!Engine::instance().resourceManager().textureExists("console/bg1"))
-        Engine::instance().resourceManager().loadTexture("console/bg1", new TextureResource("console/bg1.png", true));
-    if (!Engine::instance().resourceManager().textureExists("console/bg2"))
-        Engine::instance().resourceManager().loadTexture("console/bg2", new TextureResource("console/bg2.png", true));
+    m_consoleBg1.setTexture(sEngineRef().resourceManager().texture("console/bg1.png"));
+    ((sf::Texture*)m_consoleBg1.getTexture())->setRepeated(true);
+    ((sf::Texture*)m_consoleBg1.getTexture())->setSmooth(false);
 
-    // double check before setting JUST in case
-    if (Engine::instance().resourceManager().textureExists("console/bg1"))
-    {
-        m_consoleBg1.setTexture(*Engine::instance().resourceManager().texture("console/bg1"));
-        ((sf::Texture*)m_consoleBg1.getTexture())->setRepeated(true);
-        ((sf::Texture*)m_consoleBg1.getTexture())->setSmooth(false);
-    }
-
-    if (Engine::instance().resourceManager().textureExists("console/bg2"))
-    {
-        m_consoleBg2.setTexture(*Engine::instance().resourceManager().texture("console/bg2"));
-        ((sf::Texture*)m_consoleBg2.getTexture())->setRepeated(true);
-        ((sf::Texture*)m_consoleBg2.getTexture())->setSmooth(false);
-    }
+    m_consoleBg2.setTexture(sEngineRef().resourceManager().texture("console/bg2.png"));
+    ((sf::Texture*)m_consoleBg2.getTexture())->setRepeated(true);
+    ((sf::Texture*)m_consoleBg2.getTexture())->setSmooth(false);
 
     m_isInitialized = true;
 }
@@ -129,11 +118,11 @@ void Console::handleText(const sf::Uint32 unicode)
 #ifdef SFML_SYSTEM_LINUX
     if (unicode == XK_grave || unicode == XK_dead_grave)
     {
-        if (Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::LShift) ||
-            Engine::instance().inputManager().keyboard().isKeyDown(sf::Keyboard::RShift))
-            m_conHeight = Engine::instance().config().settingInt("vid_height", 480);
+        if (sEngineRef().inputManager().keyboard().isKeyDown(sf::Keyboard::LShift) ||
+            sEngineRef().inputManager().keyboard().isKeyDown(sf::Keyboard::RShift))
+            m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
         else
-            m_conHeight = Engine::instance().config().settingInt("con_height", 320);
+            m_conHeight = sEngineRef().config().settingInt("con_height", 320);
 
         toggleConsole();
         return;
@@ -164,18 +153,21 @@ void Console::toggleConsole()
     if (m_state == Closed || m_state == Closing)
     {
         m_state = Opening;
+        sEngineRef().resourceManager().playSound("sounds/LTTP_Pause_Open.wav");
     }
     else
     {
         m_state = Closing;
+        sEngineRef().resourceManager().playSound("sounds/LTTP_Pause_Close.wav");
     }
 
     m_commandString = "";
     m_cursorPosition = 0;
     m_cursorX = 0;
+    m_currentCommand = 0;
 
     if (m_hadFatalError)
-        Engine::instance().window().close();
+        sEngineRef().window().close();
 }
 
 void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system)
@@ -198,13 +190,13 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     // Handle toggling of fullscreen (is this the best place for this?)
     if (code == sf::Keyboard::Return && alt)
     {
-        Engine::instance().toggleFullscreen();
+        sEngineRef().toggleFullscreen();
         return;
     }
     // This should probably be in the even loop not here
-    if (code == Engine::instance().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
+    if (code == sEngineRef().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
     {
-        Engine::instance().window().close();
+        sEngineRef().window().close();
         return;
     }
 
@@ -372,11 +364,11 @@ void Console::handleMouseWheel(int delta, int x, int y)
 
 void Console::update(const sf::Time& dt)
 {
-    m_maxLines = std::ceil((m_conY / m_drawText.getCharacterSize()) - 3);
+    m_maxLines = std::ceil((m_conY / m_drawText.getCharacterSize()) - 2);
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)
-            m_conY += dt.asSeconds()*Engine::instance().config().settingFloat("con_speed", 200.f);
+            m_conY += dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 200.f);
     }
     else if (m_state == Opening && m_conY > m_conHeight)
     {
@@ -389,7 +381,7 @@ void Console::update(const sf::Time& dt)
 
     if (m_state == Closing && m_conY > m_drawText.getCharacterSize())
     {
-        m_conY -= dt.asSeconds()*Engine::instance().config().settingFloat("con_speed", 200.f);
+        m_conY -= dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 200.f);
     }
     else if (m_conY < m_drawText.getCharacterSize() && m_state == Closing)
     {
@@ -410,14 +402,14 @@ void Console::update(const sf::Time& dt)
 
     m_bgOffset += 32.f*dt.asSeconds();
     if (m_consoleBg1.getTexture())
-        m_consoleBg1.setTextureRect(sf::IntRect(m_bgOffset, m_bgOffset, Engine::instance().window().getSize().x, m_conY + (m_drawText.getCharacterSize()/2) - 4));
+        m_consoleBg1.setTextureRect(sf::IntRect(m_bgOffset, m_bgOffset, sEngineRef().window().getSize().x, m_conY + (m_drawText.getCharacterSize()/2) - 4));
     if (m_consoleBg2.getTexture())
-        m_consoleBg2.setTextureRect(sf::IntRect(-m_bgOffset, m_bgOffset, Engine::instance().window().getSize().x, m_conY + (m_drawText.getCharacterSize()/2) - 4));
+        m_consoleBg2.setTextureRect(sf::IntRect(-m_bgOffset, m_bgOffset, sEngineRef().window().getSize().x, m_conY + (m_drawText.getCharacterSize()/2) - 4));
 
-    m_borderShape.setSize(sf::Vector2f(Engine::instance().window().getSize().x - 2, (m_conY + (m_drawText.getCharacterSize()/2))- 6));
-    m_consoleBg1.setColor(Engine::instance().config().settingColor("con_color", m_defaultConColor));
-    m_consoleBg2.setColor(Engine::instance().config().settingColor("con_color", m_defaultConColor));
-    m_borderShape.setOutlineColor(Engine::instance().config().settingColor("con_color", m_defaultConColor));
+    m_borderShape.setSize(sf::Vector2f(sEngineRef().window().getSize().x - 2, (m_conY + (m_drawText.getCharacterSize()/2))- 6));
+    m_consoleBg1.setColor(sEngineRef().config().settingColor("con_color", m_defaultConColor));
+    m_consoleBg2.setColor(sEngineRef().config().settingColor("con_color", m_defaultConColor));
+    m_borderShape.setOutlineColor(sEngineRef().config().settingColor("con_color", m_defaultConColor));
     sf::String tmp = "]" + m_commandString;
 
 
@@ -433,7 +425,7 @@ void Console::update(const sf::Time& dt)
             if (!m_showCursor)
                 m_cursorShape.setFillColor(sf::Color::Transparent);
             else
-                m_cursorShape.setFillColor(Engine::instance().config().settingColor("con_textcolor", sf::Color::White));
+                m_cursorShape.setFillColor(sEngineRef().config().settingColor("con_textcolor", sf::Color::White));
             m_cursorShape.setOutlineColor(sf::Color::Transparent);
             m_cursorShape.setOutlineThickness(0.f);
             m_cursorShape.setSize(sf::Vector2f(1, m_commandText.getCharacterSize()));
@@ -443,7 +435,7 @@ void Console::update(const sf::Time& dt)
             if (!m_showCursor)
                 m_cursorShape.setOutlineColor(sf::Color::Transparent);
             else
-                m_cursorShape.setOutlineColor(Engine::instance().config().settingColor("con_textcolor", sf::Color::White));
+                m_cursorShape.setOutlineColor(sEngineRef().config().settingColor("con_textcolor", sf::Color::White));
             m_cursorShape.setOutlineThickness(1.f);
             m_cursorShape.setFillColor(sf::Color::Transparent);
             m_cursorShape.setSize(sf::Vector2f(glyphW - 3, m_commandText.getCharacterSize()));
@@ -477,7 +469,7 @@ void Console::draw(sf::RenderWindow& rt)
             if (m_startString != 0)
             {
                 sf::String sepString;
-                for (int x = 0; x < Engine::instance().window().getSize().x - (versionWidth + sepWidth); x += sepWidth)
+                for (int x = 0; x < sEngineRef().window().getSize().x - (versionWidth + sepWidth); x += sepWidth)
                 {
                     sepString += " ^";
                 }
@@ -487,7 +479,8 @@ void Console::draw(sf::RenderWindow& rt)
             }
 
             m_drawText.setString(Engine::version());
-            m_drawText.setPosition(Engine::instance().window().getSize().x - versionWidth,
+            m_drawText.setColor(sEngineRef().config().settingColor("con_textcolor", sf::Color::White));
+            m_drawText.setPosition(sEngineRef().window().getSize().x - versionWidth,
                                    (m_conY - 20) - m_drawText.getCharacterSize());
             rt.draw(m_drawText);
 
@@ -497,7 +490,7 @@ void Console::draw(sf::RenderWindow& rt)
             int line = 0;
             for (; iter != m_history.rend(); ++iter)
             {
-                if (line > m_maxLines + 1)
+                if (line > m_maxLines)
                     break;
 
                 switch(((LogEntry)*iter).level)
@@ -505,7 +498,7 @@ void Console::draw(sf::RenderWindow& rt)
                     // Info and message use the same color
                     case Message:
                     case Info:
-                        m_drawText.setColor(Engine::instance().config().settingColor("con_textcolor", sf::Color::White));
+                        m_drawText.setColor(sEngineRef().config().settingColor("con_textcolor", sf::Color::White));
                         break;
                     case Warning:
                         m_drawText.setColor(sf::Color::Yellow);
@@ -527,7 +520,7 @@ void Console::draw(sf::RenderWindow& rt)
                 posY -= m_drawText.getCharacterSize(); //m_drawText.getCharacterSize() + 8;
                 line++;
             }
-            m_commandText.setColor(Engine::instance().config().settingColor("con_textcolor", sf::Color::White));
+            m_commandText.setColor(sEngineRef().config().settingColor("con_textcolor", sf::Color::White));
 
             rt.draw(m_commandText);
         }
@@ -599,6 +592,8 @@ void Console::print(Console::Level level, const std::string& fmt, ...)
         if (m_startString > 0)
             m_startString++;
 
+        // print to console just incase there is no font
+        // and the user can't read it.
         std::cout << timestamp << entry.message.toAnsiString() << std::endl;
     }
 
@@ -606,12 +601,9 @@ void Console::print(Console::Level level, const std::string& fmt, ...)
 
     if (level == Console::Fatal)
     {
-        // print to console just incase there is no font
-        // and the user can't read it.
-
         m_hadFatalError = true;
         m_state = Opened;
-        m_conHeight = Engine::instance().config().settingInt("vid_height", 480);
+        m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
         m_conY = m_conHeight;
         recalcMaxLines();
     }
@@ -688,7 +680,7 @@ void Console::parseCommand()
                 // It's probably a setting
                 if (args.size() == 2)
                 {
-                    Engine::instance().config().setSettingLiteral(setting, args[1]);
+                    sEngineRef().config().setSettingLiteral(setting, args[1]);
                 }
                 else if (args.size() > 1)
                 {
@@ -700,10 +692,10 @@ void Console::parseCommand()
                     }
 
                     if (val.size() > 1)
-                        Engine::instance().config().setSettingLiteral(setting, val);
+                        sEngineRef().config().setSettingLiteral(setting, val);
                 }
                 else
-                    print(Info, "%s -> %s", setting.c_str(), Engine::instance().config().settingLiteral(setting).c_str());
+                    print(Info, "%s -> %s", setting.c_str(), sEngineRef().config().settingLiteral(setting).c_str());
             }
         }
     }

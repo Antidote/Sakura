@@ -1,5 +1,7 @@
 #ifndef TEESTREAM_H
 #define TEESTREAM_H
+#ifndef DOXYGEN
+
 #include "teebuf.hpp"
 #include <iostream>
 class teestream : public std::ostream
@@ -18,4 +20,5 @@ private:
 
 
 
+#endif // DOXYGEN
 #endif // TEESTREAM_H

@@ -23,6 +23,7 @@
 
 #ifndef ANIMATION_INCLUDE
 #define ANIMATION_INCLUDE
+#ifndef DOXYGEN
 
 #include <vector>
 #include <SFML/Graphics/Rect.hpp>
@@ -46,4 +47,5 @@ private:
     sf::IntRect m_noFrame;
 };
 
+#endif // DOXYGEN
 #endif // ANIMATION_INCLUDE

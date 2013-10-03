@@ -37,7 +37,7 @@ namespace AsmJit {
 
 sf::Uint32 CpuInfo::detectNumberOfProcessors()
 {
-#if defined(ASMJIT_WINDOWS)
+#if defined(SFML_SYSTEM_WINDOWS)
   SYSTEM_INFO info;
   ::GetSystemInfo(&info);
   return info.dwNumberOfProcessors;

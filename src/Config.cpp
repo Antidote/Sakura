@@ -21,12 +21,12 @@ void Config::initialize(const std::string& configFile)
     {
         m_configFile = new zelda::io::TextStream(configFile, zelda::io::TextStream::OpenOrCreate);
 
-        Engine::instance().console().print(Console::Info, "Got config\nParsing...");
+        sEngineRef().console().print(Console::Info, "Got config\nParsing...");
         parse();
     }
     catch(zelda::error::Exception e)
     {
-        Engine::instance().console().print(Console::Error, e.message());
+        sEngineRef().console().print(Console::Error, e.message());
     }
 }
 
@@ -293,7 +293,7 @@ void Config::unbind(const std::string& binding)
         m_joyButtonBinding.clear();
         m_axisBinding.clear();
         m_mouseButtonBinding.clear();
-        Engine::instance().console().print(Console::Info, "Cleared all active bindings");
+        sEngineRef().console().print(Console::Info, "Cleared all active bindings");
         return;
     }
     std::string action;
@@ -536,7 +536,7 @@ void Config::parse()
         {
             if (tokens.size() < 3)
             {
-                Engine::instance().console().print(Console::Warning, "Malformed key binding at line %i", lineNum);
+                sEngineRef().console().print(Console::Warning, "Malformed key binding at line %i", lineNum);
                 continue;
             }
 
@@ -614,7 +614,7 @@ void Config::parse()
         {
             if (tokens.size() < 3)
             {
-                Engine::instance().console().print(Console::Warning, "Malformed set variable at line %i", lineNum);
+                sEngineRef().console().print(Console::Warning, "Malformed set variable at line %i", lineNum);
                 continue;
             }
 
@@ -636,7 +636,7 @@ void Config::parse()
                 int lastIndex;
 
                 if (val.find_last_of('"') == std::string::npos || (zelda::utility::countChar(val, '"', lastIndex) % 2))
-                    Engine::instance().console().print(Console::Warning, "Malformed literal at line %i", lineNum);
+                    sEngineRef().console().print(Console::Warning, "Malformed literal at line %i", lineNum);
 
             }
             else
@@ -650,7 +650,7 @@ void Config::parse()
         }
     }
 
-    Engine::instance().console().print(Console::Info, "Config loaded");
+    sEngineRef().console().print(Console::Info, "Config loaded");
 }
 
 

@@ -7,6 +7,7 @@
 // [Guard]
 #ifndef _ASMJIT_X86_X86CPUINFO_H
 #define _ASMJIT_X86_X86CPUINFO_H
+#ifndef DOXYGEN
 
 // [Dependencies - AsmJit]
 #include <SFML/Config.hpp>
@@ -220,4 +221,5 @@ void x86CpuDetect(X86CpuInfo* out);
 
 
 // [Guard]
+#endif // DOXYGEN
 #endif // _ASMJIT_X86_X86CPUINFO_H

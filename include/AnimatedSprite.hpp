@@ -23,6 +23,7 @@
 
 #ifndef ANIMATEDSPRITE_INCLUDE
 #define ANIMATEDSPRITE_INCLUDE
+#ifndef DOXYGEN
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Time.hpp>
@@ -69,4 +70,5 @@ private:
 
 };
 
+#endif // DOXYGEN
 #endif // ANIMATEDSPRITE_INCLUDE
