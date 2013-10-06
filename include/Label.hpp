@@ -8,22 +8,23 @@
 class Label : public Widget
 {
 public:
+
+    enum Align
+    {
+        Left,
+        Right,
+        Center
+    };
+
     /*!
      * \brief Label
      * \param name
      * \param font
      * \param text
-     * \param group
      * \param visible
      * \param enabled
      */
-    Label(const std::string& name, const sf::Font& font, const std::string& text = "", Group group = GroupNone, bool visible = true, bool enabled = true);
-
-    /*!
-     * \brief setPosition
-     * \param position
-     */
-    void setPosition(const sf::Vector2f &position);
+    Label(const std::string& name, const sf::Font& font, const std::string& text = "", bool visible = true, bool enabled = true);
 
     /*!
      * \brief update
@@ -36,8 +37,17 @@ public:
      * \param rt
      */
     void draw(sf::RenderTarget &rt);
+
+
+    void setAlignment(Align align);
+    Align alignment() const;
+
+    void setFontSize(int fontSize);
+    int fontSize() const;
 private:
     sf::Text m_text;
+    Align m_alignment;
+    sf::Vector2f m_oldPosition;
 };
 
 #endif // LABEL_HPP

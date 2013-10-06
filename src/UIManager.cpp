@@ -59,3 +59,10 @@ void UIManager::draw(sf::RenderTarget& rt)
     for (Container* c : m_containers)
         c->draw(rt);
 }
+
+void UIManager::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system)
+{
+    for (Container* c : m_containers)
+        c->handleInput(code, alt, control, shift, system);
+
+}

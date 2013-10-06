@@ -33,6 +33,12 @@ public:
     bool isAnyKeyPressed();
 
     /*!
+     * \brief isAnyKeyReleased
+     * \return
+     */
+    bool isAnyKeyReleased();
+
+    /*!
      * \brief isKeyDown
      * \param key
      * \return
@@ -45,6 +51,13 @@ public:
      * \return
      */
     bool isKeyUp(sf::Keyboard::Key key);
+
+    /*!
+     * \brief wasKeyPressed
+     * \param key
+     * \return
+     */
+    bool wasKeyPressed(sf::Keyboard::Key key);
 
     /*!
      * \brief wasKeyReleased

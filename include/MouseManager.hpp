@@ -26,10 +26,22 @@ public:
     std::vector<sf::Mouse::Button> pressedButtons();
 
     /*!
+     * \brief releasedButtons
+     * \return
+     */
+    std::vector<sf::Mouse::Button> releasedButtons();
+
+    /*!
      * \brief isAnyButtonPressed
      * \return
      */
     bool isAnyButtonPressed();
+
+    /*!
+     * \brief isAnyButtonReleased
+     * \return
+     */
+    bool isAnyButtonReleased();
 
     /*!
      * \brief isButtonDown
@@ -44,6 +56,13 @@ public:
      * \return
      */
     bool isButtonUp(sf::Mouse::Button button);
+
+    /*!
+     * \brief wasButtonPressed
+     * \param button
+     * \return
+     */
+    bool wasButtonPressed(sf::Mouse::Button button);
 
     /*!
      * \brief wasButtonReleased

@@ -106,7 +106,7 @@ void Console::shutdown()
 
 bool Console::isOpen() const
 {
-    return m_state != Closed && m_state != Closing;
+    return m_state != Closed;
 }
 
 void Console::handleText(const sf::Uint32 unicode)
@@ -170,10 +170,35 @@ void Console::toggleConsole()
         sEngineRef().window().close();
 }
 
+void Console::doAutoComplete()
+{
+    std::string enteredCommand = m_commandString.toAnsiString();
+    zelda::utility::tolower(enteredCommand);
+    std::vector<std::string> potentialMatches;
+    for (std::pair<std::string, ConsoleCommandBase*> pair : m_commands)
+    {
+        if (enteredCommand == ((std::string)pair.first).substr(0, enteredCommand.length()))
+            potentialMatches.push_back(pair.first);
+    }
+
+    if (potentialMatches.size() == 1)
+        m_commandString = potentialMatches[0];
+    else if (potentialMatches.size() > 1)
+    {
+        for (std::string cmd : potentialMatches)
+            print(Message, "%s", cmd.c_str());
+    }
+
+    m_cursorPosition = m_commandString.getSize();
+
+    m_cursorX = 0;
+    for (int i = 0; i < (int)m_commandString.getSize(); i++)
+        m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[i], m_drawText.getCharacterSize(), false).advance);
+}
+
 void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system)
 {
     // shutup compiler, i might need these later
-    UNUSED(shift);
     UNUSED(system);
     // unknown key, don't? Well what do we want with it?
     if (code == sf::Keyboard::Unknown)
@@ -181,11 +206,18 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 
     // Anything but linux should be safe
     // from bug mentioned in handleText
+#ifndef SFML_SYSTEM_LINUX
     if (code == sf::Keyboard::Tilde)
     {
+        if (shift)
+            m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
+        else
+            m_conHeight = sEngineRef().config().settingInt("con_height", 240);
+
         toggleConsole();
         return;
     }
+#endif
 
     // Handle toggling of fullscreen (is this the best place for this?)
     if (code == sf::Keyboard::Return && alt)
@@ -206,8 +238,10 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 
     switch(code)
     {
-
+        case sf::Keyboard::Tab:
+            doAutoComplete();
         break;
+
         case sf::Keyboard::BackSpace:
             if (m_commandString.getSize() > 0)
             {
@@ -282,19 +316,19 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
         {
             if (m_commandHistory.size() == 0)
                 break;
-            m_currentCommand++;
+
             if (m_currentCommand < (int)m_commandHistory.size())
             {
                 m_commandString = m_commandHistory[m_currentCommand];
             }
-            else
-            {
-                m_currentCommand = m_commandHistory.size() - 1;
-                m_commandString = m_commandHistory[m_commandHistory.size() - 1];
-            }
+
             m_drawText.setString(m_commandString);
             m_cursorX = m_drawText.getLocalBounds().width;
             m_cursorPosition = m_commandString.getSize();
+            m_currentCommand++;
+
+            if (m_currentCommand > (int)m_commandHistory.size() - 1)
+                m_currentCommand = m_commandHistory.size() - 1;
         }
             break;
 
@@ -302,19 +336,18 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
         {
             if (m_commandHistory.size() == 0)
                 break;
-            m_currentCommand--;
             if (m_currentCommand >= 0)
             {
                 m_commandString = m_commandHistory[m_currentCommand];
             }
-            else
-            {
-                m_currentCommand = 0;
-                m_commandString = m_commandHistory[0];
-            }
+
             m_drawText.setString(m_commandString);
             m_cursorX = m_drawText.getLocalBounds().width;
             m_cursorPosition = m_commandString.getSize();
+            m_currentCommand--;
+
+            if (m_currentCommand < 0)
+                m_currentCommand = 0;
         }
             break;
 
@@ -364,7 +397,7 @@ void Console::handleMouseWheel(int delta, int x, int y)
 
 void Console::update(const sf::Time& dt)
 {
-    m_maxLines = std::ceil((m_conY / m_drawText.getCharacterSize()) - 2);
+    m_maxLines = ((int)m_conY / m_drawText.getCharacterSize()) + 4;
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)

@@ -14,31 +14,21 @@ class Widget
 {
 public:
     /*!
-     * \brief KeyboardSignal
+     * \brief Signal emitted when a key is pressed.
      */
     typedef Gallant::Signal2<Widget*, sf::Keyboard::Key>    KeyboardSignal;
 
     /*!
-     * \brief MouseButtonSignal
+     * \brief Signal emitted when a mouse button is pressed.
      */
     typedef Gallant::Signal2<Widget*, sf::Mouse::Button>    MouseButtonSignal;
 
     /*!
-     * \brief MouseMoveSignal
+     * \brief Signal emitted when the mouse is moved.
      */
     typedef Gallant::Signal1<Widget*>  MouseMoveSignal;
 
-    /*!
-     * \brief The Group enum
-     */
-    enum Group
-    {
-        GroupAll = -1,
-        GroupNone,
-        GroupSystem,
-        GroupGame,
-        GroupOther
-    };
+    typedef Gallant::Signal1<Widget*> ActivatedSignal;
 
     /*!
      * \brief Widget
@@ -47,7 +37,7 @@ public:
      * \param visible
      * \param enabled
      */
-    Widget(const std::string& name, Group group = GroupNone, bool visible = true, bool enabled = true);
+    Widget(const std::string& name, bool visible = true, bool enabled = true);
 
     /*!
      * \brief Widget
@@ -56,7 +46,7 @@ public:
      * \param position
      * \param size
      */
-    Widget(const std::string& name, Group group, const sf::Vector2f& position, const sf::Vector2f& size);
+    Widget(const std::string& name, const sf::Vector2f& position, const sf::Vector2f& size);
     virtual ~Widget();
 
     /*!
@@ -79,9 +69,29 @@ public:
 
     /*!
      * \brief setPosition
+     * \param x
+     * \param y
+     */
+    void setPosition(const float x, const float y);
+
+    /*!
+     * \brief setPosition
      * \param position
      */
     void setPosition(const sf::Vector2f& position);
+
+    /*!
+     * \brief move
+     * \param x
+     * \param y
+     */
+    void move(const float x, const float y);
+
+    /*!
+     * \brief move
+     * \param pos
+     */
+    void move(const sf::Vector2f& pos);
 
     /*!
      * \brief position
@@ -89,6 +99,12 @@ public:
      */
     sf::Vector2f position() const;
 
+    /*!
+     * \brief setSize
+     * \param w
+     * \param h
+     */
+    void setSize(const float w, const float h);
     /*!
      * \brief setSize
      * \param size
@@ -101,6 +117,9 @@ public:
      */
     sf::Vector2f size() const;
 
+
+    void setColor(const sf::Color& color);
+    sf::Color color() const;
     /*!
      * \brief width
      * \return
@@ -112,6 +131,40 @@ public:
      * \return
      */
     int height() const;
+
+    /*!
+     * \brief setVisible
+     * \param visible
+     */
+    void setVisible(bool visible = true);
+
+    /*!
+     * \brief visible
+     * \return
+     */
+    bool visible() const;
+
+    /*!
+     * \brief show
+     */
+    void show();
+
+    /*!
+     * \brief hide
+     */
+    void hide();
+
+    /*!
+     * \brief setEnabled
+     * \param enabled
+     */
+    void setEnabled(bool enabled = true);
+
+    /*!
+     * \brief enabled
+     * \return
+     */
+    bool enabled() const;
 
     /*!
      * \brief contains
@@ -137,13 +190,19 @@ public:
      * \brief keyRelese
      * \return
      */
-    KeyboardSignal*    keyRelese();
+    KeyboardSignal*    keyRelease();
 
     /*!
      * \brief mousePressed
      * \return
      */
     MouseButtonSignal* mousePressed();
+
+    /*!
+     * \brief mouseReleased
+     * \return
+     */
+    MouseButtonSignal* mouseReleased();
 
     /*!
      * \brief mouseEnter
@@ -158,6 +217,41 @@ public:
     MouseMoveSignal*   mouseLeave();
 
     /*!
+     * \brief activated
+     * \return
+     */
+    ActivatedSignal*   activated();
+
+    /*!
+     * \brief deactivated
+     * \return
+     */
+    ActivatedSignal*   deactivated();
+    /*!
+     * \brief onKeyPressed
+     * \param key
+     */
+    virtual void onKeyPressed(sf::Keyboard::Key key);
+
+    /*!
+     * \brief onKeyReleased
+     * \param key
+     */
+    virtual void onKeyReleased(sf::Keyboard::Key key);
+
+    /*!
+     * \brief onMousePressed
+     * \param button
+     */
+    virtual void onMousePressed(sf::Mouse::Button button);
+
+    /*!
+     * \brief onMouseReleased
+     * \param button
+     */
+    virtual void onMouseReleased(sf::Mouse::Button button);
+
+    /*!
      * \brief onMouseEnter
      */
     virtual void onMouseEnter();
@@ -168,9 +262,14 @@ public:
     virtual void onMouseLeave();
 
     /*!
-     * \brief onMouseClick
+     * \brief onActivated
      */
-    virtual void onMouseClick();
+    virtual void onActivate();
+
+    /*!
+     * \brief onDeactivate
+     */
+    virtual void onDeactivate();
 
     /*!
      * \brief update
@@ -182,12 +281,21 @@ public:
      * \brief draw
      * \param rt
      */
-    virtual void draw(sf::RenderTarget& rt)=0;
+    virtual void draw(sf::RenderTarget& rt);
 
-private:
+    /*!
+     * \brief activate
+     */
+    void activate();
+
+    /*!
+     * \brief deactivate
+     */
+    void deactivate();
+
+protected:
     Container*        m_owner;
     std::string       m_name;
-    Group             m_group;
     bool              m_visible;
     bool              m_enabled;
     sf::Vector2f      m_position;
@@ -196,12 +304,27 @@ private:
     KeyboardSignal    m_keyPressSignal;
     KeyboardSignal    m_keyReleaseSignal;
     MouseButtonSignal m_mousePressSignal;
+    MouseButtonSignal m_mouseReleaseSignal;
     MouseMoveSignal   m_mouseEnter;
     MouseMoveSignal   m_mouseLeave;
+    ActivatedSignal   m_activated;
+    ActivatedSignal   m_deactivated;
 
 
+    sf::Color         m_color;
+    sf::RectangleShape m_testRect;
     // Internal use vars
     bool m_mouseIn;
+    bool m_mouseButtonLeftEmitted;
+    bool m_mouseButtonRightEmitted;
+    bool m_mouseButtonMiddleEmitted;
+    bool m_mouseXButton1Emitted;
+    bool m_mouseXButton2Emitted;
+    bool m_mouseButtonLeftReleasedEmitted;
+    bool m_mouseButtonRightReleasedEmitted;
+    bool m_mouseButtonMiddleReleasedEmitted;
+    bool m_mouseXButton1ReleasedEmitted;
+    bool m_mouseXButton2ReleasedEmitted;
 };
 
 

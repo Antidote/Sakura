@@ -55,7 +55,6 @@ SOURCES += \
     src/Animation.cpp \
     src/AnimatedSprite.cpp \
     src/Killable.cpp \
-    src/Collideable.cpp \
     src/SoundResource.cpp \
     src/ResourceManager.cpp \
     src/TextureResource.cpp \
@@ -133,6 +132,7 @@ HEADERS += \
     include/MapFileReader.hpp \
     include/Map.hpp \
     include/Layer.hpp \
-    include/Player.hpp
+    include/Player.hpp \
+    Mainpage.hpp
 
 

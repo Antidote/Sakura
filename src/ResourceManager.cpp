@@ -140,11 +140,8 @@ int ResourceManager::liveSoundCount() const
     return m_sounds.size();
 }
 
-bool ResourceManager::loadMusic(const std::string& name, bool preload)
+bool ResourceManager::loadSong(const std::string& name, bool preload)
 {
-    if (musicExists(name))
-        return true;
-
     MusicResource* music = new MusicResource(name, preload);
 
     if (music->exists())
@@ -158,7 +155,7 @@ bool ResourceManager::loadMusic(const std::string& name, bool preload)
     return false;
 }
 
-void ResourceManager::playMusic(const std::string& name)
+void ResourceManager::playSong(const std::string& name, bool loop)
 {
     if (((MusicResource*)m_musicResources[name]) != NULL)
     {
@@ -166,11 +163,17 @@ void ResourceManager::playMusic(const std::string& name)
         {
             m_musicResources[name]->load();
         }
+        m_musicResources[name]->data()->setLoop(loop);
+        m_musicResources[name]->data()->play();
+    }
+    else if (loadSong(name, true))
+    {
+        m_musicResources[name]->data()->setLoop(loop);
         m_musicResources[name]->data()->play();
     }
 }
 
-void ResourceManager::removeMusic(const std::string &name)
+void ResourceManager::removeSong(const std::string &name)
 {
     MusicResource* resource = m_musicResources[name];
     m_musicResources.erase(m_musicResources.find(name));
@@ -178,7 +181,7 @@ void ResourceManager::removeMusic(const std::string &name)
     resource = NULL;
 }
 
-bool ResourceManager::musicExists(const std::string& name)
+bool ResourceManager::songExists(const std::string& name)
 {
     std::unordered_map<std::string, MusicResource*>::const_iterator iter = m_musicResources.begin();
     for (; iter != m_musicResources.end(); ++iter)
@@ -188,7 +191,7 @@ bool ResourceManager::musicExists(const std::string& name)
     return false;
 }
 
-int ResourceManager::musicCount() const
+int ResourceManager::songCount() const
 {
     return m_musicResources.size();
 }

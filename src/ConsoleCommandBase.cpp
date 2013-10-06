@@ -79,9 +79,9 @@ void PlayCommand::execute(std::vector<std::string> args)
             return;
         }
 
-        if (sEngineRef().resourceManager().musicExists(args[0]))
+        if (sEngineRef().resourceManager().songExists(args[0]))
         {
-            sEngineRef().resourceManager().playMusic(args[0]);
+            sEngineRef().resourceManager().playSong(args[0]);
             return;
         }
 

@@ -5,6 +5,7 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Time.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 class Container;
 
@@ -42,6 +43,7 @@ public:
      */
     void draw(sf::RenderTarget& rt);
 
+    void handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system);
 private:
     std::vector<Container*> m_containers;
 };

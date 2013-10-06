@@ -12,6 +12,10 @@ class MusicResource;
 class TextureResource;
 class FontResource;
 
+/*!
+ * \class ResourceManager
+ * \brief Manages a list of all resources currently loaded, it's been designed to load resources dynamically.
+ */
 class ResourceManager
 {
 public:
@@ -28,152 +32,153 @@ public:
     void initialize(const char* argv0);
 
     /*!
-     * \brief loadSound
-     * \param name
-     * \param preload
-     * \return
+     * \brief Loads the specified sound if it exists in the filesystem.
+     * \param name The path to the sound
+     * \param preload Whether to load the file immediately, useful if you intend to use the resource right away.
+     * \return True if sound was loaded successfully, false otherwise.
      */
     bool loadSound(const std::string& name, bool preload = false);
 
     /*!
      * \brief playSound Plays a sound, automatically loading it if it does not exist.
-     * \param name
+     * \param name The sound to play
      */
     void playSound(const std::string& name);
 
     /*!
-     * \brief removeSound
-     * \param name
+     * \brief Removes the specified sound if it exists.
+     * \param name The sound to remove.
      */
     void removeSound(const std::string& name);
 
     /*!
-     * \brief soundExists
-     * \param name
-     * \return
+     * \brief Returns whether or not a sound exists in the resource manager
+     * \param name The sound to check
+     * \return True if the sound Exists, false otherwise
      */
     bool soundExists(const std::string& name);
 
     /*!
-     * \brief soundCount
-     * \return
+     * \brief Returns the amount of sounds in the resource manager
+     * \return The number of sounds
      */
     int soundCount() const;
 
     /*!
-     * \brief liveSoundCount
-     * \return
+     * \brief Returns the amount of loaded sounds that have been used in the resource manager
+     * \return The number of loaded sounds that have been used
      */
     int liveSoundCount() const;
 
     /*!
-     * \brief loadMusic
-     * \param name
-     * \param preload
-     * \return
+     * \brief Loads the specified song if it exists in the filesystem.
+     * \param name The path to the song
+     * \param preload Whether to load the file immediately, useful if you intend to use the resource right away.
+     * \return True if song was loaded successfully, false otherwise.
      */
-    bool loadMusic(const std::string& name, bool preload = false);
+    bool loadSong(const std::string& name, bool preload = false);
 
     /*!
-     * \brief playMusic
-     * \param name
+     * \brief playSound Plays a song, automatically loading it if it does not exist.
+     * \param name The song to play
+     * \param loop Whether to loop the song
      */
-    void playMusic(const std::string& name);
+    void playSong(const std::string& name, bool loop = false);
 
     /*!
      * \brief removeMusic
      * \param name
      */
-    void removeMusic(const std::string& name);
+    void removeSong(const std::string& name);
 
     /*!
-     * \brief musicExists
-     * \param name
-     * \return
+     * \brief Returns whether or not a song exists in the resource manager
+     * \param name The sound to check
+     * \return True if the song Exists, false otherwise
      */
-    bool musicExists(const std::string& name);
+    bool songExists(const std::string& name);
 
     /*!
-     * \brief musicCount
-     * \return
+     * \brief Returns the amount of songs in the resource manager
+     * \return The number of songs
      */
-    int musicCount() const;
+    int songCount() const;
 
     /*!
-     * \brief loadTexture
-     * \param name
-     * \param preload
-     * \return
+     * \brief Loads the specified texture if it exists in the filesystem.
+     * \param name The path to the texture
+     * \param preload Whether to load the file immediately, useful if you intend to use the resource right away.
+     * \return True if texture was loaded successfully, false otherwise.
      */
     bool loadTexture(const std::string& name, bool preload = false);
 
     /*!
-     * \brief texture
-     * \param name
-     * \return
+     * \brief Returns the specified texture if it exists, it will also attempt to load it if it's unavailable.
+     * \param name The texture to return.
+     * \return The texture if it exists, NULL otherwise
      */
     sf::Texture& texture(const std::string& name);
 
     /*!
-     * \brief removeTexture
-     * \param name
+     * \brief Removes the specified texture if it exists.
+     * \param name The texture to remove.
      */
     void removeTexture(const std::string& name);
 
     /*!
-     * \brief textureExists
-     * \param name
-     * \return
+     * \brief Returns whether or not a texture exists in the resource manager
+     * \param name The texture to check
+     * \return True if the texture Exists, false otherwise
      */
     bool textureExists(const std::string& name);
 
     /*!
-     * \brief textureCount
-     * \return
+     * \brief Returns the amount of textures in the resource manager
+     * \return The number of textures
      */
     int textureCount() const;
 
     /*!
-     * \brief loadFont
-     * \param name
-     * \param preload
-     * \return
+     * \brief Loads the specified font if it exists in the filesystem.
+     * \param name The path to the font
+     * \param preload Whether to load the file immediately, useful if you intend to use the resource right away.
+     * \return True if font was loaded successfully, false otherwise.
      */
     bool loadFont(const std::string& name, bool preload = false);
 
     /*!
-     * \brief font
-     * \param name
-     * \return
+     * \brief Returns the specified font if it exists, it will also attempt to load it if it's unavailable.
+     * \param name The font to return.
+     * \return The font if it exists, NULL otherwise
      */
     sf::Font* font(const std::string& name);
 
     /*!
-     * \brief removeFont
-     * \param name
+     * \brief Removes the specified font if it exists.
+     * \param name The font to remove.
      */
     void removeFont(const std::string& name);
 
     /*!
-     * \brief fontExists
-     * \param name
-     * \return
+     * \brief Returns whether or not a font exists in the resource manager
+     * \param name The font to check
+     * \return True if the font Exists, false otherwise
      */
     bool fontExists(const std::string& name);
 
     /*!
-     * \brief fontCount
-     * \return
+     * \brief Returns the amount of fonts in the resource manager
+     * \return The number of fonts
      */
     int fontCount() const;
 
     /*!
-     * \brief shutdown
+     * \brief Shuts down the ResourceManager
      */
     void shutdown();
 
     /*!
-     * \brief purgeResources
+     * \brief Removes all Resources.
      */
     void purgeResources();
 

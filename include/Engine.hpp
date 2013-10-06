@@ -244,8 +244,14 @@ protected:
     static Engine*  m_instance;
 };
 
+/*!
+ * \brief Macro to get a reference to the Engine
+ */
 #define sEngineRef Engine::instanceRef
+
+/*!
+ * \brief Macro to get a pointer to the Engine
+ */
 #define sEnginePtr Engine::instancePtr
-#define CON_MESSAGE(fmt, args...) Engine::instanceRef().console().print(Console::Message, fmt, args)
 
 #endif // ENGINE_HPP

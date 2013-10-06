@@ -63,6 +63,18 @@ bool KeyboardManager::isAnyKeyPressed()
     return pressedKeys().size() > 0;
 }
 
+bool KeyboardManager::isAnyKeyReleased()
+{
+    std::vector<sf::Keyboard::Key> ret;
+    for (int i = 0; i < sf::Keyboard::KeyCount - 1; i++)
+    {
+        if (wasKeyReleased((sf::Keyboard::Key)i))
+            ret.push_back((sf::Keyboard::Key)i);
+    }
+
+    return ret.size() > 0;
+}
+
 bool KeyboardManager::isKeyDown(sf::Keyboard::Key key)
 {
     return m_pressedKeys[key];
@@ -71,6 +83,11 @@ bool KeyboardManager::isKeyDown(sf::Keyboard::Key key)
 bool KeyboardManager::isKeyUp(sf::Keyboard::Key key)
 {
     return !m_pressedKeys[key];
+}
+
+bool KeyboardManager::wasKeyPressed(sf::Keyboard::Key key)
+{
+    return (sf::Keyboard::isKeyPressed(key) && !m_pressedKeys[key]);
 }
 
 bool KeyboardManager::wasKeyReleased(sf::Keyboard::Key key)

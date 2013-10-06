@@ -236,7 +236,7 @@ sf::Keyboard::Key Config::keyForAction(const std::string& action, sf::Keyboard::
     return m_keyBinding[actionName];
 }
 
-Int32 Config::joyAxisForAction(const std::string& action, int joy, sf::Joystick::Axis def, bool defNeg, bool &neg)
+Int32 Config::joyAxisForAction(const std::string& action, int joy, sf::Joystick::Axis defAxis, bool defNeg, bool &neg)
 {
     std::string actionName = action;
     zelda::utility::tolower(actionName);
@@ -246,7 +246,7 @@ Int32 Config::joyAxisForAction(const std::string& action, int joy, sf::Joystick:
     {
         Joy _default;
         _default.id = joy;
-        _default.axis = def;
+        _default.axis = defAxis;
         _default.neg = defNeg;
         m_axisBinding[actionName] = _default;
     }

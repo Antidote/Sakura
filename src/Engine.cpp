@@ -92,7 +92,7 @@ void Engine::initialize(int argc, char* argv[])
     resourceManager().loadFont("fonts/debug.ttf", true);
     m_clearColor = config().settingColor("r_clearcolor", sf::Color::Black);
 
-
+/*
     // only initialize the inputthread if it's not already intialized
     // Don't want to have stray threads littering the place
     if (!m_inputThreadInitialized)
@@ -101,7 +101,7 @@ void Engine::initialize(int argc, char* argv[])
         m_inputThread.detach();
         m_inputThreadInitialized = true;
     }
-
+*/
     // Initialize the console
     m_console.initialize();
 
@@ -170,13 +170,19 @@ int Engine::run()
             if (event.type == sf::Event::TextEntered)
                 m_console.handleText(event.text.unicode);
             if (event.type == sf::Event::KeyPressed)
+            {
                 m_console.handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
+                if (!console().isOpen())
+                    uiManager().handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
+            }
             if (event.type == sf::Event::MouseWheelMoved)
                 m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
         }
 
+        inputManager().update();
         camera().update();
         console().update(m_lastTime);
+
         m_fpsString.setColor(sf::Color::White);
         m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
 
@@ -187,7 +193,7 @@ int Engine::run()
             stats << "Texture Count: " << resourceManager().textureCount() << std::endl;
             stats << "Sound Count: " << resourceManager().soundCount() << std::endl;
             stats << "Live Sounds: " << resourceManager().liveSoundCount() << std::endl;
-            stats << "Music Count: " << resourceManager().musicCount() << std::endl;
+            stats << "Music Count: " << resourceManager().songCount() << std::endl;
             stats << "Font Count: " << resourceManager().fontCount() << std::endl;
             stats << "Current State: " << m_currentState->name() << std::endl;
             stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
@@ -226,8 +232,8 @@ int Engine::run()
 
                 delete oldState;
             }
-
-            m_currentState->update(m_lastTime);
+            uiManager().update(m_lastTime);
+            m_currentState->update(m_lastTime);            
         }
 
         for (int i = 0; i < (config().settingBoolean("r_drawwire", false) ? 2 : 1); i++)
@@ -249,6 +255,8 @@ int Engine::run()
 
             if (config().settingBoolean("sys_showstats", false))
                 window().draw(m_statsString);
+
+            uiManager().draw(window());
 
             console().draw(window());
 
@@ -416,7 +424,12 @@ void Engine::addState(RunState* newState)
     // If there is no current state specified
     // go ahead and assign it to the new state
     if (m_currentState == NULL)
+    {
         m_currentState = newState;
+        // If we don't initialize the initial gamestate the engine will choke.
+        // TODO: Find out why
+        m_currentState->initialize();
+    }
 }
 
 Map* Engine::currentMap() const

@@ -1,3 +1,18 @@
+// This file is part of Sakura.
+//
+// libZelda is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// libZelda is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Sakura.  If not, see <http://www.gnu.org/licenses/>
+
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
@@ -23,8 +38,8 @@ public:
 
 
     /*!
-     * \brief initialize
-     * \param configFile
+     * \brief Initializes the Config subsystem with the specified configuration file
+     * \param configFile The configuration file to load
      */
     void initialize     (const std::string& configFile);
 
@@ -34,17 +49,17 @@ public:
     void shutdown();
 
     /*!
-     * \brief bind
-     * \param action
-     * \param commandString
+     * \brief Associates a command with an action
+     * \param action The action to bind e.g "player1.walkleft"
+     * \param commandString The command to bind eg "-joy7.x"
      * \return
      */
     bool bind           (const std::string& action, const std::string& commandString);
 
     /*!
-     * \brief bindKey
-     * \param action
-     * \param key
+     * \brief Associates a Key with an action
+     * \param action The action to bind e.g "player1.walkleft"
+     * \param key The key to bind eg "a"
      */
     void bindKey        (const std::string& action, sf::Keyboard::Key key);
 
@@ -81,15 +96,15 @@ public:
     sf::Keyboard::Key keyForAction(const std::string& action, sf::Keyboard::Key def);
 
     /*!
-     * \brief joyAxisForAction
-     * \param action
-     * \param joy
-     * \param def
-     * \param defNeg
-     * \param neg
-     * \return
+     * \brief Returns the joysticks axis for a given action e.g "player1.walkleft"
+     * \param action The requested action
+     * \param joy The requested joystick
+     * \param defAxis The default axis, used if one isn't specified.
+     * \param defNeg The default axis direction, true if negative, false if positive
+     * \param neg The value stored
+     * \return Int32 The axis for the requested action
      */
-    Int32 joyAxisForAction(const std::string& action, int joy, sf::Joystick::Axis def, bool defNeg, bool& neg);
+    Int32 joyAxisForAction(const std::string& action, int joy, sf::Joystick::Axis defAxis, bool defNeg, bool& neg);
 
     /*!
      * \brief joyButtonForAction
@@ -109,8 +124,8 @@ public:
     Int32 mouseButtonForAction(const std::string& action, sf::Mouse::Button def);
 
     /*!
-     * \brief unbind
-     * \param binding
+     * \brief <i>unbind</i> Removes the given action from the binding map
+     * \param binding The binding to remove
      */
     void unbind(const std::string& binding);
 
