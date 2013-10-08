@@ -44,6 +44,7 @@ Engine::Engine()
       m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
       m_lastTime(sf::seconds(0)),
       m_frameLimit(0),
+      m_vsync(false),
       m_fps(0),
       m_paused(false),
       m_inputThreadInitialized(false),
@@ -55,6 +56,8 @@ Engine::Engine()
     console().print(Console::Info, "Sakura Engine " + version() + ": Initializing");
     console().print(Console::Info, "Built with SFML %i.%i", SFML_VERSION_MAJOR , SFML_VERSION_MINOR);
     console().print(Console::Info, "Build date %s %s", __DATE__, __TIME__);
+    // This is a hack to initialize the openALContext
+    sf::Sound snd;
 }
 
 Engine::~Engine()
@@ -75,12 +78,12 @@ void Engine::initialize(int argc, char* argv[])
     console().print(Console::Info, "Creating context...");
     setFullscreen(config().settingBoolean("r_fullscreen", false));
 
-
-
     m_frameLimit = config().settingInt("sys_framelimit", 60);
     window().setFramerateLimit(m_frameLimit);
 
-    window().setVerticalSyncEnabled(config().settingBoolean("sys_vsync", true));
+    m_vsync = config().settingBoolean("sys_vsync", true);
+    window().setVerticalSyncEnabled(m_vsync);
+
     // QUICK GRAB THE VIEW!!!
     m_defaultView = window().getDefaultView();
 
@@ -89,6 +92,7 @@ void Engine::initialize(int argc, char* argv[])
     console().print(Console::Info, "End Hardware poll");
     // Initailize the ResourceManager
     resourceManager().initialize(argv[0]);
+
     resourceManager().loadFont("fonts/debug.ttf", true);
     m_clearColor = config().settingColor("r_clearcolor", sf::Color::Black);
 
@@ -151,6 +155,13 @@ int Engine::run()
             m_frameLimit = config().settingInt("sys_framelimit", 60);
             window().setFramerateLimit(m_frameLimit);
         }
+
+        if (config().settingBoolean("sys_vsync", true) != m_vsync)
+        {
+            m_vsync = config().settingBoolean("sys_vsync", true);
+            window().setVerticalSyncEnabled(m_vsync);
+        }
+
         m_lastTime = m_clock.restart();
         m_fps = 1.f / m_lastTime.asSeconds();
 
@@ -172,11 +183,26 @@ int Engine::run()
             if (event.type == sf::Event::KeyPressed)
             {
                 m_console.handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
-                if (!console().isOpen())
-                    uiManager().handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
+                if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
+                    uiManager().handleKeyPress(event.key);
+            }
+            if (event.type == sf::Event::KeyReleased)
+            {
+                if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
+                    uiManager().handleKeyRelease(event.key);
             }
             if (event.type == sf::Event::MouseWheelMoved)
                 m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
+            if (event.type == sf::Event::MouseButtonPressed)
+            {
+                if (!console().isOpen())
+                    uiManager().handleMousePress(event.mouseButton);
+            }
+            if (event.type == sf::Event::MouseButtonReleased)
+            {
+                if (!console().isOpen())
+                    uiManager().handleMouseRelease(event.mouseButton);
+            }
         }
 
         inputManager().update();
@@ -189,16 +215,17 @@ int Engine::run()
         if (config().settingBoolean("sys_showstats", false))
         {
             std::stringstream stats;
-            stats << "Entity Count: " << entityManager().entities().size() << std::endl;
-            stats << "Texture Count: " << resourceManager().textureCount() << std::endl;
-            stats << "Sound Count: " << resourceManager().soundCount() << std::endl;
-            stats << "Live Sounds: " << resourceManager().liveSoundCount() << std::endl;
-            stats << "Music Count: " << resourceManager().songCount() << std::endl;
-            stats << "Font Count: " << resourceManager().fontCount() << std::endl;
-            stats << "Current State: " << m_currentState->name() << std::endl;
+            stats << "Entity Count: "    << entityManager().entities().size() << std::endl;
+            stats << "Texture Count: "   << resourceManager().textureCount() << std::endl;
+            stats << "Sound Count: "     << resourceManager().soundCount() << std::endl;
+            stats << "Live Sounds: "     << resourceManager().liveSoundCount() << std::endl;
+            stats << "Music Count: "     << resourceManager().songCount() << std::endl;
+            stats << "Font Count: "      << resourceManager().fontCount() << std::endl;
+            stats << "Current State: "   << m_currentState->name() << std::endl;
             stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
-            stats << "Camera Size: " << camera().size().x << " " << camera().size().y << std::endl;
-            stats << "World Size: " << camera().world().x << " " << camera().world().y << std::endl;
+            stats << "Camera Size: "     << camera().size().x << " " << camera().size().y << std::endl;
+            stats << "World Size: "      << camera().world().x << " " << camera().world().y << std::endl;
+
             if (camera().lockedOn())
             {
                 stats << "Camera Target: " << camera().lockedOn()->name() << std::endl;
@@ -211,7 +238,7 @@ int Engine::run()
         }
 
         if (config().settingBoolean("r_clear", true))
-            window().clear(m_clearColor);
+            window().clear(config().settingColor("r_clearcolor", sf::Color::Black));
 
         if (m_currentState->type() == RunState::Game && !console().isOpen())
         {
@@ -233,7 +260,7 @@ int Engine::run()
                 delete oldState;
             }
             uiManager().update(m_lastTime);
-            m_currentState->update(m_lastTime);            
+            m_currentState->update(m_lastTime);
         }
 
         for (int i = 0; i < (config().settingBoolean("r_drawwire", false) ? 2 : 1); i++)

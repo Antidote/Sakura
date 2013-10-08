@@ -13,7 +13,7 @@ struct KeyCode
     sf::Keyboard::Key code;
 };
 
-static const KeyCode KeyInfo[100] =
+static const KeyCode KeyInfo[101] =
 {
     {"a",        sf::Keyboard::A},
     {"b",        sf::Keyboard::B},
@@ -53,11 +53,12 @@ static const KeyCode KeyInfo[100] =
     {"9",        sf::Keyboard::Num9},
     {"esc",      sf::Keyboard::Escape},
     {"lcontrol", sf::Keyboard::LControl},
-    {"rcontrol", sf::Keyboard::RControl},
     {"lshift",   sf::Keyboard::LShift},
     {"lalt",     sf::Keyboard::LAlt},
-    {"ralt",     sf::Keyboard::RAlt},
     {"lsys",     sf::Keyboard::LSystem},
+    {"rcontrol", sf::Keyboard::RControl},
+    {"rshift",   sf::Keyboard::RShift},
+    {"ralt",     sf::Keyboard::RAlt},
     {"rsys",     sf::Keyboard::LSystem},
     {"menu",     sf::Keyboard::Menu},
     {"[",        sf::Keyboard::LBracket},
@@ -72,7 +73,7 @@ static const KeyCode KeyInfo[100] =
     {"=",        sf::Keyboard::Equal},
     {"dash",     sf::Keyboard::Dash},
     {"space",    sf::Keyboard::Space},
-    {"enter",    sf::Keyboard::Return},
+    {"return",   sf::Keyboard::Return},
     {"backspace",sf::Keyboard::BackSpace},
     {"tab",      sf::Keyboard::Tab},
     {"pageup",   sf::Keyboard::PageUp},

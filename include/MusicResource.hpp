@@ -4,6 +4,7 @@
 #include "Resource.hpp"
 
 #include <SFML/Audio/Music.hpp>
+#include "PHYSFSStream.hpp"
 #include <string>
 
 class MusicResource : public Resource<sf::Music>
@@ -52,6 +53,7 @@ public:
     bool isPrecached() const;
 private:
     void setData(sf::Music *data);
+    PHYSFSStream         m_stream;
 };
 
 #endif // MUSICRESOURCE_HPP

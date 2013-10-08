@@ -6,6 +6,7 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Time.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Event.hpp>
 
 class Container;
 
@@ -43,7 +44,10 @@ public:
      */
     void draw(sf::RenderTarget& rt);
 
-    void handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system);
+    void handleKeyPress(sf::Event::KeyEvent keyEvent);
+    void handleKeyRelease(sf::Event::KeyEvent keyEvent);
+    void handleMousePress(sf::Event::MouseButtonEvent buttonEvent);
+    void handleMouseRelease(sf::Event::MouseButtonEvent buttonEvent);
 private:
     std::vector<Container*> m_containers;
 };

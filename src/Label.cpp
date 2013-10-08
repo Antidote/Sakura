@@ -1,33 +1,21 @@
 #include "Label.hpp"
+#include "Container.hpp"
 
-Label::Label(const std::string &name, const sf::Font& font, const std::string &text, bool visible, bool enabled)
-    : Widget(name, visible, enabled)
+Label::Label(Container* owner, const std::string &name, const sf::Font& font, const std::string &text, bool visible, bool enabled)
+    : Widget(owner, name, visible, enabled),
+      m_alignment(None)
 {
     m_text.setFont(font);
     m_text.setString(text);
+    updateLabel();
+    // reset the position for the next frame.
+    m_position = m_oldPosition;
 }
 
 void Label::update(sf::Time dt)
 {
-    m_oldPosition = m_position;
-    m_size = sf::Vector2f(m_text.getLocalBounds().width, m_text.getLocalBounds().height*2);
-    m_text.setColor(m_color);
-    switch(m_alignment)
-    {
-        case Left:
-            break;
-        case Right:
-            m_position.x += m_size.x;
-            break;
-        case Center:
-            m_position.x -= m_size.x*.5f;
-            break;
-    }
-
-    m_text.setPosition(m_position);
-
+    updateLabel();
     Widget::update(dt);
-
     // reset the position for the next frame.
     m_position = m_oldPosition;
 }
@@ -56,4 +44,27 @@ void Label::setFontSize(int fontSize)
 int Label::fontSize() const
 {
     return m_text.getCharacterSize();
+}
+
+void Label::updateLabel()
+{
+    m_oldPosition = m_position;
+    m_size = sf::Vector2f(m_text.getLocalBounds().width, m_text.getLocalBounds().height*2);
+    m_text.setColor(m_color);
+    switch(m_alignment)
+    {
+        case Left:
+            m_position.x = m_owner->position().x;
+            break;
+        case Right:
+            m_position.x = m_owner->position().x + (m_owner->size().x - m_size.x);
+            break;
+        case Center:
+            m_position.x = m_owner->position().x + (m_owner->size().x *.5f) - (m_size.x * .5f);
+            break;
+        default:
+            break;
+    }
+
+    m_text.setPosition(m_position);
 }

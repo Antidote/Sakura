@@ -11,6 +11,7 @@ public:
 
     enum Align
     {
+        None = -1,
         Left,
         Right,
         Center
@@ -24,7 +25,7 @@ public:
      * \param visible
      * \param enabled
      */
-    Label(const std::string& name, const sf::Font& font, const std::string& text = "", bool visible = true, bool enabled = true);
+    Label(Container* owner, const std::string& name, const sf::Font& font, const std::string& text = "", bool visible = true, bool enabled = true);
 
     /*!
      * \brief update
@@ -45,6 +46,7 @@ public:
     void setFontSize(int fontSize);
     int fontSize() const;
 private:
+    void updateLabel();
     sf::Text m_text;
     Align m_alignment;
     sf::Vector2f m_oldPosition;

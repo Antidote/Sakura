@@ -2,30 +2,32 @@
 #include "Engine.hpp"
 #include "Container.hpp"
 
-Widget::Widget(const std::string &name, bool visible, bool enabled)
-    : m_name(name),
+Widget::Widget(Container* owner, const std::string &name, bool visible, bool enabled)
+    : m_owner(owner),
+      m_name(name),
       m_visible(visible),
       m_enabled(enabled),
+      m_position(0, 0),
+      m_size(1, 1),
       m_color(sf::Color::White),
-      m_mouseIn(false),
-      m_mouseButtonLeftEmitted(false),
-      m_mouseButtonRightEmitted(false),
-      m_mouseButtonMiddleEmitted(false),
-      m_mouseXButton1Emitted(false),
-      m_mouseXButton2Emitted(false),
-      m_mouseButtonLeftReleasedEmitted(false),
-      m_mouseButtonRightReleasedEmitted(false),
-      m_mouseButtonMiddleReleasedEmitted(false),
-      m_mouseXButton1ReleasedEmitted(false),
-      m_mouseXButton2ReleasedEmitted(false)
+      m_mouseIn(false)
 {
+    if (owner)
+        owner->addWidget(this);
 }
 
-Widget::Widget(const std::string &name, const sf::Vector2f &position, const sf::Vector2f &size)
-    : m_name(name),
+Widget::Widget(Container* owner, const std::string &name, const sf::Vector2f &position, const sf::Vector2f &size)
+    : m_owner(owner),
+      m_name(name),
+      m_visible(true),
+      m_enabled(true),
       m_position(position),
-      m_size(size)
+      m_size(size),
+      m_color(sf::Color::White),
+      m_mouseIn(false)
 {
+    if (owner)
+        owner->addWidget(this);
 }
 
 Widget::~Widget()
@@ -55,7 +57,7 @@ void Widget::setPosition(const float x, const float y)
 
 void Widget::setPosition(const sf::Vector2f& position)
 {
-    m_position = position;
+    m_position = (m_owner ? m_owner->position()  : sf::Vector2f(0,0)) + position;
 }
 
 void Widget::move(const float x, const float y)
@@ -192,24 +194,24 @@ Widget::ActivatedSignal* Widget::deactivated()
     return &m_deactivated;
 }
 
-void Widget::onKeyPressed(sf::Keyboard::Key key)
+void Widget::onKeyPressed(sf::Event::KeyEvent keyEvent)
 {
-    m_keyPressSignal.Emit(this, key);
+    m_keyPressSignal.Emit(this, keyEvent);
 }
 
-void Widget::onKeyReleased(sf::Keyboard::Key key)
+void Widget::onKeyReleased(sf::Event::KeyEvent keyEvent)
 {
-    m_keyReleaseSignal.Emit(this, key);
+    m_keyReleaseSignal.Emit(this, keyEvent);
 }
 
-void Widget::onMousePressed(sf::Mouse::Button button)
+void Widget::onMousePressed(sf::Event::MouseButtonEvent buttonEvent)
 {
-    m_mousePressSignal.Emit(this, button);
+    m_mousePressSignal.Emit(this, buttonEvent);
 }
 
-void Widget::onMouseReleased(sf::Mouse::Button button)
+void Widget::onMouseReleased(sf::Event::MouseButtonEvent buttonEvent)
 {
-    m_mouseReleaseSignal.Emit(this, button);
+    m_mouseReleaseSignal.Emit(this, buttonEvent);
 }
 
 void Widget::onMouseEnter()
@@ -235,16 +237,6 @@ void Widget::onDeactivate()
 void Widget::update(sf::Time dt)
 {
     UNUSED(dt);
-    m_testRect.setPosition(m_position);
-    m_testRect.setSize(m_size);
-
-    if (m_owner && m_owner->activeWidget() == this)
-    {
-        if (sEngineRef().inputManager().keyboard().isAnyKeyPressed())
-            onKeyPressed(sEngineRef().inputManager().keyboard().lastPressed());
-        if (sEngineRef().inputManager().keyboard().isAnyKeyReleased())
-            onKeyReleased(sEngineRef().inputManager().keyboard().lastReleased());
-    }
 
     if (contains((sf::Vector2f)sEngineRef().inputManager().mouse().mouseLocalPosition()))
     {
@@ -253,107 +245,6 @@ void Widget::update(sf::Time dt)
             onMouseEnter();
             m_mouseIn = true;
             m_owner->setActiveWidget(this);
-        }
-
-        if (sEngineRef().inputManager().mouse().isAnyButtonPressed())
-        {
-            switch(sEngineRef().inputManager().mouse().lastPressed())
-            {
-                case sf::Mouse::Left:
-                    if (!m_mouseButtonLeftEmitted)
-                    {
-                        onMousePressed(sf::Mouse::Left);
-                        m_mouseButtonLeftEmitted = true;
-                    }
-                    break;
-                case sf::Mouse::Right:
-                    if (!m_mouseButtonRightEmitted)
-                    {
-                        onMousePressed(sf::Mouse::Right);
-                        m_mouseButtonRightEmitted = true;
-                    }
-                    break;
-                case sf::Mouse::Middle:
-                    if (!m_mouseButtonMiddleEmitted)
-                    {
-                        onMousePressed(sf::Mouse::Middle);
-                        m_mouseButtonMiddleEmitted = true;
-                    }
-                    break;
-                case sf::Mouse::XButton1:
-                    if (!m_mouseXButton1Emitted)
-                    {
-                        onMousePressed(sf::Mouse::XButton1);
-                        m_mouseXButton1Emitted = true;
-                    }
-                    break;
-                case sf::Mouse::XButton2:
-                    if (!m_mouseXButton2Emitted)
-                    {
-                        onMousePressed(sf::Mouse::XButton2);
-                        m_mouseXButton2Emitted = true;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-        else
-        {
-            m_mouseButtonLeftEmitted = false;
-            m_mouseButtonRightEmitted = false;
-            m_mouseButtonMiddleEmitted = false;
-            m_mouseXButton1Emitted = false;
-            m_mouseXButton2Emitted = false;
-        }
-
-        if (sEngineRef().inputManager().mouse().wasButtonReleased(sf::Mouse::Left) && !m_mouseButtonLeftReleasedEmitted)
-        {
-            onMouseReleased(sf::Mouse::Left);
-            m_mouseButtonLeftReleasedEmitted = true;
-        }
-        else
-        {
-            m_mouseButtonLeftReleasedEmitted = false;
-        }
-
-        if (sEngineRef().inputManager().mouse().wasButtonReleased(sf::Mouse::Right) && !m_mouseButtonRightReleasedEmitted)
-        {
-            onMouseReleased(sf::Mouse::Right);
-            m_mouseButtonRightReleasedEmitted = true;
-        }
-        else
-        {
-            m_mouseButtonRightReleasedEmitted = false;
-        }
-        if (sEngineRef().inputManager().mouse().wasButtonReleased(sf::Mouse::Middle) && !m_mouseButtonMiddleReleasedEmitted)
-        {
-            onMouseReleased(sf::Mouse::Middle);
-            m_mouseButtonMiddleReleasedEmitted = true;
-        }
-        else
-        {
-            m_mouseButtonMiddleReleasedEmitted = false;
-        }
-
-        if (sEngineRef().inputManager().mouse().wasButtonReleased(sf::Mouse::XButton1) && !m_mouseXButton1ReleasedEmitted)
-        {
-            onMouseReleased(sf::Mouse::XButton1);
-            m_mouseXButton1ReleasedEmitted = true;
-        }
-        else
-        {
-            m_mouseXButton1ReleasedEmitted = false;
-        }
-        if (sEngineRef().inputManager().mouse().wasButtonReleased(sf::Mouse::XButton2) && !m_mouseXButton2ReleasedEmitted)
-        {
-            m_mouseReleaseSignal.Emit(this, sf::Mouse::XButton2);
-            m_mouseXButton2ReleasedEmitted = true;
-        }
-        else
-        {
-            m_mouseXButton2ReleasedEmitted = false;
-
         }
     }
     else if (m_mouseIn)
@@ -376,4 +267,32 @@ void Widget::activate()
 void Widget::deactivate()
 {
     onDeactivate();
+}
+
+void Widget::handleKeyPress(sf::Event::KeyEvent keyEvent)
+{
+    if (m_owner && m_owner->activeWidget() == this)
+    {
+        onKeyPressed(keyEvent);
+    }
+}
+
+void Widget::handleKeyRelease(sf::Event::KeyEvent keyEvent)
+{
+    if (m_owner && m_owner->activeWidget() == this)
+    {
+        onKeyReleased(keyEvent);
+    }
+}
+
+void Widget::handleMousePress(sf::Event::MouseButtonEvent buttonEvent)
+{
+    if (m_mouseIn)
+        onMousePressed(buttonEvent);
+}
+
+void Widget::handleMouseRelease(sf::Event::MouseButtonEvent buttonEvent)
+{
+    if (m_mouseIn)
+        onMouseReleased(buttonEvent);
 }

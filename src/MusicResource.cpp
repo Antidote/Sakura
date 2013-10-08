@@ -6,7 +6,8 @@
 
 
 MusicResource::MusicResource(const std::string& filename, bool precache)
-    : Resource(filename, precache)
+    : Resource(filename, precache),
+      m_stream(filename)
 {
     if (precache)
     {
@@ -36,28 +37,19 @@ void MusicResource::load()
     if (!m_precached)
         sEngineRef().console().print(Console::Info, "Loading song %s...", m_filename.c_str());
 
-    PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
-    if (file)
+    if (exists())
     {
-        sf::Uint8* data = new sf::Uint8[PHYSFS_fileLength(file)];
-        sf::Uint32 readLen = PHYSFS_read(file, data, 1, PHYSFS_fileLength(file));
-
-        if (readLen == PHYSFS_fileLength(file))
+        m_data = new sf::Music;
+        if (m_data->openFromStream(m_stream))
         {
-            m_data = new sf::Music;
-            if (m_data->openFromMemory(data, PHYSFS_fileLength(file)))
-            {
-                m_isLoaded = true;
-                sEngineRef().console().print(Console::Message, "done.");
-            }
-            else
-            {
-                m_isLoaded = false;
-                sEngineRef().console().print(Console::Warning, "failed!\n");
-            }
+            m_isLoaded = true;
+            sEngineRef().console().print(Console::Message, "done.");
         }
-
-        PHYSFS_close(file);
+        else
+        {
+            m_isLoaded = false;
+            sEngineRef().console().print(Console::Warning, "failed!\n");
+        }
     }
 }
 

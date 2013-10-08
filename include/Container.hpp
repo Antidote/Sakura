@@ -21,6 +21,8 @@
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Mouse.hpp>
+#include <SFML/Window/Event.hpp>
 #include <SFML/System/Time.hpp>
 
 class Widget;
@@ -107,7 +109,11 @@ public:
     void setActiveWidget(Widget* w);
     Widget* activeWidget();
 
-    void handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system);
+    virtual void handleKeyPress(sf::Event::KeyEvent keyEvent);
+    virtual void handleKeyRelease(sf::Event::KeyEvent keyEvent);
+
+    virtual void handleMousePress(sf::Event::MouseButtonEvent buttonEvent);
+    virtual void handleMouseRelease(sf::Event::MouseButtonEvent buttonEvent);
 
 private:
     std::vector<Widget*> m_children;

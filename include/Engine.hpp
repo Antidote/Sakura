@@ -225,6 +225,7 @@ protected:
     sf::Text         m_fpsString;
     sf::Text         m_statsString;
     int              m_frameLimit;
+    bool             m_vsync;
     float            m_fps;
     bool             m_paused;
     bool             m_inputThreadInitialized;

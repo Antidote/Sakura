@@ -60,9 +60,28 @@ void UIManager::draw(sf::RenderTarget& rt)
         c->draw(rt);
 }
 
-void UIManager::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system)
+void UIManager::handleKeyPress(sf::Event::KeyEvent keyEvent)
 {
     for (Container* c : m_containers)
-        c->handleInput(code, alt, control, shift, system);
+        c->handleKeyPress(keyEvent);
 
 }
+
+void UIManager::handleKeyRelease(sf::Event::KeyEvent keyEvent)
+{
+    for (Container* c : m_containers)
+        c->handleKeyRelease(keyEvent);
+}
+
+void UIManager::handleMousePress(sf::Event::MouseButtonEvent buttonEvent)
+{
+    for (Container* c : m_containers)
+        c->handleMousePress(buttonEvent);
+}
+
+void UIManager::handleMouseRelease(sf::Event::MouseButtonEvent buttonEvent)
+{
+    for (Container* c : m_containers)
+        c->handleMouseRelease(buttonEvent);
+}
+

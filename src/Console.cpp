@@ -200,6 +200,9 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 {
     // shutup compiler, i might need these later
     UNUSED(system);
+#ifdef SFML_SYSTEM_LINUX
+    UNUSED(shift);
+#endif
     // unknown key, don't? Well what do we want with it?
     if (code == sf::Keyboard::Unknown)
         return;
@@ -264,12 +267,12 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 
         case sf::Keyboard::PageUp:
         {
-            if (control && (int)((m_history.size()) - (m_startString + m_maxLines)) > m_maxLines)
+            if (control && (int)((m_history.size()) - (m_startString + m_maxLines)) >= m_maxLines)
             {
                 m_startString += m_maxLines;
                 break;
             }
-            if ((int)((m_history.size())  - m_startString) > m_maxLines)
+            if ((int)((m_history.size())  - m_startString) >= m_maxLines)
                 m_startString++;
         }
             break;
@@ -389,15 +392,15 @@ void Console::handleMouseWheel(int delta, int x, int y)
 
     if (delta < 0 && m_startString == 0)
         return;
-    if (delta > 0 && (int)(m_history.size() - (m_startString + delta*4)) < m_maxLines)
+    if (delta > 0 && (int)(m_history.size() - (m_startString + (delta*4))) < (m_maxLines - delta))
         return;
 
-    m_startString += delta*4;
+    m_startString += (delta*4);
 }
 
 void Console::update(const sf::Time& dt)
 {
-    m_maxLines = ((int)m_conY / m_drawText.getCharacterSize()) + 4;
+    recalcMaxLines();
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)
@@ -523,7 +526,7 @@ void Console::draw(sf::RenderWindow& rt)
             int line = 0;
             for (; iter != m_history.rend(); ++iter)
             {
-                if (line > m_maxLines)
+                if (line >= m_maxLines)
                     break;
 
                 switch(((LogEntry)*iter).level)
@@ -738,6 +741,6 @@ void Console::parseCommand()
 
 void Console::recalcMaxLines()
 {
-    m_maxLines = (m_conHeight / m_drawText.getCharacterSize()) - 2;
+    m_maxLines = std::abs(m_conHeight / (m_drawText.getCharacterSize())) - 1;
 }
 

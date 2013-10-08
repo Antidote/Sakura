@@ -1,6 +1,7 @@
 #include "Container.hpp"
 #include "Widget.hpp"
 #include "Engine.hpp"
+#include <GL/gl.h>
 
 Container::Container(float x, float y, int width, int height)
     : m_position(sf::Vector2f(x, y)),
@@ -8,6 +9,7 @@ Container::Container(float x, float y, int width, int height)
       m_activeWidget(NULL)
 {
     m_renderTexture.create(width, height);
+    m_renderTexture.setSmooth(false);
 }
 
 Container::~Container()
@@ -21,6 +23,16 @@ Container::~Container()
     m_children.clear();
 }
 
+void Container::setPosition(const float x, const float y)
+{
+    setPosition(sf::Vector2f(x, y));
+}
+
+void Container::setPosition(const sf::Vector2f& pos)
+{
+    m_position = pos;
+}
+
 sf::Vector2f Container::position() const
 {
     return m_position;
@@ -29,6 +41,7 @@ sf::Vector2f Container::position() const
 void Container::setSize(int w, int h)
 {
     m_renderTexture.create(w, h);
+    m_renderTexture.setSmooth(false);
 }
 
 void Container::setSize(sf::Vector2i size)
@@ -43,6 +56,9 @@ sf::Vector2i Container::size() const
 
 void Container::addWidget(Widget *w)
 {
+    if (!w)
+        return;
+
     // Check if the widget is already a child
     for (Widget* c : m_children)
     {
@@ -90,6 +106,9 @@ void Container::removeWidget(const std::string& name)
 
 void Container::removeWidget(Widget* w)
 {
+    if (!w)
+        return;
+
     int index = -1;
     for (size_t i = 0; i < m_children.size(); ++i)
     {
@@ -122,15 +141,29 @@ void Container::update(sf::Time dt)
 
 void Container::draw(sf::RenderTarget& rt)
 {
-    m_renderTexture.clear();
-    for (Widget* w : m_children)
+    m_renderTexture.clear(sf::Color::Transparent);
+    for (int i = 0; i <= (sEngineRef().config().settingBoolean("r_drawwire", false) ? 1 : 2); i++)
     {
-        if (w->visible())
-            w->draw(m_renderTexture);
+        if (sEngineRef().config().settingBoolean("r_drawwire", false) && i == 1)
+        {
+            glDisable(GL_TEXTURE_2D);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+
+        for (Widget* w : m_children)
+        {
+            if (w->visible())
+                w->draw(m_renderTexture);
+        }
+
+        if (sEngineRef().config().settingBoolean("r_drawwire", false) && i == 1)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glEnable(GL_TEXTURE_2D);
+        }
     }
     m_renderTexture.display();
     m_renderSprite.setTexture(m_renderTexture.getTexture());
-
     rt.draw(m_renderSprite);
 }
 
@@ -147,14 +180,9 @@ Widget* Container::activeWidget()
     return m_activeWidget;
 }
 
-void Container::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool shift, bool system)
+void Container::handleKeyPress(sf::Event::KeyEvent keyEvent)
 {
-    UNUSED(alt);
-    UNUSED(control);
-    UNUSED(shift);
-    UNUSED(system);
-
-    switch (code)
+    switch (keyEvent.code)
     {
         case sf::Keyboard::Up:
         {
@@ -180,5 +208,38 @@ void Container::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool
             break;
         default:
             break;
+    }
+
+    for (Widget* w : m_children)
+    {
+        if (w->enabled())
+            w->handleKeyPress(keyEvent);
+    }
+}
+
+void Container::handleKeyRelease(sf::Event::KeyEvent keyEvent)
+{
+    for (Widget* w : m_children)
+    {
+        if (w->enabled())
+            w->handleKeyRelease(keyEvent);
+    }
+}
+
+void Container::handleMousePress(sf::Event::MouseButtonEvent buttonEvent)
+{
+    for (Widget* w : m_children)
+    {
+        if (w->enabled())
+            w->handleMousePress(buttonEvent);
+    }
+}
+
+void Container::handleMouseRelease(sf::Event::MouseButtonEvent buttonEvent)
+{
+    for (Widget* w : m_children)
+    {
+        if (w->enabled())
+            w->handleMouseRelease(buttonEvent);
     }
 }

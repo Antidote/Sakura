@@ -79,7 +79,8 @@ SOURCES += \
     src/MapFileReader.cpp \
     src/Map.cpp \
     src/Layer.cpp \
-    src/Player.cpp
+    src/Player.cpp \
+    src/PHYSFSStream.cpp
 
 INCLUDEPATH +=  \
     ../libzelda/include \
@@ -133,6 +134,7 @@ HEADERS += \
     include/Map.hpp \
     include/Layer.hpp \
     include/Player.hpp \
-    Mainpage.hpp
+    Mainpage.hpp \
+    include/PHYSFSStream.hpp
 
 
