@@ -31,7 +31,7 @@ unix:LIBS += \
     -lGLEW \
     -lGLU \
     -lX11 \
-    -lopenal
+    -lopenal \
 
 CONFIG(release, release|debug){
     DEFINES -= DEBUG
@@ -47,40 +47,38 @@ CONFIG(debug, debug|release){
     LIBS += -lzelda-d
 }
 
-SOURCES += \
-    src/Engine.cpp \
-    src/Camera.cpp \
-    src/EntityManager.cpp \
-    src/Entity.cpp \
-    src/Animation.cpp \
-    src/AnimatedSprite.cpp \
-    src/Killable.cpp \
-    src/SoundResource.cpp \
-    src/ResourceManager.cpp \
-    src/TextureResource.cpp \
-    src/Widget.cpp \
-    src/InputManager.cpp \
-    src/Label.cpp \
-    src/KeyboardManager.cpp \
-    src/MouseManager.cpp \
-    src/Container.cpp \
-    src/UIManager.cpp \
-    src/FontResource.cpp \
-    src/Tile.cpp \
-    src/JoystickManager.cpp \
-    src/memorysize.c \
-    src/MusicResource.cpp \
+SOURCES += \ 
     src/x86cpuinfo.cpp \
+    src/memorysize.c \
     src/cpuinfo.cpp \
-    src/Console.cpp \
-    src/ConsoleCommandBase.cpp \
-    src/Config.cpp \
-    src/GameState.cpp \
-    src/MapFileReader.cpp \
-    src/Map.cpp \
-    src/Layer.cpp \
-    src/Player.cpp \
-    src/PHYSFSStream.cpp
+    src/Sakura/Core/UIManager.cpp \
+    src/Sakura/Core/Tile.cpp \
+    src/Sakura/Core/ResourceManager.cpp \
+    src/Sakura/Core/Player.cpp \
+    src/Sakura/Core/PHYSFSStream.cpp \
+    src/Sakura/Core/MapFileReader.cpp \
+    src/Sakura/Core/Map.cpp \
+    src/Sakura/Core/Layer.cpp \
+    src/Sakura/Core/Killable.cpp \
+    src/Sakura/Core/InputManager.cpp \
+    src/Sakura/Core/GameState.cpp \
+    src/Sakura/Core/EntityManager.cpp \
+    src/Sakura/Core/Entity.cpp \
+    src/Sakura/Core/Engine.cpp \
+    src/Sakura/Core/ConsoleCommandBase.cpp \
+    src/Sakura/Core/Console.cpp \
+    src/Sakura/Core/Config.cpp \
+    src/Sakura/Core/Camera.cpp \
+    src/Sakura/Gui/Widget.cpp \
+    src/Sakura/Gui/Label.cpp \
+    src/Sakura/Gui/Container.cpp \
+    src/Sakura/Input/MouseManager.cpp \
+    src/Sakura/Input/KeyboardManager.cpp \
+    src/Sakura/Input/JoystickManager.cpp \
+    src/Sakura/Resources/TextureResource.cpp \
+    src/Sakura/Resources/SoundResource.cpp \
+    src/Sakura/Resources/MusicResource.cpp \
+    src/Sakura/Resources/FontResource.cpp
 
 INCLUDEPATH +=  \
     ../libzelda/include \
@@ -92,49 +90,48 @@ win32:INCLUDEPATH += \
     extlibs/GLEW/include
 
 HEADERS += \
-    include/Engine.hpp \
-    include/Camera.hpp \
-    include/EntityManager.hpp \
-    include/Entity.hpp \
-    include/Animation.hpp \
-    include/AnimatedSprite.hpp \
-    include/Killable.hpp \
-    include/Collideable.hpp \
-    include/SoundResource.hpp \
-    include/Resource.hpp \
-    include/ResourceManager.hpp \
-    include/TextureResource.hpp \
-    include/AI.hpp \
-    include/Widget.hpp \
-    include/InputManager.hpp \
+    include/Mainpage.hpp
+    include/teestream.hpp \
+    include/teebuf.hpp \
+    include/x86cpuinfo.h \
+    include/memorysize.h \
+    include/cpuinfo.h \
     include/Signal.h \
     include/Delegate.h \
-    include/Label.hpp \
-    include/KeyboardManager.hpp \
-    include/MouseManager.hpp \
-    include/InputBase.hpp \
-    include/Container.hpp \
-    include/UIManager.hpp \
-    include/FontResource.hpp \
-    include/Tile.hpp \
-    include/JoystickManager.hpp \
-    include/memorysize.h \
-    include/MusicResource.hpp \
-    include/x86cpuinfo.h \
-    include/cpuinfo.h \
-    include/teebuf.hpp \
-    include/teestream.hpp \
-    include/Console.hpp \
-    include/ConsoleCommandBase.hpp \
-    include/Config.hpp \
-    include/Keys.hpp \
-    include/RunState.hpp \
-    include/GameState.hpp \
-    include/MapFileReader.hpp \
-    include/Map.hpp \
-    include/Layer.hpp \
-    include/Player.hpp \
-    Mainpage.hpp \
-    include/PHYSFSStream.hpp
-
+    include/Sakura/Core/UIManager.hpp \
+    include/Sakura/Core/Tile.hpp \
+    include/Sakura/Core/Signal.h \
+    include/Sakura/Core/RunState.hpp \
+    include/Sakura/Core/ResourceManager.hpp \
+    include/Sakura/Core/Resource.hpp \
+    include/Sakura/Core/Player.hpp \
+    include/Sakura/Core/PHYSFSStream.hpp \
+    include/Sakura/Core/Map.hpp \
+    include/Sakura/Core/Layer.hpp \
+    include/Sakura/Core/Killable.hpp \
+    include/Sakura/Core/Keys.hpp \
+    include/Sakura/Core/InputManager.hpp \
+    include/Sakura/Core/GameState.hpp \
+    include/Sakura/Core/EntityManager.hpp \
+    include/Sakura/Core/Entity.hpp \
+    include/Sakura/Core/Engine.hpp \
+    include/Sakura/Core/Delegate.h \
+    include/Sakura/Core/ConsoleCommandBase.hpp \
+    include/Sakura/Core/Console.hpp \
+    include/Sakura/Core/Config.hpp \
+    include/Sakura/Core/Collideable.hpp \
+    include/Sakura/Core/Camera.hpp \
+    include/Sakura/Core/AI.hpp \
+    include/Sakura/Core/MapFileReader.hpp \
+    include/Sakura/Gui/Widget.hpp \
+    include/Sakura/Gui/Label.hpp \
+    include/Sakura/Gui/Container.hpp \
+    include/Sakura/Input/MouseManager.hpp \
+    include/Sakura/Input/KeyboardManager.hpp \
+    include/Sakura/Input/JoystickManager.hpp \
+    include/Sakura/Input/InputBase.hpp \
+    include/Sakura/Resources/TextureResource.hpp \
+    include/Sakura/Resources/SoundResource.hpp \
+    include/Sakura/Resources/MusicResource.hpp \
+    include/Sakura/Resources/FontResource.hpp \
 
