@@ -90,7 +90,7 @@ win32:INCLUDEPATH += \
     extlibs/GLEW/include
 
 HEADERS += \
-    include/Mainpage.hpp
+    include/Mainpage.hpp \
     include/teestream.hpp \
     include/teebuf.hpp \
     include/x86cpuinfo.h \
