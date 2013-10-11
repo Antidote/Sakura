@@ -18,14 +18,36 @@
 #define UNUSED(x) ((void)x)
 #endif
 
+/*!
+ * \namespace Sakura
+ * \brief The Main namespace.
+ *
+ * The Sakura namespace is meant to contain all of the Sakura Game Engine's namespaces and classes.<br />
+ * <div style="color:red; font-weight:bold;">DO NOT PUT ANY CLASSES IN THE MAIN NAMESPACE</div>
+ * \sa Sakura::Core
+ * \sa Sakura::Gui
+ * \sa Sakura::Resources
+ * \sa Sakura::Input
+ */
 namespace Sakura
 {
+/*!
+ * \namespace Core
+ * \brief Core contains all runtime specific classes, e.g the Engine, ResourceManager, InputManager, EntityManager, and the UIManager
+ * \sa Sakura::Core::Engine
+ * \sa Sakura::Core::ResourceManager
+ * \sa Sakura::Core::InputManager
+ * \sa Sakura::Core::EntityManager
+ * \sa Sakura::Core::UIManager
+ * \sa Sakura::Core::Console
+ */
 namespace Core
 {
 class RunState;
 class Map;
 /*!
  * \brief The Engine class
+ * \ingroup Core
  */
 class Engine
 {
@@ -215,6 +237,51 @@ public:
      */
     Map* currentMap() const;
 
+    /*!
+     * \brief handleEvent
+     * \param event
+     */
+    virtual void onEvent(const sf::Event& event);
+
+    /*!
+     * \brief beforeUpdate
+     */
+    virtual void beforeUpdate();
+
+    /*!
+     * \brief onUpdate
+     */
+    virtual void onUpdate();
+
+    /*!
+     * \brief afterUpdate
+     */
+    virtual void afterUpdate();
+
+    /*!
+     * \brief beforeDraw
+     */
+    virtual void beforeDraw();
+
+    /*!
+     * \brief onDrawEntities
+     */
+    virtual void onDrawEntities();
+
+    /*!
+     * \brief onDraw
+     */
+    virtual void onDraw();
+
+    /*!
+     * \brief onDrawConsole
+     */
+    virtual void onDrawConsole();
+
+    /*!
+     * \brief afterDraw
+     */
+    virtual void afterDraw();
 protected:
     void printSysInfo();
     void operator =(const Engine&);
@@ -240,6 +307,7 @@ protected:
     sf::Text         m_statsString;
     int              m_frameLimit;
     bool             m_vsync;
+    bool             m_fullscreen;
     float            m_fps;
     bool             m_paused;
     bool             m_inputThreadInitialized;

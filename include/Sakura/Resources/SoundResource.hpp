@@ -1,7 +1,7 @@
 #ifndef SOUNDRESOURCE_HPP
 #define SOUNDRESOURCE_HPP
 
-#include "Sakura/Core/Resource.hpp"
+#include "Sakura/Core/ResourceBase.hpp"
 #include <SFML/Audio/SoundBuffer.hpp>
 
 namespace Sakura
@@ -9,7 +9,7 @@ namespace Sakura
 namespace Resources
 {
 
-class SoundResource : public Core::Resource<sf::SoundBuffer>
+class SoundResource : public Core::ResourceBase<sf::SoundBuffer>
 {
 public:
     /*!

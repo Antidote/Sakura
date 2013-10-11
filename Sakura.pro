@@ -77,8 +77,8 @@ SOURCES += \
     src/Sakura/Input/JoystickManager.cpp \
     src/Sakura/Resources/TextureResource.cpp \
     src/Sakura/Resources/SoundResource.cpp \
-    src/Sakura/Resources/MusicResource.cpp \
-    src/Sakura/Resources/FontResource.cpp
+    src/Sakura/Resources/FontResource.cpp \
+    src/Sakura/Resources/SongResource.cpp
 
 INCLUDEPATH +=  \
     ../libzelda/include \
@@ -103,7 +103,6 @@ HEADERS += \
     include/Sakura/Core/Signal.h \
     include/Sakura/Core/RunState.hpp \
     include/Sakura/Core/ResourceManager.hpp \
-    include/Sakura/Core/Resource.hpp \
     include/Sakura/Core/Player.hpp \
     include/Sakura/Core/PHYSFSStream.hpp \
     include/Sakura/Core/Map.hpp \
@@ -132,6 +131,7 @@ HEADERS += \
     include/Sakura/Input/InputBase.hpp \
     include/Sakura/Resources/TextureResource.hpp \
     include/Sakura/Resources/SoundResource.hpp \
-    include/Sakura/Resources/MusicResource.hpp \
     include/Sakura/Resources/FontResource.hpp \
+    include/Sakura/Core/ResourceBase.hpp \
+    include/Sakura/Resources/SongResource.hpp
 

@@ -1,7 +1,7 @@
-#ifndef MUSICRESOURCE_HPP
-#define MUSICRESOURCE_HPP
+#ifndef SONGRESOURCE_HPP
+#define SONGRESOURCE_HPP
 
-#include "Sakura/Core/Resource.hpp"
+#include "Sakura/Core/ResourceBase.hpp"
 
 #include <SFML/Audio/Music.hpp>
 #include "Sakura/Core/PHYSFSStream.hpp"
@@ -11,15 +11,15 @@ namespace Sakura
 {
 namespace Resources
 {
-class MusicResource : public Core::Resource<sf::Music>
+class SongResource : public Core::ResourceBase<sf::Music>
 {
 public:
     /*!
-     * \brief MusicResource
+     * \brief SongResource
      * \param precache
      */
-    MusicResource(const std::string&, bool precache = false);
-    ~MusicResource();
+    SongResource(const std::string&, bool precache = false);
+    ~SongResource();
 
     /*!
      * \brief filename
@@ -63,4 +63,4 @@ private:
 } // Sakura
 
 
-#endif // MUSICRESOURCE_HPP
+#endif // SONGRESOURCE_HPP

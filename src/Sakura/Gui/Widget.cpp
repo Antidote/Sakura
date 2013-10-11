@@ -62,7 +62,7 @@ void Widget::setPosition(const float x, const float y)
 
 void Widget::setPosition(const sf::Vector2f& position)
 {
-    m_position = (m_owner ? m_owner->position()  : sf::Vector2f(0,0)) + position;
+    m_position = position;
 }
 
 void Widget::move(const float x, const float y)
@@ -147,14 +147,14 @@ bool Widget::enabled() const
 
 bool Widget::contains(const sf::Vector2f& point)
 {
-    sf::FloatRect bounds(m_position, m_size);
+    sf::FloatRect bounds((m_owner != NULL ? m_owner->position() : sf::Vector2f(0, 0)) + m_position, m_size);
 
     return bounds.contains(point);
 }
 
 bool Widget::intersects(const sf::FloatRect& rect)
 {
-    sf::FloatRect bounds(m_position, m_size);
+    sf::FloatRect bounds((m_owner != NULL ? m_owner->position() : sf::Vector2f(0, 0)) + m_position, m_size);
 
     return bounds.intersects(rect);
 }

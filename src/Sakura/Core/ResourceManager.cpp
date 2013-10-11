@@ -1,8 +1,8 @@
 #include "Sakura/Core/ResourceManager.hpp"
-#include "Sakura/Core/Resource.hpp"
+#include "Sakura/Core/ResourceBase.hpp"
 #include "Sakura/Core/Engine.hpp"
 #include "Sakura/Resources/SoundResource.hpp"
-#include "Sakura/Resources/MusicResource.hpp"
+#include "Sakura/Resources/SongResource.hpp"
 #include "Sakura/Resources/TextureResource.hpp"
 #include "Sakura/Resources/FontResource.hpp"
 #include <iostream>
@@ -47,13 +47,29 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::initialize(const char* argv0)
 {
+    sEngineRef().console().print(Console::Info, "Initializing PHYSFS");
+    sEngineRef().console().print(Console::Info, "Sakura built with PHYSFS Version %i.%i.%i", PHYSFS_VER_MAJOR, PHYSFS_VER_MINOR, PHYSFS_VER_PATCH);
     PHYSFS_init(argv0);
+    PHYSFS_Version version;
+    PHYSFS_getLinkedVersion(&version);
+    sEngineRef().console().print(Console::Info, "Local PHYSFS Version %i.%i.%i", (int)version.major, (int)version.minor, (int)version.patch);
+    const PHYSFS_ArchiveInfo** archiveInfoBegin = PHYSFS_supportedArchiveTypes();
+
+    sEngineRef().console().print(Console::Info, "Support Archive types:");
+    for (const PHYSFS_ArchiveInfo** archiveInfo = archiveInfoBegin; *archiveInfo != NULL; archiveInfo++)
+    {
+        sEngineRef().console().print(Console::Info,    "Extension:      %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->extension);
+        sEngineRef().console().print(Console::Info,    "Author:         %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->author);
+        sEngineRef().console().print(Console::Info,    "Description:    %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->description);
+        sEngineRef().console().print(Console::Message, "-------------------------");
+    }
     PHYSFS_mount(sEngineRef().config().settingLiteral("fs_basepath", "data").c_str(), "/", 0);
 
     char** listBegin = PHYSFS_enumerateFiles("/");
     std::vector<std::string> archives;
     for (char** file = listBegin; *file != NULL; file++)
     {
+        // We don't support sub-directories for pak files
         if (PHYSFS_isDirectory(*file))
             continue;
 
@@ -147,11 +163,11 @@ int ResourceManager::liveSoundCount() const
 
 bool ResourceManager::loadSong(const std::string& name, bool preload)
 {
-    Resources::MusicResource* music = new Resources::MusicResource(name, preload);
+    Resources::SongResource* music = new Resources::SongResource(name, preload);
 
     if (music->exists())
     {
-        m_musicResources[name] = music;
+        m_songResources[name] = music;
         return true;
     }
 
@@ -162,34 +178,37 @@ bool ResourceManager::loadSong(const std::string& name, bool preload)
 
 void ResourceManager::playSong(const std::string& name, bool loop)
 {
-    if (((Resources::MusicResource*)m_musicResources[name]) != NULL)
+    if (((Resources::SongResource*)m_songResources[name]) != NULL)
     {
-        if (!m_musicResources[name]->isLoaded())
+        if (!m_songResources[name]->isLoaded())
         {
-            m_musicResources[name]->load();
+            m_songResources[name]->load();
         }
-        m_musicResources[name]->data()->setLoop(loop);
-        m_musicResources[name]->data()->play();
+        m_songResources[name]->data()->setLoop(loop);
+        m_songResources[name]->data()->play();
+        return;
     }
     else if (loadSong(name, true))
     {
-        m_musicResources[name]->data()->setLoop(loop);
-        m_musicResources[name]->data()->play();
+        m_songResources[name]->data()->setLoop(loop);
+        m_songResources[name]->data()->play();
+        return;
     }
+    sEngineRef().console().print(Console::Warning, "Song %s does not exist", name.c_str());
 }
 
 void ResourceManager::removeSong(const std::string &name)
 {
-    Resources::MusicResource* resource = m_musicResources[name];
-    m_musicResources.erase(m_musicResources.find(name));
+    Resources::SongResource* resource = m_songResources[name];
+    m_songResources.erase(m_songResources.find(name));
     delete resource;
     resource = NULL;
 }
 
 bool ResourceManager::songExists(const std::string& name)
 {
-    std::unordered_map<std::string, Resources::MusicResource*>::const_iterator iter = m_musicResources.begin();
-    for (; iter != m_musicResources.end(); ++iter)
+    std::unordered_map<std::string, Resources::SongResource*>::const_iterator iter = m_songResources.begin();
+    for (; iter != m_songResources.end(); ++iter)
         if (iter->first == name)
             return true;
 
@@ -198,7 +217,7 @@ bool ResourceManager::songExists(const std::string& name)
 
 int ResourceManager::songCount() const
 {
-    return m_musicResources.size();
+    return m_songResources.size();
 }
 
 bool ResourceManager::loadTexture(const std::string &name, bool preload)
@@ -368,14 +387,14 @@ void ResourceManager::purgeResources()
 
     m_fontResources.clear();
 
-    std::unordered_map<std::string, Resources::MusicResource*>::iterator musicIter = m_musicResources.begin();
-    for (; musicIter != m_musicResources.end(); ++musicIter)
+    std::unordered_map<std::string, Resources::SongResource*>::iterator musicIter = m_songResources.begin();
+    for (; musicIter != m_songResources.end(); ++musicIter)
     {
         delete musicIter->second;
         musicIter->second = NULL;
     }
 
-    m_musicResources.clear();
+    m_songResources.clear();
 }
 
 } // Core

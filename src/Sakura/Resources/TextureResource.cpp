@@ -8,18 +8,18 @@ namespace Sakura
 namespace Resources
 {
 TextureResource::TextureResource(const std::string &filename, bool precache)
-    : Resource(filename, precache)
+    : ResourceBase(filename, precache)
 {
     if (precache)
     {
-        sEngineRef().console().print(Core::Console::Info, "Precaching texture %s...", m_filename.c_str());
+        sEngineRef().console().print(Core::Console::Info, "Precaching texture %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
     }
 }
 
 TextureResource::~TextureResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Texture destroyed %s", m_filename.c_str());
+    sEngineRef().console().print(Core::Console::Info, "Texture destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     delete m_data;
 }
 
@@ -36,7 +36,7 @@ sf::Texture* TextureResource::data()
 void TextureResource::load()
 {
     if (!m_precached)
-        sEngineRef().console().print(Core::Console::Info, "Loading texture %s...", m_filename.c_str());
+        sEngineRef().console().print(Core::Console::Info, "Loading texture %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
     {
@@ -64,7 +64,7 @@ void TextureResource::load()
     }
     else
     {
-        sEngineRef().console().print(Core::Console::Warning, "Texture %s does not exist", m_filename.c_str());
+        sEngineRef().console().print(Core::Console::Warning, "Texture %s@%s does not exist", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     }
 }
 

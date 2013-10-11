@@ -1,14 +1,14 @@
 #ifndef TEXTURERESOURCE_HPP
 #define TEXTURERESOURCE_HPP
 
-#include "Sakura/Core/Resource.hpp"
+#include "Sakura/Core/ResourceBase.hpp"
 #include <SFML/Graphics/Texture.hpp>
 
 namespace Sakura
 {
 namespace Resources
 {
-class TextureResource : public Core::Resource<sf::Texture>
+class TextureResource : public Core::ResourceBase<sf::Texture>
 {
 public:
     /*!

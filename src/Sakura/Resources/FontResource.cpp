@@ -9,18 +9,18 @@ namespace Sakura
 namespace Resources
 {
 FontResource::FontResource(const std::string& filepath, bool precache)
-    : Resource(filepath, precache)
+    : ResourceBase(filepath, precache)
 {
     if (precache)
     {
-        sEngineRef().console().print(Core::Console::Info, "Precaching font %s...", m_filename.c_str());
+        sEngineRef().console().print(Core::Console::Info, "Precaching font %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
     }
 }
 
 FontResource::~FontResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Font destroyed %s", m_filename.c_str());
+    sEngineRef().console().print(Core::Console::Info, "Font destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     delete m_data;
 }
 
@@ -37,7 +37,7 @@ sf::Font* FontResource::data()
 void FontResource::load()
 {
     if (!m_precached)
-        sEngineRef().console().print(Core::Console::Info, "Loading font %s...", m_filename.c_str());
+        sEngineRef().console().print(Core::Console::Info, "Loading font %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
@@ -61,7 +61,9 @@ void FontResource::load()
         }
 
         PHYSFS_close(file);
+        return;
     }
+    sEngineRef().console().print(Core::Console::Warning, "Font %s%s%s does not exist", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 }
 
 bool FontResource::exists() const

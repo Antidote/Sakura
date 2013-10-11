@@ -58,13 +58,13 @@ void Label::updateLabel()
     switch(m_alignment)
     {
         case Left:
-            m_position.x = m_owner->position().x;
+            m_position.x = 0;
             break;
         case Right:
-            m_position.x = m_owner->position().x + (m_owner->size().x - m_size.x);
+            m_position.x = (m_owner->size().x - m_size.x);
             break;
         case Center:
-            m_position.x = m_owner->position().x + (m_owner->size().x *.5f) - (m_size.x * .5f);
+            m_position.x = (m_owner->size().x *.5f) - (m_size.x * .5f);
             break;
         default:
             break;

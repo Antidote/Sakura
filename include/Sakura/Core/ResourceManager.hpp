@@ -12,7 +12,7 @@ namespace Sakura
 namespace Resources
 {
 class SoundResource;
-class MusicResource;
+class SongResource;
 class TextureResource;
 class FontResource;
 }
@@ -195,7 +195,7 @@ private:
 
     std::unordered_map<std::string, Resources::SoundResource*>   m_soundBufferResources;
     std::unordered_map<std::string, sf::Sound*>                  m_sounds;
-    std::unordered_map<std::string, Resources::MusicResource*>   m_musicResources;
+    std::unordered_map<std::string, Resources::SongResource*>    m_songResources;
     std::unordered_map<std::string, Resources::TextureResource*> m_textureResources;
     std::unordered_map<std::string, Resources::FontResource*>    m_fontResources;
 };

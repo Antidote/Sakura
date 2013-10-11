@@ -9,18 +9,18 @@ namespace Resources
 {
 
 SoundResource::SoundResource(const std::string &filename, bool precache)
-    : Resource(filename, precache)
+    : ResourceBase(filename, precache)
 {
     if (precache)
     {
-        sEngineRef().console().print(Core::Console::Info, "Precaching sound %s...", m_filename.c_str());
+        sEngineRef().console().print(Core::Console::Info, "Precaching sound %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
     }
 }
 
 SoundResource::~SoundResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Sound destroyed %s...", m_filename.c_str());
+    sEngineRef().console().print(Core::Console::Info, "Sound destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     delete m_data;
 }
 
@@ -78,7 +78,9 @@ void SoundResource::load()
         delete[] data;
         data = NULL;
         PHYSFS_close(file);
+        return;
     }
+    sEngineRef().console().print(Core::Console::Warning, "Sound %s@%s does not exist", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 }
 
 void SoundResource::setData(sf::SoundBuffer *data)

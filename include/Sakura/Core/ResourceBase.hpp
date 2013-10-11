@@ -1,5 +1,5 @@
-#ifndef RESOURCE_HPP
-#define RESOURCE_HPP
+#ifndef RESOURCEBASE_HPP
+#define RESOURCEBASE_HPP
 
 #include <string>
 
@@ -8,7 +8,7 @@ namespace Sakura
 namespace Core
 {
 template <typename T>
-class Resource
+class ResourceBase
 {
 public:
     /*!
@@ -16,7 +16,7 @@ public:
      * \param filename
      * \param precache
      */
-    Resource(const std::string& filename, bool precache = false)
+    ResourceBase(const std::string& filename, bool precache = false)
       : m_filename(filename),
         m_isLoaded(false),
         m_precached(precache),
@@ -74,4 +74,4 @@ protected:
 } // Core
 } // Sakura
 
-#endif // RESOURCE_HPP
+#endif // RESOURCEBASE_HPP

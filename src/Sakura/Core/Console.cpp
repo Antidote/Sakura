@@ -34,9 +34,10 @@ Console::Console(const std::string &logfile)
       m_maxLines(15),
       m_conHeight(240),
       m_conY(0.0f),
-      m_defaultConColor(sf::Color(100, 180, 32, 100)),
-      m_log(logfile)
+      m_defaultConColor(sf::Color::White)
 {
+    m_log.open(logfile, std::ios_base::out | std::ios_base::app);
+
 }
 
 Console::~Console()
@@ -48,8 +49,6 @@ void Console::initialize()
 {
     // register default commands
     registerCommand("quit",         new QuitCommand());
-    registerCommand("r_fullscreen", new FullscreenCommand());
-    registerCommand("r_drawwire",   new WireframeCommand());
     registerCommand("con_clear",    new ClearCommand());
     registerCommand("play",         new PlayCommand());
     registerCommand("bind",         new BindCommand());
@@ -133,7 +132,7 @@ void Console::handleText(const sf::Uint32 unicode)
     }
 #endif
 
-    if (m_state == Opened)
+    if (m_state == Opened || m_state == Opening)
     {
         if (unicode > 0x1f && unicode != 0x7f)
         {
@@ -256,7 +255,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     // This should probably be in the even loop not here
     if (code == sEngineRef().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
     {
-        sEngineRef().window().close();
+        sEngineRef().quit();
         return;
     }
 
@@ -429,7 +428,7 @@ void Console::update(const sf::Time& dt)
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)
-            m_conY += dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 200.f);
+            m_conY += dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 500.f);
     }
     else if (m_state == Opening && m_conY > m_conHeight)
     {
@@ -442,7 +441,7 @@ void Console::update(const sf::Time& dt)
 
     if (m_state == Closing && m_conY > m_drawText.getCharacterSize())
     {
-        m_conY -= dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 200.f);
+        m_conY -= dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 500.f);
     }
     else if (m_conY < m_drawText.getCharacterSize() && m_state == Closing)
     {
@@ -524,76 +523,6 @@ void Console::draw(sf::RenderWindow& rt)
         m_commandText.setColor(textColor());
         rt.draw(m_commandText);
     }
-}
-
-void Console::drawHistory(sf::RenderWindow& rt)
-{
-    int posY = (m_conY - 20)  - (m_commandText.getCharacterSize() * 2);
-    std::vector<LogEntry>::reverse_iterator iter = m_history.rbegin() + m_startString;
-    int line = 0;
-    for (; iter != m_history.rend(); ++iter)
-    {
-        if (line >= m_maxLines)
-            break;
-
-        switch(((LogEntry)*iter).level)
-        {
-            // Info and message use the same color
-            case Message:
-            case Info:
-                m_drawText.setColor(textColor());
-                break;
-            case Warning:
-                m_drawText.setColor(sf::Color::Yellow);
-                break;
-            case Error:
-                m_drawText.setColor(sf::Color::Red);
-                break;
-            case Fatal:
-                if (!m_showError)
-                    m_drawText.setColor(sf::Color::Red);
-                else
-                    m_drawText.setColor(sf::Color::Transparent);
-                break;
-        }
-
-        m_drawText.setPosition(2, posY);
-        m_drawText.setString(">" + ((LogEntry)*iter).message);
-        rt.draw(m_drawText);
-        posY -= m_drawText.getCharacterSize();
-        line++;
-    }
-}
-
-void Console::drawSeparator(sf::RenderWindow& rt)
-{
-    m_drawText.setString(sEngineRef().gameVersion());
-    float versionWidth = (m_drawText.getLocalBounds().width + 2);
-    int sepWidth = m_drawText.getFont()->getGlyph('^', m_drawText.getCharacterSize(), false).advance +
-                   m_drawText.getFont()->getGlyph(' ', m_drawText.getCharacterSize(), false).advance;
-
-    if (m_startString != 0)
-    {
-        sf::String sepString;
-        for (int x = 0; x < sEngineRef().window().getSize().x - (versionWidth + sepWidth); x += sepWidth)
-        {
-            sepString += " ^";
-        }
-        m_drawText.setString(sepString);
-        m_drawText.setPosition(0, (m_conY- 20) - (m_drawText.getCharacterSize()));
-        rt.draw(m_drawText);
-    }
-}
-
-void Console::drawVersion(sf::RenderWindow& rt)
-{
-    m_drawText.setString(sEngineRef().gameVersion());
-    float versionWidth = (m_drawText.getLocalBounds().width + 2);
-    m_drawText.setString(sEngineRef().gameVersion());
-    m_drawText.setColor(textColor());
-    m_drawText.setPosition(sEngineRef().window().getSize().x - versionWidth,
-                           (m_conY - 20) - m_drawText.getCharacterSize());
-    rt.draw(m_drawText);
 }
 
 void Console::print(Console::Level level, const std::string& fmt, ...)
@@ -756,9 +685,7 @@ void Console::parseCommand()
                     std::string val = "";
                     args.erase(args.begin());
                     for (std::string s : args)
-                    {
                         val += s + " ";
-                    }
 
                     if (val.size() > 1)
                         sEngineRef().config().setSettingLiteral(setting, val);
@@ -775,6 +702,76 @@ void Console::parseCommand()
 void Console::recalcMaxLines()
 {
     m_maxLines = std::abs(m_conHeight / (m_drawText.getCharacterSize())) - 1;
+}
+
+
+void Console::drawHistory(sf::RenderWindow& rt)
+{
+    int posY = (m_conY - 20)  - (m_commandText.getCharacterSize() * 2);
+    std::vector<LogEntry>::reverse_iterator iter = m_history.rbegin() + m_startString;
+    int line = 0;
+    for (; iter != m_history.rend(); ++iter)
+    {
+        if (line >= m_maxLines)
+            break;
+
+        switch(((LogEntry)*iter).level)
+        {
+            // Info and message use the same color
+            case Message:
+            case Info:
+                m_drawText.setColor(textColor());
+                break;
+            case Warning:
+                m_drawText.setColor(sf::Color::Yellow);
+                break;
+            case Error:
+                m_drawText.setColor(sf::Color::Red);
+                break;
+            case Fatal:
+                if (!m_showError)
+                    m_drawText.setColor(sf::Color::Red);
+                else
+                    m_drawText.setColor(sf::Color::Transparent);
+                break;
+        }
+
+        m_drawText.setPosition(2, posY);
+        m_drawText.setString(">" + ((LogEntry)*iter).message);
+        rt.draw(m_drawText);
+        posY -= m_drawText.getCharacterSize();
+        line++;
+    }
+}
+
+void Console::drawSeparator(sf::RenderWindow& rt)
+{
+    m_drawText.setString("v"+sEngineRef().gameVersion());
+    float versionWidth = (m_drawText.getLocalBounds().width + 2);
+    int sepWidth = m_drawText.getFont()->getGlyph('^', m_drawText.getCharacterSize(), false).advance +
+                   m_drawText.getFont()->getGlyph(' ', m_drawText.getCharacterSize(), false).advance;
+
+    if (m_startString != 0)
+    {
+        sf::String sepString;
+        for (int x = 0; x < sEngineRef().window().getSize().x - (versionWidth + sepWidth); x += sepWidth)
+        {
+            sepString += " ^";
+        }
+        m_drawText.setString(sepString);
+        m_drawText.setPosition(0, (m_conY- 20) - (m_drawText.getCharacterSize()));
+        rt.draw(m_drawText);
+    }
+}
+
+void Console::drawVersion(sf::RenderWindow& rt)
+{
+    m_drawText.setString("v"+sEngineRef().gameVersion());
+    float versionWidth = (m_drawText.getLocalBounds().width + 2);
+    m_drawText.setColor(textColor());
+    m_drawText.setPosition(sEngineRef().window().getSize().x - versionWidth,
+                           (m_conY - 20) - m_drawText.getCharacterSize());
+    rt.draw(m_drawText);
 }
 
 } // Core

@@ -2,13 +2,13 @@
 #define FONTRESOURCE_HPP
 
 #include <SFML/Graphics/Font.hpp>
-#include "Sakura/Core/Resource.hpp"
+#include "Sakura/Core/ResourceBase.hpp"
 
 namespace Sakura
 {
 namespace Resources
 {
-class FontResource : public Core::Resource<sf::Font>
+class FontResource : public Core::ResourceBase<sf::Font>
 {
 public:
     /*!

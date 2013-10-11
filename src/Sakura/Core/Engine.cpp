@@ -39,6 +39,7 @@ Engine::Engine()
       m_lastTime(sf::seconds(0)),
       m_frameLimit(0),
       m_vsync(false),
+      m_fullscreen(false),
       m_fps(0),
       m_paused(false),
       m_inputThreadInitialized(false),
@@ -57,6 +58,7 @@ Engine::Engine()
 Engine::~Engine()
 {
     console().print(Console::Info, "Shutdown complete");
+    console().print(Console::Message, "********************** END OF LOG **********************");
     m_inputThreadInitialized = false;
 }
 
@@ -70,7 +72,8 @@ void Engine::initialize(int argc, char* argv[])
     m_title = config().settingLiteral("sys_title", defaultTitle());
     m_size = sf::Vector2u(config().settingInt("vid_width", 640), config().settingInt("vid_height", 480));
     console().print(Console::Info, "Creating context...");
-    setFullscreen(config().settingBoolean("r_fullscreen", false));
+    m_fullscreen = config().settingBoolean("r_fullscreen", false);
+    setFullscreen(m_fullscreen);
 
     m_frameLimit = config().settingInt("sys_framelimit", 60);
     window().setFramerateLimit(m_frameLimit);
@@ -144,17 +147,24 @@ int Engine::run()
     console().print(Console::Info, "Entering main loop...");
     while(window().isOpen())
     {
+        // Check to see if the framelimit has been changed
         if (config().settingInt("sys_framelimit", 60) != m_frameLimit)
         {
+            // It has? Let's update the window.
             m_frameLimit = config().settingInt("sys_framelimit", 60);
             window().setFramerateLimit(m_frameLimit);
         }
 
+        // Check to see if vsync has been changed
         if (config().settingBoolean("sys_vsync", true) != m_vsync)
         {
+            // It has? Let's update the window
             m_vsync = config().settingBoolean("sys_vsync", true);
             window().setVerticalSyncEnabled(m_vsync);
         }
+
+        if (config().settingBoolean("r_fullscreen", false) != m_fullscreen)
+            setFullscreen(config().settingBoolean("r_fullscreen", false));
 
         m_lastTime = m_clock.restart();
         m_fps = 1.f / m_lastTime.asSeconds();
@@ -165,98 +175,13 @@ int Engine::run()
 
         sf::Event event;
         while(m_window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window().close();
-            if (event.type == sf::Event::GainedFocus)
-                m_paused = false;
-            if (event.type == sf::Event::LostFocus)
-                m_paused = true;
-            if (event.type == sf::Event::TextEntered)
-                m_console.handleText(event.text.unicode);
-            if (event.type == sf::Event::KeyPressed)
-            {
-                m_console.handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
-                if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
-                    uiManager().handleKeyPress(event.key);
-            }
-            if (event.type == sf::Event::KeyReleased)
-            {
-                if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
-                    uiManager().handleKeyRelease(event.key);
-            }
-            if (event.type == sf::Event::MouseWheelMoved)
-                m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
-            if (event.type == sf::Event::MouseButtonPressed)
-            {
-                if (!console().isOpen())
-                    uiManager().handleMousePress(event.mouseButton);
-            }
-            if (event.type == sf::Event::MouseButtonReleased)
-            {
-                if (!console().isOpen())
-                    uiManager().handleMouseRelease(event.mouseButton);
-            }
-        }
+            onEvent(event);
 
-        inputManager().update();
-        camera().update();
-        console().update(m_lastTime);
+        beforeUpdate();
+        onUpdate();
+        afterUpdate();
 
-        m_fpsString.setColor(sf::Color::White);
-        m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
-
-        if (config().settingBoolean("sys_showstats", false))
-        {
-            std::stringstream stats;
-            stats << "Entity Count: "    << entityManager().entities().size() << std::endl;
-            stats << "Texture Count: "   << resourceManager().textureCount() << std::endl;
-            stats << "Sound Count: "     << resourceManager().soundCount() << std::endl;
-            stats << "Live Sounds: "     << resourceManager().liveSoundCount() << std::endl;
-            stats << "Music Count: "     << resourceManager().songCount() << std::endl;
-            stats << "Font Count: "      << resourceManager().fontCount() << std::endl;
-            stats << "Current State: "   << m_currentState->name() << std::endl;
-            stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
-            stats << "Camera Size: "     << camera().size().x << " " << camera().size().y << std::endl;
-            stats << "World Size: "      << camera().world().x << " " << camera().world().y << std::endl;
-
-            if (camera().lockedOn())
-            {
-                stats << "Camera Target: " << camera().lockedOn()->name() << std::endl;
-                Player* player = dynamic_cast<Player*>(camera().lockedOn());
-
-                if (player)
-                    stats << "Player Id: " << player->playerId() << std::endl;
-            }
-            m_statsString.setString(stats.str());
-        }
-
-        if (config().settingBoolean("r_clear", true))
-            window().clear(config().settingColor("r_clearcolor", sf::Color::Black));
-
-        if (m_currentState->type() == RunState::Game && !console().isOpen())
-        {
-            entityManager().think(m_lastTime);
-            entityManager().update(m_lastTime);
-        }
-
-
-        if (!console().isOpen())
-        {
-            if (m_currentState->isDone() && m_currentState->nextState() != NULL)
-            {
-                m_states.erase(m_currentState->name());
-                RunState* oldState = m_currentState;
-                m_currentState = oldState->nextState();
-                if (!m_currentState->isInitialized())
-                    m_currentState->initialize();
-
-                delete oldState;
-            }
-            uiManager().update(m_lastTime);
-            m_currentState->update(m_lastTime);
-        }
-
+        beforeDraw();
         for (int i = 0; i < (config().settingBoolean("r_drawwire", false) ? 2 : 1); i++)
         {
             window().setView(m_camera.view());
@@ -266,23 +191,20 @@ int Engine::run()
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
 
-            // Reset the view to the default
-            // Draw the console over everything
-            window().setView(m_defaultView);
+            // The reason the draws are separated the way they are is so
+            // a developer can hook in at a specific spot in the draw event
 
-            m_currentState->draw(window());
-            if (m_currentState->type() == RunState::Game)
-                entityManager().draw(window());
+            // onDrawEntities allows the developer to draw specifings, either
+            // before or after the entities
+            onDrawEntities();
 
-            if (config().settingBoolean("sys_showstats", false))
-                window().draw(m_statsString);
+            // onDraw renders the current state as well as the ui components, the reason for this is simple
+            // If anyone wants to draw anything before the ui, they simply need to use the RunState's draw event
+            onDraw();
 
-            uiManager().draw(window());
-
-            console().draw(window());
-
-            if (config().settingBoolean("r_showfps", false))
-                window().draw(m_fpsString);
+            // onDrawConsole allows the developer to draw things before or after the console
+            // by default it draws stats, followed by the console and finally the FPS
+            onDrawConsole();
 
             if (config().settingBoolean("r_drawwire", false) && i == 1)
             {
@@ -290,7 +212,7 @@ int Engine::run()
                 glEnable(GL_TEXTURE_2D);
             }
         }
-
+        afterDraw();
         window().display();
 
     }
@@ -391,10 +313,11 @@ void Engine::setWireframe(bool mode)
 void Engine::setFullscreen(bool isFullscreen)
 {
     // Don't toggle if it's the same
-    if (isFullscreen == config().settingBoolean("r_fullscreen", false) && window().isOpen())
+    if (isFullscreen == m_fullscreen && window().isOpen())
         return;
 
     window().close();
+    m_fullscreen = isFullscreen;
     config().setSettingBoolean("r_fullscreen", isFullscreen);
     if (isFullscreen)
         window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Fullscreen);
@@ -456,6 +379,152 @@ void Engine::addState(RunState* newState)
 Map* Engine::currentMap() const
 {
     return m_currentMap;
+}
+
+void Engine::onEvent(const sf::Event& event)
+{
+    // Default event handler
+    if (event.type == sf::Event::Closed)
+        window().close();
+    if (event.type == sf::Event::GainedFocus)
+        m_paused = false;
+    if (event.type == sf::Event::LostFocus)
+        m_paused = true;
+    if (event.type == sf::Event::TextEntered)
+        m_console.handleText(event.text.unicode);
+    if (event.type == sf::Event::KeyPressed)
+    {
+        m_console.handleInput(event.key.code, event.key.alt, event.key.control, event.key.shift, event.key.system);
+        if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
+            uiManager().handleKeyPress(event.key);
+    }
+    if (event.type == sf::Event::KeyReleased)
+    {
+        if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
+            uiManager().handleKeyRelease(event.key);
+    }
+    if (event.type == sf::Event::MouseWheelMoved)
+        m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
+    if (event.type == sf::Event::MouseButtonPressed)
+    {
+        if (!console().isOpen())
+            uiManager().handleMousePress(event.mouseButton);
+    }
+    if (event.type == sf::Event::MouseButtonReleased)
+    {
+        if (!console().isOpen())
+            uiManager().handleMouseRelease(event.mouseButton);
+    }
+}
+
+void Engine::beforeUpdate()
+{
+    // Do nothing by default
+}
+
+void Engine::onUpdate()
+{
+    inputManager().update();
+    console().update(m_lastTime);
+    camera().update();
+
+    m_fpsString.setColor(sf::Color::White);
+    m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
+
+    if (config().settingBoolean("sys_showstats", false))
+    {
+        std::stringstream stats;
+        stats << "Entity Count: "    << entityManager().entities().size() << std::endl;
+        stats << "Texture Count: "   << resourceManager().textureCount() << std::endl;
+        stats << "Sound Count: "     << resourceManager().soundCount() << std::endl;
+        stats << "Live Sounds: "     << resourceManager().liveSoundCount() << std::endl;
+        stats << "Music Count: "     << resourceManager().songCount() << std::endl;
+        stats << "Font Count: "      << resourceManager().fontCount() << std::endl;
+        stats << "Current State: "   << m_currentState->name() << std::endl;
+        stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
+        stats << "Camera Size: "     << camera().size().x << " " << camera().size().y << std::endl;
+        stats << "World Size: "      << camera().world().x << " " << camera().world().y << std::endl;
+
+        if (camera().lockedOn())
+        {
+            stats << "Camera Target: " << camera().lockedOn()->name() << std::endl;
+            Player* player = dynamic_cast<Player*>(camera().lockedOn());
+
+            if (player)
+                stats << "Player Id: " << player->playerId() << std::endl;
+        }
+        m_statsString.setString(stats.str());
+    }
+
+    if (config().settingBoolean("r_clear", true))
+        window().clear(config().settingColor("r_clearcolor", sf::Color::Black));
+
+    if (m_currentState->type() == RunState::Game && !console().isOpen() && !m_paused)
+    {
+        entityManager().think(m_lastTime);
+        entityManager().update(m_lastTime);
+    }
+
+
+    if (!console().isOpen())
+    {
+        if (m_currentState->isDone() && m_currentState->nextState() != NULL)
+        {
+            m_states.erase(m_currentState->name());
+            RunState* oldState = m_currentState;
+            m_currentState = oldState->nextState();
+            if (!m_currentState->isInitialized())
+                m_currentState->initialize();
+
+            delete oldState;
+        }
+        uiManager().update(m_lastTime);
+        m_currentState->update(m_lastTime);
+    }
+
+}
+
+void Engine::afterUpdate()
+{
+    // Do nothing by default
+}
+
+void Engine::beforeDraw()
+{
+    // Do nothing by default
+}
+
+void Engine::onDrawEntities()
+{
+     if (m_currentState->type() == RunState::Game)
+         entityManager().draw(window());
+}
+
+void Engine::onDraw()
+{
+    // Reset the view to the default
+    // Draw the console over everything
+    window().setView(m_defaultView);
+
+    m_currentState->draw(window());
+    uiManager().draw(window());
+}
+
+void Engine::onDrawConsole()
+{
+
+    if (config().settingBoolean("sys_showstats", false))
+        window().draw(m_statsString);
+
+    console().draw(window());
+
+    if (config().settingBoolean("r_showfps", false))
+        window().draw(m_fpsString);
+}
+
+void Engine::afterDraw()
+{
+    // Do nothing by default
 }
 
 void Engine::toggleFullscreen()
