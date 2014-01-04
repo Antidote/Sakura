@@ -44,6 +44,11 @@ sf::Vector2f Camera::position() const
     return m_pos;
 }
 
+void Camera::setSize(const float w, const float h)
+{
+    setSize(sf::Vector2f(w, h));
+}
+
 void Camera::setSize(const sf::Vector2f &size)
 {
     m_size = size;

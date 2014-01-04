@@ -1,6 +1,7 @@
 #include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/RunState.hpp"
 #include "Sakura/Core/Player.hpp"
+#include "Sakura/Core/CVar.hpp"
 #include "x86cpuinfo.h"
 #include "memorysize.h"
 
@@ -24,15 +25,6 @@ namespace Core
 Engine* Engine::m_instance = NULL;
 const std::string Engine::SAKURA_VERSION = "0.1a";
 
-void InputThread()
-{
-    while(sEngineRef().window().isOpen())
-    {
-        sEngineRef().inputManager().update();
-        sf::sleep(sf::milliseconds(20));
-    }
-}
-
 Engine::Engine()
     : m_console("log.txt"),
       m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
@@ -42,7 +34,6 @@ Engine::Engine()
       m_fullscreen(false),
       m_fps(0),
       m_paused(false),
-      m_inputThreadInitialized(false),
       m_clearColor(sf::Color::Black),
       m_currentMap(NULL),
       m_currentState(NULL)
@@ -53,21 +44,20 @@ Engine::Engine()
     console().print(Console::Info, "Build date %s %s", __DATE__, __TIME__);
     // This is a hack to initialize the openALContext
     sf::Sound snd;
+    UNUSED(snd);
 }
 
 Engine::~Engine()
 {
     console().print(Console::Info, "Shutdown complete");
     console().print(Console::Message, "********************** END OF LOG **********************");
-    m_inputThreadInitialized = false;
 }
 
-void Engine::initialize(int argc, char* argv[])
+bool Engine::initialize(int argc, char* argv[])
 {
     m_argc = argc;
     m_argv = argv;
-
-    config().initialize("config.cfg");
+    config().initialize("settings.cfg");
 
     m_title = config().settingLiteral("sys_title", defaultTitle());
     m_size = sf::Vector2u(config().settingInt("vid_width", 640), config().settingInt("vid_height", 480));
@@ -88,21 +78,17 @@ void Engine::initialize(int argc, char* argv[])
     printSysInfo();
     console().print(Console::Info, "End Hardware poll");
     // Initailize the ResourceManager
-    resourceManager().initialize(argv[0]);
+    if (!resourceManager().initialize(argv[0]))
+    {
+        // Kill the engine
+        window().close();
+        return false;
+    }
 
     resourceManager().loadFont("fonts/debug.ttf", true);
+
     m_clearColor = config().settingColor("r_clearcolor", sf::Color::Black);
 
-/*
-    // only initialize the inputthread if it's not already intialized
-    // Don't want to have stray threads littering the place
-    if (!m_inputThreadInitialized)
-    {
-        m_inputThread = std::thread(&InputThread);
-        m_inputThread.detach();
-        m_inputThreadInitialized = true;
-    }
-*/
     // Initialize the console
     m_console.initialize();
 
@@ -118,6 +104,8 @@ void Engine::initialize(int argc, char* argv[])
         m_statsString.setColor(sf::Color::White);
         ((sf::Texture&)m_statsString.getFont()->getTexture(20)).setSmooth(false);
     }
+
+    return true;
 }
 
 void Engine::restart()
@@ -139,7 +127,9 @@ void Engine::restart()
 
 int Engine::run()
 {
-    if (!m_currentState && m_states.size() <= 0)
+    // Only run check if the engine was able to successfully initialize
+    // the resource manager
+    if (window().isOpen() && (!m_currentState && m_states.size() <= 0))
     {
         console().print(Console::Fatal, "No states specified!!!");
     }
@@ -215,6 +205,17 @@ int Engine::run()
         afterDraw();
         window().display();
 
+        // This is when we handle Screenshots
+        if (inputManager().keyboard().wasKeyReleased(sf::Keyboard::F12))
+        {
+            sf::Image tmp = window().capture();
+            std::stringstream ssFile;
+            ssFile << "screenshot_" << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << ".png";
+            if (tmp.saveToFile(ssFile.str()))
+                console().print(Console::Fatal, "Saved screenshot to '%s'", ssFile.str().c_str());
+            else
+                console().print(Console::Warning, "Failed to save screenshot");
+        }
     }
     console().print(Console::Info, "Quit main loop performing preshutdown maintenance...");
     shutdown();
@@ -249,6 +250,11 @@ UIManager& Engine::uiManager()
 Config& Engine::config()
 {
     return m_config;
+}
+
+CVarManager& Engine::cvarManager()
+{
+    return m_cvarManager;
 }
 
 Console& Engine::console()
@@ -303,6 +309,7 @@ void Engine::shutdown()
     console().print(Console::Info, "Maintenance complete...");
     console().shutdown();
     config().shutdown();
+    cvarManager().writeToFile();
 }
 
 void Engine::setWireframe(bool mode)
@@ -340,8 +347,6 @@ void Engine::setCurrentState(const std::string& state)
     }
 
     m_currentState = m_states[state];
-    if (!m_currentState->isInitialized())
-        m_currentState->initialize();
 }
 
 RunState* Engine::state(const std::string& name)
@@ -372,7 +377,7 @@ void Engine::addState(RunState* newState)
         m_currentState = newState;
         // If we don't initialize the initial gamestate the engine will choke.
         // TODO: Find out why
-        m_currentState->initialize();
+        //m_currentState->initialize();
     }
 }
 
@@ -473,11 +478,13 @@ void Engine::onUpdate()
             m_states.erase(m_currentState->name());
             RunState* oldState = m_currentState;
             m_currentState = oldState->nextState();
-            if (!m_currentState->isInitialized())
-                m_currentState->initialize();
 
             delete oldState;
         }
+
+        if (!m_currentState->isInitialized())
+            m_currentState->initialize();
+
         uiManager().update(m_lastTime);
         m_currentState->update(m_lastTime);
     }
@@ -496,8 +503,10 @@ void Engine::beforeDraw()
 
 void Engine::onDrawEntities()
 {
-     if (m_currentState->type() == RunState::Game)
-         entityManager().draw(window());
+    // Entities need to be drawn to the camera's view
+    window().setView(m_defaultView);
+    if (m_currentState->type() == RunState::Game)
+        entityManager().draw(window());
 }
 
 void Engine::onDraw()
@@ -525,6 +534,14 @@ void Engine::onDrawConsole()
 void Engine::afterDraw()
 {
     // Do nothing by default
+}
+
+void Engine::parseCommandLine()
+{
+    for (int i = 1; i < m_argc; i++)
+    {
+        console().print(Console::Message, "%s", m_argv[i]);
+    }
 }
 
 void Engine::toggleFullscreen()

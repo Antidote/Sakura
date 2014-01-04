@@ -196,19 +196,44 @@ sf::Color Console::textColor() const
 
 void Console::doAutoComplete()
 {
+    // This is a rather hacky way of doing autocomplete, but it works
+    // and is pretty reliable
+
+    // First we need to get a copy of the command string,
+    // we need to tolower it and libZelda's utility function
+    // takes a reference.
     std::string enteredCommand = m_commandString.toAnsiString();
+
+    // No need to do anything if there is nothing entered
+    if (enteredCommand.length() == 0)
+        return;
+
+    // Get a lowercase version
     zelda::utility::tolower(enteredCommand);
     std::vector<std::string> potentialMatches;
+
+    // Now we need to iterate through each command, this could get a little slow
+    // which is why i consider this function a bit hacky
     for (std::pair<std::string, ConsoleCommandBase*> pair : m_commands)
     {
+        // Now we need to compare the commands
+        // Right now it doesn't handle the spaces
         if (enteredCommand == ((std::string)pair.first).substr(0, enteredCommand.length()))
             potentialMatches.push_back(pair.first);
     }
 
+    // TODO: Handle cvars
+
+    // If there is only one potential match
+    // set it to the command string
+
+    // TODO: Handle cvars
     if (potentialMatches.size() == 1)
         m_commandString = potentialMatches[0];
     else if (potentialMatches.size() > 1)
     {
+        // If not print the list to the console
+        // TODO: Handle help info
         for (std::string cmd : potentialMatches)
             print(Message, "%s", cmd.c_str());
     }
@@ -263,6 +288,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     if (m_state == Closed || m_state == Closing)
         return;
 
+    // This switch is getting huge, really need to cut it down
     switch(code)
     {
         case sf::Keyboard::Tab:
@@ -270,12 +296,35 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             break;
 
         case sf::Keyboard::BackSpace:
+        {
             if (m_commandString.getSize() > 0)
             {
-                m_cursorX -= (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
+                // If control is pressed we need to erase whole words
+                if (control)
+                {
+                    int index = m_commandString.toAnsiString().rfind(' ', m_cursorPosition - 1);
+                    if (index == (int)std::string::npos)
+                    {
+                        m_commandString.clear();
+                        m_cursorPosition = 0;
+                    }
+                    else
+                    {
+                        m_commandString.erase(index, (index - m_commandString.getSize()));
+                        m_cursorPosition = index;
+                    }
+                    m_cursorX = 0;
+                    for (int i = 0; i < (int)m_commandString.getSize(); i++)
+                        m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[i], m_drawText.getCharacterSize(), false).advance);
+                }
+                else
+                {
+                    m_cursorX -= (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
 
-                m_commandString.erase(--m_cursorPosition);
+                    m_commandString.erase(--m_cursorPosition);
+                }
             }
+        }
             break;
         case sf::Keyboard::Delete:
         {
@@ -380,18 +429,22 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 
         case sf::Keyboard::Insert: m_overwrite ^= 1; break;
         case sf::Keyboard::Home:
+        {
             m_cursorPosition = 0;
             m_drawText.setString(m_commandString);
             m_cursorX = 0;
             m_showCursor = true;
             m_cursorTime = sf::seconds(0.f);
+        }
             break;
         case sf::Keyboard::End:
+        {
             m_cursorPosition = m_commandString.getSize();
             m_drawText.setString(m_commandString);
             m_cursorX = m_drawText.getLocalBounds().width;
             m_showCursor = true;
             m_cursorTime = sf::seconds(0.f);
+        }
             break;
 
         default:
@@ -479,7 +532,10 @@ void Console::update(const sf::Time& dt)
     {
         float glyphW =  2.f;
         if (m_commandString.getSize() > 0)
-            glyphW = m_commandText.getFont()->getGlyph(m_commandString[m_cursorPosition], m_commandText.getCharacterSize(), false).bounds.width + 2;
+            glyphW = m_commandText.getFont()->getGlyph(m_commandString[m_cursorPosition], m_commandText.getCharacterSize(), false).advance + 2;
+        else
+            glyphW = m_commandText.getFont()->getGlyph(' ', m_commandText.getCharacterSize(), false).advance + 2;
+
         if (!m_overwrite)
         {
             if (!m_showCursor)
@@ -507,6 +563,8 @@ void Console::update(const sf::Time& dt)
 
 void Console::draw(sf::RenderWindow& rt)
 {
+    if (!isInitialized())
+        return;
 
     if (m_state != Closed)
     {
@@ -707,6 +765,7 @@ void Console::recalcMaxLines()
 
 void Console::drawHistory(sf::RenderWindow& rt)
 {
+
     int posY = (m_conY - 20)  - (m_commandText.getCharacterSize() * 2);
     std::vector<LogEntry>::reverse_iterator iter = m_history.rbegin() + m_startString;
     int line = 0;

@@ -24,9 +24,13 @@ namespace Sakura
 {
 namespace Core
 {
+
+typedef void (*commandFunc)(std::vector<std::string>);
+
 class ConsoleCommandBase
 {
 public:
+    //ConsoleCommandBase(const std::string& name, const std::string& help, commandFunc func);
     /*!
      * \brief ~ConsoleCommandBase
      */
@@ -40,6 +44,12 @@ public:
      * \param args
      */
     virtual void execute(std::vector<std::string> args) = 0;
+
+private:
+    std::string m_name;
+    std::string m_help;
+
+    commandFunc m_commandFunc;
 };
 
 

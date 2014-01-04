@@ -11,7 +11,7 @@
 #include "Sakura/Core/Camera.hpp"
 #include "Sakura/Core/Console.hpp"
 #include "Sakura/Core/Config.hpp"
-#include <thread>
+#include "Sakura/Core/CVarManager.hpp"
 
 // Unused macro
 #ifndef UNUSED
@@ -69,7 +69,7 @@ public:
      * \param argc
      * \param argv
      */
-    virtual void initialize(int argc, char* argv[]);
+    virtual bool initialize(int argc, char* argv[]);
 
     /*!
      * \brief restart
@@ -121,8 +121,11 @@ public:
     /*!
      * \brief config
      * \return
+     * \deprecated Use CVarManager instead
      */
     Config& config();
+
+    CVarManager& cvarManager();
 
     /*!
      * \brief instanceRef
@@ -283,6 +286,7 @@ public:
      */
     virtual void afterDraw();
 protected:
+    virtual void parseCommandLine();
     void printSysInfo();
     void operator =(const Engine&);
     Engine(const Engine&);
@@ -292,6 +296,7 @@ protected:
     ResourceManager  m_resourceManager;
     InputManager     m_inputManager;
     Config           m_config;
+    CVarManager      m_cvarManager;
 
 
     UIManager        m_uiManager;
@@ -310,10 +315,7 @@ protected:
     bool             m_fullscreen;
     float            m_fps;
     bool             m_paused;
-    bool             m_inputThreadInitialized;
     sf::Color        m_clearColor;
-
-    std::thread      m_inputThread;
 
     int              m_argc;
     char**           m_argv;

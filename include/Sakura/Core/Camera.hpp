@@ -81,6 +81,12 @@ public:
 
     /*!
      * \brief setSize Sets the size of the viewport (useful for changes in resolution)
+     * \param int width The size of the viewport.
+     * \param int height The size of the viewport.
+     */
+    void setSize(const float w, const float h);
+    /*!
+     * \brief setSize Sets the size of the viewport (useful for changes in resolution)
      * \param  sf::Vector2f size The size of the viewport, allowing for half pixels
      */
     void setSize(const sf::Vector2f& size);

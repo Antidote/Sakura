@@ -24,7 +24,8 @@ LIBS += -lsfml-graphics \
         -lsfml-system \
         -lphysfs \
         -L../libzelda/lib \
-        -lz
+        -lz \
+        -ltinyxml2
 
 unix:LIBS += \
     -lGL \
@@ -69,6 +70,8 @@ SOURCES += \
     src/Sakura/Core/Console.cpp \
     src/Sakura/Core/Config.cpp \
     src/Sakura/Core/Camera.cpp \
+    src/Sakura/Core/CVar.cpp \
+    src/Sakura/Core/CVarManager.cpp \
     src/Sakura/Gui/Widget.cpp \
     src/Sakura/Gui/Label.cpp \
     src/Sakura/Gui/Container.cpp \
@@ -122,6 +125,8 @@ HEADERS += \
     include/Sakura/Core/Camera.hpp \
     include/Sakura/Core/AI.hpp \
     include/Sakura/Core/MapFileReader.hpp \
+    include/Sakura/Core/CVar.hpp \
+    include/Sakura/Core/CVarManager.hpp \
     include/Sakura/Gui/Widget.hpp \
     include/Sakura/Gui/Label.hpp \
     include/Sakura/Gui/Container.hpp \

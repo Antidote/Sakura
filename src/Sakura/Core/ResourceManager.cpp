@@ -27,7 +27,7 @@ ResourceManager::ResourceManager()
             // if x is greater than the half width and y is still less than the half width
             // as well as if the y is greater than the half width and x is less
             // fill with red
-            // otherwise fill with transparent
+            // otherwise fill with semi-transparent white
             if ((x > (32/2) && y < (32/2)) || (x < (32/2) && y > (32/2)))
                 fillColor = sf::Color::Red;
             else
@@ -45,7 +45,7 @@ ResourceManager::~ResourceManager()
     delete m_defaultTexture;
 }
 
-void ResourceManager::initialize(const char* argv0)
+bool ResourceManager::initialize(const char* argv0)
 {
     sEngineRef().console().print(Console::Info, "Initializing PHYSFS");
     sEngineRef().console().print(Console::Info, "Sakura built with PHYSFS Version %i.%i.%i", PHYSFS_VER_MAJOR, PHYSFS_VER_MINOR, PHYSFS_VER_PATCH);
@@ -63,7 +63,11 @@ void ResourceManager::initialize(const char* argv0)
         sEngineRef().console().print(Console::Info,    "Description:    %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->description);
         sEngineRef().console().print(Console::Message, "-------------------------");
     }
-    PHYSFS_mount(sEngineRef().config().settingLiteral("fs_basepath", "data").c_str(), "/", 0);
+    if (!PHYSFS_mount(sEngineRef().config().settingLiteral("fs_basepath", "data").c_str(), "/", 0))
+    {
+        sEngineRef().console().print(Console::Fatal, "Failed to mount basepath %s", sEngineRef().config().settingLiteral("fs_basepath", "data").c_str());
+        return false;
+    }
 
     char** listBegin = PHYSFS_enumerateFiles("/");
     std::vector<std::string> archives;
@@ -90,6 +94,8 @@ void ResourceManager::initialize(const char* argv0)
         sEngineRef().console().print(Console::Info, "Mounting archive: %s", archive.c_str());
         PHYSFS_mount(archive.c_str(), NULL, 1);
     }
+
+    return true;
 }
 
 bool ResourceManager::loadSound(const std::string &name, bool preload)

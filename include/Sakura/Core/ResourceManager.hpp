@@ -37,7 +37,7 @@ public:
      * \brief initialize Initializes the resource subsystem, starting PHYSFS, and mounting any archives (.pak or .zip) available
      * \param argv0 Used by PHYSFS to determine the current working directory.
      */
-    void initialize(const char* argv0);
+    bool initialize(const char* argv0);
 
     /*!
      * \brief Loads the specified sound if it exists in the filesystem.
