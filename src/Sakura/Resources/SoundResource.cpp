@@ -11,7 +11,7 @@ namespace Resources
 SoundResource::SoundResource(const std::string &filename, bool precache)
     : ResourceBase(filename, precache)
 {
-    if (precache)
+    if (precache && exists())
     {
         sEngineRef().console().print(Core::Console::Info, "Precaching sound %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
@@ -20,7 +20,9 @@ SoundResource::SoundResource(const std::string &filename, bool precache)
 
 SoundResource::~SoundResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Sound destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+    if (exists())
+        sEngineRef().console().print(Core::Console::Info, "Sound destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+
     delete m_data;
 }
 
@@ -51,6 +53,9 @@ bool SoundResource::isPrecached()
 
 void SoundResource::load()
 {
+    if (!exists())
+        return;
+
     if (!m_precached)
         sEngineRef().console().print(Core::Console::Info, "Loading sound %s...", m_filename.c_str());
 

@@ -15,11 +15,12 @@ class SoundResource;
 class SongResource;
 class TextureResource;
 class FontResource;
+class SpriteResource;
 }
 
 namespace Core
 {
-
+class SSpriteFile;
 /*!
  * \class ResourceManager
  * \brief Manages a list of all resources currently loaded, it's been designed to load resources dynamically.
@@ -180,6 +181,12 @@ public:
      */
     int fontCount() const;
 
+    bool loadSprite(const std::string& name, bool preload = false);
+    SSpriteFile* sprite(const std::string& name);
+    void removeSprite(const std::string& name);
+    bool spriteExists(const std::string& name) const;
+    int spriteCount() const;
+
     /*!
      * \brief Shuts down the ResourceManager
      */
@@ -198,6 +205,7 @@ private:
     std::unordered_map<std::string, Resources::SongResource*>    m_songResources;
     std::unordered_map<std::string, Resources::TextureResource*> m_textureResources;
     std::unordered_map<std::string, Resources::FontResource*>    m_fontResources;
+    std::unordered_map<std::string, Resources::SpriteResource*>  m_spriteResources;
 };
 
 } // Core

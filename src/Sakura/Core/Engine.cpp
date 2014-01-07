@@ -205,17 +205,6 @@ int Engine::run()
         afterDraw();
         window().display();
 
-        // This is when we handle Screenshots
-        if (inputManager().keyboard().wasKeyReleased(sf::Keyboard::F12))
-        {
-            sf::Image tmp = window().capture();
-            std::stringstream ssFile;
-            ssFile << "screenshot_" << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << ".png";
-            if (tmp.saveToFile(ssFile.str()))
-                console().print(Console::Fatal, "Saved screenshot to '%s'", ssFile.str().c_str());
-            else
-                console().print(Console::Warning, "Failed to save screenshot");
-        }
     }
     console().print(Console::Info, "Quit main loop performing preshutdown maintenance...");
     shutdown();
@@ -373,12 +362,7 @@ void Engine::addState(RunState* newState)
     // If there is no current state specified
     // go ahead and assign it to the new state
     if (m_currentState == NULL)
-    {
         m_currentState = newState;
-        // If we don't initialize the initial gamestate the engine will choke.
-        // TODO: Find out why
-        //m_currentState->initialize();
-    }
 }
 
 Map* Engine::currentMap() const
@@ -407,6 +391,16 @@ void Engine::onEvent(const sf::Event& event)
     {
         if (!console().isOpen() && event.key.code != sf::Keyboard::Unknown)
             uiManager().handleKeyRelease(event.key);
+        if (event.key.code == sf::Keyboard::F12)
+        {
+            sf::Image tmp = window().capture();
+            std::stringstream ssFile;
+            ssFile << "screenshot_" << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << ".png";
+            if (tmp.saveToFile(ssFile.str()))
+                console().print(Console::Info, "Saved screenshot to '%s'", ssFile.str().c_str());
+            else
+                console().print(Console::Warning, "Failed to save screenshot");
+        }
     }
     if (event.type == sf::Event::MouseWheelMoved)
         m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);

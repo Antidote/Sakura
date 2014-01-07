@@ -516,15 +516,20 @@ void Config::parse()
     {
         lineNum++;
         // If the line starts with a comment don't try to parse it
-        if (line.find_first_of("//") == 0)
+        if (line.find("//") == 0)
             continue;
+
+        if (line.find("/") == 0)
+        {
+            sEngineRef().console().print(Console::Warning, "Malformed comment at line %i", lineNum);
+            continue;
+        }
 
         bool done = false;
         // Remove comments
-        if (line.find_first_of("//") != std::string::npos)
-        {
-            line.erase(line.find_first_of("//"), line.find_first_of("//") - line.size());
-        }
+        if (line.find("//") != std::string::npos)
+            line.erase(line.find("//"), line.find("//") - line.size());
+
         std::replace(line.begin(), line.end(), '\n', ' ');
         zelda::utility::tolower(line);
         line.erase(line.size());
@@ -640,7 +645,6 @@ void Config::parse()
 
                 if (val.find_last_of('"') == std::string::npos || (zelda::utility::countChar(val, '"', lastIndex) % 2))
                     sEngineRef().console().print(Console::Warning, "Malformed literal at line %i", lineNum);
-
             }
             else
             {

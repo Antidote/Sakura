@@ -5,6 +5,7 @@
 #include "Sakura/Resources/SongResource.hpp"
 #include "Sakura/Resources/TextureResource.hpp"
 #include "Sakura/Resources/FontResource.hpp"
+#include "Sakura/Resources/SpriteResource.hpp"
 #include <iostream>
 #include <physfs.h>
 
@@ -316,6 +317,8 @@ sf::Font* ResourceManager::font(const std::string& name)
         return ((Resources::FontResource*)m_fontResources[name])->data();
     }
 
+    sEngineRef().console().print(Console::Warning, "Font %s does not exist", name.c_str());
+
     return NULL;
 }
 
@@ -341,6 +344,65 @@ bool ResourceManager::fontExists(const std::string& name)
 int ResourceManager::fontCount() const
 {
     return m_fontResources.size();
+}
+
+bool ResourceManager::loadSprite(const std::string& name, bool preload)
+{
+    if (spriteExists(name))
+        return true;
+
+    Resources::SpriteResource* sprite = new Resources::SpriteResource(name, preload);
+    if (sprite->exists())
+    {
+        m_spriteResources.insert(std::make_pair(name, sprite));
+        return true;
+    }
+
+    delete sprite;
+    sprite = NULL;
+    return false;
+}
+
+SSpriteFile* ResourceManager::sprite(const std::string& name)
+{
+    if (spriteExists(name))
+    {
+        if (!m_spriteResources[name]->isLoaded())
+            m_spriteResources[name]->load();
+        return ((Resources::SpriteResource*)m_spriteResources[name])->data();
+    }
+    else if (loadSprite(name, true))
+    {
+        return ((Resources::SpriteResource*)m_spriteResources[name])->data();
+    }
+
+    sEngineRef().console().print(Console::Warning, "Sprite container %s does not exist", name.c_str());
+
+    return NULL;
+}
+
+void ResourceManager::removeSprite(const std::string& name)
+{
+    Resources::SpriteResource* resource = m_spriteResources[name];
+    m_spriteResources.erase(m_spriteResources.find(name));
+    delete resource;
+    resource = NULL;
+}
+
+bool ResourceManager::spriteExists(const std::string& name) const
+{
+    std::unordered_map<std::string, Resources::SpriteResource*>::const_iterator iter = m_spriteResources.begin();
+
+    for (; iter != m_spriteResources.end(); ++iter)
+        if (iter->first == name)
+            return true;
+
+    return false;
+}
+
+int ResourceManager::spriteCount() const
+{
+    return m_spriteResources.size();
 }
 
 void ResourceManager::shutdown()
@@ -401,6 +463,15 @@ void ResourceManager::purgeResources()
     }
 
     m_songResources.clear();
+
+    std::unordered_map<std::string, Resources::SpriteResource*>::iterator spriteIter = m_spriteResources.begin();
+    for (; spriteIter != m_spriteResources.end(); ++spriteIter)
+    {
+        delete spriteIter->second;
+        spriteIter->second = NULL;
+    }
+
+    m_spriteResources.clear();
 }
 
 } // Core

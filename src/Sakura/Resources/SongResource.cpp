@@ -11,7 +11,7 @@ SongResource::SongResource(const std::string& filename, bool precache)
     : ResourceBase(filename, precache),
       m_stream(filename)
 {
-    if (precache)
+    if (precache && exists())
     {
         sEngineRef().console().print(Core::Console::Info, "Precaching song %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
@@ -20,7 +20,8 @@ SongResource::SongResource(const std::string& filename, bool precache)
 
 SongResource::~SongResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Song destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+    if (exists())
+        sEngineRef().console().print(Core::Console::Info, "Song destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     delete m_data;
 }
 
@@ -36,6 +37,9 @@ sf::Music* SongResource::data()
 
 void SongResource::load()
 {
+    if (!exists())
+        return;
+
     if (!m_precached)
         sEngineRef().console().print(Core::Console::Info, "Loading song %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 

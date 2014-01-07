@@ -121,8 +121,8 @@ void Console::handleText(const sf::Uint32 unicode)
 #ifdef SFML_SYSTEM_LINUX
     if (unicode == XK_grave || unicode == XK_dead_grave)
     {
-        if (sEngineRef().inputManager().keyboard().isKeyDown(sf::Keyboard::LShift) ||
-            sEngineRef().inputManager().keyboard().isKeyDown(sf::Keyboard::RShift))
+        if (sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::LShift) ||
+            sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::RShift))
             m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
         else
             m_conHeight = sEngineRef().config().settingInt("con_height", 320);
@@ -153,16 +153,21 @@ void Console::handleText(const sf::Uint32 unicode)
 
 void Console::toggleConsole()
 {
+    std::string sndFile;
     if (m_state == Closed || m_state == Closing)
     {
         m_state = Opening;
-        sEngineRef().resourceManager().playSound("sounds/LTTP_Pause_Open.wav");
+        sndFile = sEngineRef().config().settingLiteral("con_sndopen", "sounds/con_open.wav");
+
     }
     else
     {
         m_state = Closing;
-        sEngineRef().resourceManager().playSound("sounds/LTTP_Pause_Close.wav");
+        sndFile = sEngineRef().config().settingLiteral("con_sndclose", "sounds/con_close.wav");
     }
+
+    if (sndFile != std::string())
+        sEngineRef().resourceManager().playSound(sndFile);
 
     m_commandString = "";
     m_cursorPosition = 0;
@@ -229,7 +234,7 @@ void Console::doAutoComplete()
 
     // TODO: Handle cvars
     if (potentialMatches.size() == 1)
-        m_commandString = potentialMatches[0];
+        m_commandString = potentialMatches[0] + " ";
     else if (potentialMatches.size() > 1)
     {
         // If not print the list to the console
@@ -618,16 +623,16 @@ void Console::print(Console::Level level, const std::string& fmt, ...)
         case Message:
             break;
         case Info:
-            label = "[Info] ";
+            label = "[Info   ] ";
             break;
         case Warning:
             label = "[Warning] ";
             break;
         case Error:
-            label = "[Error] ";
+            label = "[Error  ] ";
             break;
         case Fatal:
-            label = "[FATAL] ";
+            label = "[FATAL  ] ";
             break;
     }
     std::vector<std::string> entries = zelda::utility::split(str, '\n');

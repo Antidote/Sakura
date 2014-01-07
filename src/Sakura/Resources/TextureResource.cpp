@@ -10,7 +10,7 @@ namespace Resources
 TextureResource::TextureResource(const std::string &filename, bool precache)
     : ResourceBase(filename, precache)
 {
-    if (precache)
+    if (precache && exists())
     {
         sEngineRef().console().print(Core::Console::Info, "Precaching texture %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
@@ -19,7 +19,8 @@ TextureResource::TextureResource(const std::string &filename, bool precache)
 
 TextureResource::~TextureResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Texture destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+    if (exists())
+        sEngineRef().console().print(Core::Console::Info, "Texture destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
     delete m_data;
 }
 
@@ -35,8 +36,12 @@ sf::Texture* TextureResource::data()
 
 void TextureResource::load()
 {
+    if (!exists())
+         return;
+
     if (!m_precached)
         sEngineRef().console().print(Core::Console::Info, "Loading texture %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+
     PHYSFS_file* file = PHYSFS_openRead(m_filename.c_str());
     if (file)
     {

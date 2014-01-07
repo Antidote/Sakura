@@ -81,7 +81,14 @@ SOURCES += \
     src/Sakura/Resources/TextureResource.cpp \
     src/Sakura/Resources/SoundResource.cpp \
     src/Sakura/Resources/FontResource.cpp \
-    src/Sakura/Resources/SongResource.cpp
+    src/Sakura/Resources/SongResource.cpp \
+    src/Sakura/Core/SSprite.cpp \
+    src/Sakura/Core/SSpriteFile.cpp \
+    src/Sakura/Core/SSpriteFileReader.cpp \
+    src/Sakura/Core/SSpriteFileWriter.cpp \
+    src/Sakura/Core/SSpriteFrame.cpp \
+    src/Sakura/Core/SSpritePart.cpp \
+    src/Sakura/Resources/SpriteResource.cpp
 
 INCLUDEPATH +=  \
     ../libzelda/include \
@@ -138,5 +145,12 @@ HEADERS += \
     include/Sakura/Resources/SoundResource.hpp \
     include/Sakura/Resources/FontResource.hpp \
     include/Sakura/Core/ResourceBase.hpp \
-    include/Sakura/Resources/SongResource.hpp
+    include/Sakura/Resources/SongResource.hpp \
+    include/Sakura/Core/SSprite.hpp \
+    include/Sakura/Core/SSpriteFile.hpp \
+    include/Sakura/Core/SSpriteFileReader.hpp \
+    include/Sakura/Core/SSpriteFileWriter.hpp \
+    include/Sakura/Core/SSpriteFrame.hpp \
+    include/Sakura/Core/SSpritePart.hpp \
+    include/Sakura/Resources/SpriteResource.hpp
 

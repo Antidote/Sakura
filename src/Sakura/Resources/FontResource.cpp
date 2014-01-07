@@ -11,7 +11,7 @@ namespace Resources
 FontResource::FontResource(const std::string& filepath, bool precache)
     : ResourceBase(filepath, precache)
 {
-    if (precache)
+    if (precache && exists())
     {
         sEngineRef().console().print(Core::Console::Info, "Precaching font %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
         load();
@@ -20,7 +20,9 @@ FontResource::FontResource(const std::string& filepath, bool precache)
 
 FontResource::~FontResource()
 {
-    sEngineRef().console().print(Core::Console::Info, "Font destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+    if (exists())
+        sEngineRef().console().print(Core::Console::Info, "Font destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+
     delete m_data;
 }
 
@@ -36,6 +38,9 @@ sf::Font* FontResource::data()
 
 void FontResource::load()
 {
+    if (!exists())
+        return;
+
     if (!m_precached)
         sEngineRef().console().print(Core::Console::Info, "Loading font %s@%s...", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 
