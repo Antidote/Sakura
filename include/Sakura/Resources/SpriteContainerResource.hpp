@@ -1,5 +1,5 @@
-#ifndef SPRITERESOURCE_HPP
-#define SPRITERESOURCE_HPP
+#ifndef SPRITECONTAINERRESOURCE_HPP
+#define SPRITECONTAINERRESOURCE_HPP
 
 #include "Sakura/Core/ResourceBase.hpp"
 #include "Sakura/Core/SSpriteFile.hpp"
@@ -9,11 +9,11 @@ namespace Sakura
 namespace Resources
 {
 
-class SpriteResource : public Core::ResourceBase<Core::SSpriteFile>
+class SpriteContainerResource : public Core::ResourceBase<Core::SSpriteFile>
 {
 public:
-    SpriteResource(const std::string& filename, bool precache);
-    ~SpriteResource();
+    SpriteContainerResource(const std::string& filename, bool precache);
+    ~SpriteContainerResource();
 
     /*!
      * \brief filename
@@ -56,4 +56,4 @@ private:
 }
 }
 
-#endif // SPRITERESOURCE_HPP
+#endif // SPRITECONTAINERRESOURCE_HPP

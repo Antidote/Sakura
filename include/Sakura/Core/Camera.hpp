@@ -69,6 +69,13 @@ public:
 
     /*!
      * \brief setPosition Sets the camera's position (does not ignore the lock target, keep this in mind)
+     * \param x The new x position in world space (allowing for half pixels)
+     * \param y The new x position in world space (allowing for half pixels)
+     */
+    void setPosition(float x, float y);
+
+    /*!
+     * \brief setPosition Sets the camera's position (does not ignore the lock target, keep this in mind)
      * \param pos The new position in world space (allowing for half pixels)
      */
     void setPosition(const sf::Vector2f& pos);

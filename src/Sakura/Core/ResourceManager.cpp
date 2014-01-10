@@ -5,7 +5,9 @@
 #include "Sakura/Resources/SongResource.hpp"
 #include "Sakura/Resources/TextureResource.hpp"
 #include "Sakura/Resources/FontResource.hpp"
-#include "Sakura/Resources/SpriteResource.hpp"
+#include "Sakura/Resources/SpriteContainerResource.hpp"
+#include <BinaryReader.hpp>
+#include <IOException.hpp>
 #include <iostream>
 #include <physfs.h>
 
@@ -56,13 +58,18 @@ bool ResourceManager::initialize(const char* argv0)
     sEngineRef().console().print(Console::Info, "Local PHYSFS Version %i.%i.%i", (int)version.major, (int)version.minor, (int)version.patch);
     const PHYSFS_ArchiveInfo** archiveInfoBegin = PHYSFS_supportedArchiveTypes();
 
-    sEngineRef().console().print(Console::Info, "Support Archive types:");
+    // Print the supported archive formats
+    sEngineRef().console().print(Console::Info, "Supported Archive types:");
     for (const PHYSFS_ArchiveInfo** archiveInfo = archiveInfoBegin; *archiveInfo != NULL; archiveInfo++)
     {
-        sEngineRef().console().print(Console::Info,    "Extension:      %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->extension);
-        sEngineRef().console().print(Console::Info,    "Author:         %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->author);
-        sEngineRef().console().print(Console::Info,    "Description:    %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->description);
-        sEngineRef().console().print(Console::Message, "-------------------------");
+        if (!std::string(((PHYSFS_ArchiveInfo*)*archiveInfo)->extension).compare("ZIP"))
+        {
+            sEngineRef().console().print(Console::Info,    "Extension:      %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->extension);
+            sEngineRef().console().print(Console::Info,    "Author:         %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->author);
+            sEngineRef().console().print(Console::Info,    "Description:    %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->description);
+            sEngineRef().console().print(Console::Info,    "URL:            %s", ((PHYSFS_ArchiveInfo*)*archiveInfo)->url);
+            sEngineRef().console().print(Console::Message, "-------------------------");
+        }
     }
     if (!PHYSFS_mount(sEngineRef().config().settingLiteral("fs_basepath", "data").c_str(), "/", 0))
     {
@@ -88,12 +95,55 @@ bool ResourceManager::initialize(const char* argv0)
     PHYSFS_freeList(listBegin);
 
     // Sort files in descending order
-    std::sort(archives.begin(), archives.end(), std::greater<std::string>());
+    std::sort(archives.begin(), archives.end(), std::less<std::string>());
 
     for (std::string archive : archives)
     {
         sEngineRef().console().print(Console::Info, "Mounting archive: %s", archive.c_str());
-        PHYSFS_mount(archive.c_str(), NULL, 1);
+        PHYSFS_mount(archive.c_str(), NULL, 0);
+    }
+
+    try
+    {
+        zelda::io::BinaryReader reader("precache");
+        sEngineRef().console().print(Console::Info, "Attempting to load precache list...");
+        Uint32 magic = reader.readUInt32();
+        if (magic != 0x45484353)
+            throw zelda::error::IOException("Not a valid precache file");
+
+        Uint32 fileCount = reader.readUInt32();
+        while( (fileCount--) > 0)
+        {
+            std::string filepath = reader.readString();
+            ResourceType resType = (ResourceType)reader.readByte();
+
+            switch (resType)
+            {
+                case Texture:
+                    loadTexture(filepath, true);
+                    break;
+                case Font:
+                    loadFont(filepath, true);
+                    break;
+                case Song:
+                    loadSong(filepath, true);
+                    break;
+                case Sound:
+                    loadSound(filepath, true);
+                    break;
+                case SpriteContainer:
+                    loadSpriteContainer(filepath, true);
+                    break;
+                case Map:
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    catch (zelda::error::Exception e)
+    {
+        sEngineRef().console().print(Console::Error, "Failed to load precache list:\n%s", e.message().c_str());
     }
 
     return true;
@@ -346,15 +396,15 @@ int ResourceManager::fontCount() const
     return m_fontResources.size();
 }
 
-bool ResourceManager::loadSprite(const std::string& name, bool preload)
+bool ResourceManager::loadSpriteContainer(const std::string& name, bool preload)
 {
-    if (spriteExists(name))
+    if (spriteContainerExists(name))
         return true;
 
-    Resources::SpriteResource* sprite = new Resources::SpriteResource(name, preload);
+    Resources::SpriteContainerResource* sprite = new Resources::SpriteContainerResource(name, preload);
     if (sprite->exists())
     {
-        m_spriteResources.insert(std::make_pair(name, sprite));
+        m_spriteContainerResources.insert(std::make_pair(name, sprite));
         return true;
     }
 
@@ -363,17 +413,17 @@ bool ResourceManager::loadSprite(const std::string& name, bool preload)
     return false;
 }
 
-SSpriteFile* ResourceManager::sprite(const std::string& name)
+SSpriteFile* ResourceManager::spriteContainer(const std::string& name)
 {
-    if (spriteExists(name))
+    if (spriteContainerExists(name))
     {
-        if (!m_spriteResources[name]->isLoaded())
-            m_spriteResources[name]->load();
-        return ((Resources::SpriteResource*)m_spriteResources[name])->data();
+        if (!m_spriteContainerResources[name]->isLoaded())
+            m_spriteContainerResources[name]->load();
+        return ((Resources::SpriteContainerResource*)m_spriteContainerResources[name])->data();
     }
-    else if (loadSprite(name, true))
+    else if (loadSpriteContainer(name, true))
     {
-        return ((Resources::SpriteResource*)m_spriteResources[name])->data();
+        return ((Resources::SpriteContainerResource*)m_spriteContainerResources[name])->data();
     }
 
     sEngineRef().console().print(Console::Warning, "Sprite container %s does not exist", name.c_str());
@@ -381,28 +431,28 @@ SSpriteFile* ResourceManager::sprite(const std::string& name)
     return NULL;
 }
 
-void ResourceManager::removeSprite(const std::string& name)
+void ResourceManager::removeSpriteContainer(const std::string& name)
 {
-    Resources::SpriteResource* resource = m_spriteResources[name];
-    m_spriteResources.erase(m_spriteResources.find(name));
+    Resources::SpriteContainerResource* resource = m_spriteContainerResources[name];
+    m_spriteContainerResources.erase(m_spriteContainerResources.find(name));
     delete resource;
     resource = NULL;
 }
 
-bool ResourceManager::spriteExists(const std::string& name) const
+bool ResourceManager::spriteContainerExists(const std::string& name) const
 {
-    std::unordered_map<std::string, Resources::SpriteResource*>::const_iterator iter = m_spriteResources.begin();
+    std::unordered_map<std::string, Resources::SpriteContainerResource*>::const_iterator iter = m_spriteContainerResources.begin();
 
-    for (; iter != m_spriteResources.end(); ++iter)
+    for (; iter != m_spriteContainerResources.end(); ++iter)
         if (iter->first == name)
             return true;
 
     return false;
 }
 
-int ResourceManager::spriteCount() const
+int ResourceManager::spriteContainerCount() const
 {
-    return m_spriteResources.size();
+    return m_spriteContainerResources.size();
 }
 
 void ResourceManager::shutdown()
@@ -464,14 +514,14 @@ void ResourceManager::purgeResources()
 
     m_songResources.clear();
 
-    std::unordered_map<std::string, Resources::SpriteResource*>::iterator spriteIter = m_spriteResources.begin();
-    for (; spriteIter != m_spriteResources.end(); ++spriteIter)
+    std::unordered_map<std::string, Resources::SpriteContainerResource*>::iterator spriteIter = m_spriteContainerResources.begin();
+    for (; spriteIter != m_spriteContainerResources.end(); ++spriteIter)
     {
         delete spriteIter->second;
         spriteIter->second = NULL;
     }
 
-    m_spriteResources.clear();
+    m_spriteContainerResources.clear();
 }
 
 } // Core

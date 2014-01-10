@@ -9,6 +9,7 @@ namespace Sakura
 {
 namespace Core
 {
+
 Entity::Entity(const std::string& name, Type type)
     : m_name(name),
       m_id(0),

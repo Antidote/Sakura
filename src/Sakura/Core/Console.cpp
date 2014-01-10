@@ -32,7 +32,7 @@ Console::Console(const std::string &logfile)
       m_isInitialized(false),
       m_overwrite(false),
       m_maxLines(15),
-      m_conHeight(240),
+      m_conHeight(234),
       m_conY(0.0f),
       m_defaultConColor(sf::Color::White)
 {
@@ -60,15 +60,15 @@ void Console::initialize()
     m_borderShape.setOutlineColor(sf::Color::Red);
     m_borderShape.setOutlineThickness(1.f);
 
-    m_conHeight = sEngineRef().config().settingInt("con_height", 240);
+    m_conHeight = sEngineRef().config().settingInt("con_height", 234);
 
     if (sEngineRef().resourceManager().fontExists("fonts/debug.ttf"))
     {
         m_commandText.setFont(*sEngineRef().resourceManager().font("fonts/debug.ttf"));
-        m_commandText.setCharacterSize(15);
+        m_commandText.setCharacterSize(12);
         ((sf::Texture&)m_commandText.getFont()->getTexture(m_commandText.getCharacterSize())).setSmooth(false);
         m_drawText.setFont(*sEngineRef().resourceManager().font("fonts/debug.ttf"));
-        m_drawText.setCharacterSize(15);
+        m_drawText.setCharacterSize(12);
         ((sf::Texture&)m_drawText.getFont()->getTexture(m_drawText.getCharacterSize())).setSmooth(false);
         recalcMaxLines();
     }
@@ -125,7 +125,7 @@ void Console::handleText(const sf::Uint32 unicode)
             sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::RShift))
             m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
         else
-            m_conHeight = sEngineRef().config().settingInt("con_height", 320);
+            m_conHeight = sEngineRef().config().settingInt("con_height", 234);
 
         toggleConsole();
         return;
@@ -269,7 +269,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
         if (shift)
             m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
         else
-            m_conHeight = sEngineRef().config().settingInt("con_height", 240);
+            m_conHeight = sEngineRef().config().settingInt("con_height", 234);
 
         toggleConsole();
         return;
@@ -298,7 +298,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     {
         case sf::Keyboard::Tab:
             doAutoComplete();
-            break;
+        break;
 
         case sf::Keyboard::BackSpace:
         {
@@ -330,7 +330,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
                 }
             }
         }
-            break;
+        break;
         case sf::Keyboard::Delete:
         {
             if (m_commandString.getSize() > 0)
@@ -341,7 +341,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
                 m_commandString.erase(m_cursorPosition);
             }
         }
-            break;
+        break;
 
         case sf::Keyboard::PageUp:
         {
@@ -353,7 +353,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             if ((int)((m_history.size())  - m_startString) >= m_maxLines)
                 m_startString++;
         }
-            break;
+        break;
         case sf::Keyboard::PageDown:
         {
             if (m_startString > 0)
@@ -366,12 +366,12 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
                 m_startString--;
             }
         }
-            break;
+        break;
         case sf::Keyboard::Return:
         {
             parseCommand();
         }
-            break;
+        break;
         case sf::Keyboard::Left:
         {
             if (m_cursorPosition <= 0)
@@ -381,7 +381,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             m_showCursor = true;
             m_cursorTime = sf::seconds(0.f);
         }
-            break;
+        break;
         case sf::Keyboard::Right:
         {
             if (m_cursorPosition >= (int)m_commandString.getSize())
@@ -391,7 +391,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             m_showCursor = true;
             m_cursorTime = sf::seconds(0.f);
         }
-            break;
+        break;
 
         case sf::Keyboard::Up:
         {
@@ -411,7 +411,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             if (m_currentCommand > (int)m_commandHistory.size() - 1)
                 m_currentCommand = m_commandHistory.size() - 1;
         }
-            break;
+        break;
 
         case sf::Keyboard::Down:
         {
@@ -430,7 +430,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             if (m_currentCommand < 0)
                 m_currentCommand = 0;
         }
-            break;
+        break;
 
         case sf::Keyboard::Insert: m_overwrite ^= 1; break;
         case sf::Keyboard::Home:
@@ -441,7 +441,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             m_showCursor = true;
             m_cursorTime = sf::seconds(0.f);
         }
-            break;
+        break;
         case sf::Keyboard::End:
         {
             m_cursorPosition = m_commandString.getSize();
@@ -450,10 +450,10 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
             m_showCursor = true;
             m_cursorTime = sf::seconds(0.f);
         }
-            break;
+        break;
 
         default:
-            break;
+        break;
     }
 
     if (m_cursorPosition > (int)m_commandString.getSize())
@@ -621,19 +621,19 @@ void Console::print(Console::Level level, const std::string& fmt, ...)
     switch(level)
     {
         case Message:
-            break;
+        break;
         case Info:
             label = "[Info   ] ";
-            break;
+        break;
         case Warning:
             label = "[Warning] ";
-            break;
+        break;
         case Error:
             label = "[Error  ] ";
-            break;
+        break;
         case Fatal:
             label = "[FATAL  ] ";
-            break;
+        break;
     }
     std::vector<std::string> entries = zelda::utility::split(str, '\n');
 
@@ -696,65 +696,72 @@ void Console::parseCommand()
     if (m_commandString.isEmpty())
         return;
 
-    std::vector<std::string> args = zelda::utility::split(m_commandString.toAnsiString(), ' ');
-
     m_commandHistory.insert(m_commandHistory.begin(), m_commandString);
     // If the command history is full
     // Erase the end entry
     if (m_commandHistory.size() > 5)
         m_commandHistory.erase(m_commandHistory.end());
+
     print(Message, m_commandString.toAnsiString());
 
-    if (args.size() > 0)
+    std::vector<std::string> commands = zelda::utility::split(m_commandString.toAnsiString(), ';');
+    for (std::string cmd : commands)
     {
-        // Eventually need to handle semi colons for multiple commands
-        // The command is always the first word
-        std::string command = args[0];
-        std::transform(command.begin(), command.end(), command.begin(), ::tolower);
+        std::string tmpCmd = cmd;
+        if (tmpCmd[0] == ' ')
+            tmpCmd.erase(tmpCmd.begin(), tmpCmd.begin()+1);
+        std::vector<std::string> args = zelda::utility::split(tmpCmd, ' ');
 
-        // Hard coded commands
-        if (!command.compare("list"))
+        if (args.size() > 0)
         {
-            // List all registered commands
-            for (std::pair<std::string, ConsoleCommandBase*> cmd : m_commands)
-                print(Message, cmd.first);
+            // The command is always the first word
+            std::string command = args[0];
+            std::transform(command.begin(), command.end(), command.begin(), ::tolower);
 
-            print(Message, "set");
-            resetCursor();
-            return;
-        }
-
-        // remove the command
-        args.erase(args.begin());
-        if (m_commands.find(command) != m_commands.end())
-            m_commands[command]->execute(args);
-        else
-        {
-            if (!command.compare("set"))
+            // Hard coded commands
+            if (!command.compare("list"))
             {
-                if (args.size() == 0)
-                    return;
+                // List all registered commands
+                for (std::pair<std::string, ConsoleCommandBase*> cmd : m_commands)
+                    print(Message, cmd.first);
 
-                std::string setting = args[0];
-                zelda::utility::tolower(setting);
-                // Not a command?
-                // It's probably a setting
-                if (args.size() == 2)
-                {
-                    sEngineRef().config().setSettingLiteral(setting, args[1]);
-                }
-                else if (args.size() > 1)
-                {
-                    std::string val = "";
-                    args.erase(args.begin());
-                    for (std::string s : args)
-                        val += s + " ";
+                print(Message, "set");
+                resetCursor();
+                return;
+            }
 
-                    if (val.size() > 1)
-                        sEngineRef().config().setSettingLiteral(setting, val);
+            // remove the command
+            args.erase(args.begin());
+            if (m_commands.find(command) != m_commands.end())
+                m_commands[command]->execute(args);
+            else
+            {
+                if (!command.compare("set"))
+                {
+                    if (args.size() == 0)
+                        return;
+
+                    std::string setting = args[0];
+                    zelda::utility::tolower(setting);
+                    // Not a command?
+                    // It's probably a setting
+                    if (args.size() == 2)
+                    {
+                        sEngineRef().config().setSettingLiteral(setting, args[1]);
+                    }
+                    else if (args.size() > 1)
+                    {
+                        std::string val = "";
+                        args.erase(args.begin());
+                        for (std::string s : args)
+                            val += s + " ";
+
+                        if (val.size() > 1)
+                            sEngineRef().config().setSettingLiteral(setting, val);
+                    }
+                    else
+                        print(Info, "%s -> %s", setting.c_str(), sEngineRef().config().settingLiteral(setting).c_str());
                 }
-                else
-                    print(Info, "%s -> %s", setting.c_str(), sEngineRef().config().settingLiteral(setting).c_str());
             }
         }
     }
@@ -770,7 +777,6 @@ void Console::recalcMaxLines()
 
 void Console::drawHistory(sf::RenderWindow& rt)
 {
-
     int posY = (m_conY - 20)  - (m_commandText.getCharacterSize() * 2);
     std::vector<LogEntry>::reverse_iterator iter = m_history.rbegin() + m_startString;
     int line = 0;
@@ -785,19 +791,19 @@ void Console::drawHistory(sf::RenderWindow& rt)
             case Message:
             case Info:
                 m_drawText.setColor(textColor());
-                break;
+            break;
             case Warning:
                 m_drawText.setColor(sf::Color::Yellow);
-                break;
+            break;
             case Error:
                 m_drawText.setColor(sf::Color::Red);
-                break;
+            break;
             case Fatal:
                 if (!m_showError)
                     m_drawText.setColor(sf::Color::Red);
                 else
                     m_drawText.setColor(sf::Color::Transparent);
-                break;
+            break;
         }
 
         m_drawText.setPosition(2, posY);
@@ -810,6 +816,7 @@ void Console::drawHistory(sf::RenderWindow& rt)
 
 void Console::drawSeparator(sf::RenderWindow& rt)
 {
+    m_drawText.setColor(sf::Color::White);
     m_drawText.setString("v"+sEngineRef().gameVersion());
     float versionWidth = (m_drawText.getLocalBounds().width + 2);
     int sepWidth = m_drawText.getFont()->getGlyph('^', m_drawText.getCharacterSize(), false).advance +

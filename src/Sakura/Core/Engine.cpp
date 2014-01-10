@@ -22,12 +22,15 @@ namespace Sakura
 {
 namespace Core
 {
-Engine* Engine::m_instance = NULL;
-const std::string Engine::SAKURA_VERSION = "0.1a";
 
-Engine::Engine()
-    : m_console("log.txt"),
-      m_camera(sf::Vector2f(100, 100), sf::Vector2f(320, 240)),
+Engine* Engine::m_instance = NULL;
+const std::string Engine::SAKURA_VERSION = "0.5a";
+
+Engine::Engine(int argc, char* argv[])
+    : m_argc(argc),
+      m_argv(argv),
+      m_console("log.txt"),
+      m_camera(sf::Vector2f(0, 0), sf::Vector2f(512, 224)),
       m_lastTime(sf::seconds(0)),
       m_frameLimit(0),
       m_vsync(false),
@@ -53,10 +56,8 @@ Engine::~Engine()
     console().print(Console::Message, "********************** END OF LOG **********************");
 }
 
-bool Engine::initialize(int argc, char* argv[])
+bool Engine::initialize()
 {
-    m_argc = argc;
-    m_argv = argv;
     config().initialize("settings.cfg");
 
     m_title = config().settingLiteral("sys_title", defaultTitle());
@@ -78,7 +79,7 @@ bool Engine::initialize(int argc, char* argv[])
     printSysInfo();
     console().print(Console::Info, "End Hardware poll");
     // Initailize the ResourceManager
-    if (!resourceManager().initialize(argv[0]))
+    if (!resourceManager().initialize(m_argv[0]))
     {
         // Kill the engine
         window().close();
@@ -119,7 +120,7 @@ void Engine::restart()
         setFullscreen(false);
 
     shutdown();
-    initialize(m_argc, m_argv);
+    initialize();
 
     if (wasFullscreen)
         setFullscreen(true);
@@ -187,6 +188,10 @@ int Engine::run()
             // onDrawEntities allows the developer to draw specifings, either
             // before or after the entities
             onDrawEntities();
+
+            // Reset the view to the default
+            // Draw the console over everything
+            window().setView(window().getDefaultView());
 
             // onDraw renders the current state as well as the ui components, the reason for this is simple
             // If anyone wants to draw anything before the ui, they simply need to use the RunState's draw event
@@ -290,6 +295,7 @@ void Engine::shutdown()
         pair.second = NULL;
     }
     m_states.clear();
+    m_currentState = NULL;
 
     console().print(Console::Info, "Killing Entity Manager...");
     entityManager().shutdown();
@@ -439,7 +445,8 @@ void Engine::onUpdate()
         stats << "Live Sounds: "     << resourceManager().liveSoundCount() << std::endl;
         stats << "Music Count: "     << resourceManager().songCount() << std::endl;
         stats << "Font Count: "      << resourceManager().fontCount() << std::endl;
-        stats << "Current State: "   << m_currentState->name() << std::endl;
+        if (m_currentState)
+            stats << "Current State: "   << m_currentState->name() << std::endl;
         stats << "Camera Position: " << camera().position().x << " " << camera().position().y << std::endl;
         stats << "Camera Size: "     << camera().size().x << " " << camera().size().y << std::endl;
         stats << "World Size: "      << camera().world().x << " " << camera().world().y << std::endl;
@@ -498,17 +505,12 @@ void Engine::beforeDraw()
 void Engine::onDrawEntities()
 {
     // Entities need to be drawn to the camera's view
-    window().setView(m_defaultView);
     if (m_currentState->type() == RunState::Game)
         entityManager().draw(window());
 }
 
 void Engine::onDraw()
 {
-    // Reset the view to the default
-    // Draw the console over everything
-    window().setView(m_defaultView);
-
     m_currentState->draw(window());
     uiManager().draw(window());
 }

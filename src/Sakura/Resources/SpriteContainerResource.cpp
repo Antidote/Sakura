@@ -1,13 +1,13 @@
 #include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/SSpriteFileReader.hpp"
-#include "Sakura/Resources/SpriteResource.hpp"
+#include "Sakura/Resources/SpriteContainerResource.hpp"
 #include <physfs.h>
 
 namespace Sakura
 {
 namespace Resources
 {
-SpriteResource::SpriteResource(const std::string &filename, bool precache)
+SpriteContainerResource::SpriteContainerResource(const std::string &filename, bool precache)
     : ResourceBase(filename, precache)
 {
     if (precache && exists())
@@ -17,7 +17,7 @@ SpriteResource::SpriteResource(const std::string &filename, bool precache)
     }
 }
 
-SpriteResource::~SpriteResource()
+SpriteContainerResource::~SpriteContainerResource()
 {
     if (exists())
         sEngineRef().console().print(Core::Console::Info, "Sprite container destroyed %s@%s", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
@@ -25,17 +25,17 @@ SpriteResource::~SpriteResource()
     delete m_data;
 }
 
-std::string SpriteResource::filename() const
+std::string SpriteContainerResource::filename() const
 {
     return m_filename;
 }
 
-Core::SSpriteFile*SpriteResource::data()
+Core::SSpriteFile*SpriteContainerResource::data()
 {
     return m_data;
 }
 
-void SpriteResource::load()
+void SpriteContainerResource::load()
 {
     if (!exists())
         return;
@@ -74,17 +74,17 @@ void SpriteResource::load()
     }
 }
 
-bool SpriteResource::exists() const
+bool SpriteContainerResource::exists() const
 {
     return PHYSFS_exists(m_filename.c_str());
 }
 
-bool SpriteResource::isLoaded() const
+bool SpriteContainerResource::isLoaded() const
 {
     return m_isLoaded;
 }
 
-bool SpriteResource::isPrecached()
+bool SpriteContainerResource::isPrecached()
 {
     return m_precached;
 }

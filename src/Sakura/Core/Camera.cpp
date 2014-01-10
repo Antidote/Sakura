@@ -34,6 +34,11 @@ sf::Vector2i Camera::world() const
     return m_world;
 }
 
+void Camera::setPosition(float x, float y)
+{
+    setPosition(sf::Vector2f(x, y));
+}
+
 void Camera::setPosition(const sf::Vector2f &pos)
 {
     m_pos = pos;

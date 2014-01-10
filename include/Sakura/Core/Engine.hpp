@@ -61,7 +61,7 @@ public:
     /*!
      * \brief Engine
      */
-    Engine();
+    Engine(int argc, char *argv[]);
     virtual ~Engine();
 
     /*!
@@ -69,7 +69,7 @@ public:
      * \param argc
      * \param argv
      */
-    virtual bool initialize(int argc, char* argv[]);
+    virtual bool initialize();
 
     /*!
      * \brief restart
@@ -196,7 +196,12 @@ public:
      */
     virtual std::string gameVersion() const;
 
+    /*!
+     * \brief defaultTitle
+     * \return
+     */
     virtual std::string defaultTitle() const;
+
     /*!
      * \brief setFullscreen
      * \param isFullscreen
@@ -290,6 +295,11 @@ protected:
     void printSysInfo();
     void operator =(const Engine&);
     Engine(const Engine&);
+
+
+    int              m_argc;
+    char**           m_argv;
+
     Console          m_console;
     Camera           m_camera;
     EntityManager    m_entityManager;
@@ -316,9 +326,6 @@ protected:
     float            m_fps;
     bool             m_paused;
     sf::Color        m_clearColor;
-
-    int              m_argc;
-    char**           m_argv;
 
     // State name -> State Object
     // e.g m_states["game"] = new GameState;

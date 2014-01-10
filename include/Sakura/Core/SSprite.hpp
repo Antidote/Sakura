@@ -42,6 +42,7 @@ public:
 
     void addStateId(int id);
 
+    sf::Texture& currentTexture() const;
     /*!
      * \brief Returns the texture id of a given state
      * \param index The index of the id.
@@ -50,6 +51,7 @@ public:
     int stateId(int index) const;
     void setStateIds(std::vector<int> ids);
     Uint32 stateCount() const;
+    void setCurrentState(const Uint32 id);
 
     void addPart(SSpritePart* part);
     SSpritePart* part(const std::string& name);
@@ -61,11 +63,9 @@ public:
     virtual void update(const sf::Time& dt);
     virtual void draw(sf::RenderTarget& rt);
 
-    sf::Texture& sfTexture() const;
 private:
     SSpriteFile* m_root;
     std::string  m_name;
-    sf::Time     m_currentTime;
     Direction    m_direction;
     sf::Vector2f m_position;
 

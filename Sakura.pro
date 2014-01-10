@@ -4,8 +4,8 @@ DESTDIR = lib
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-DEFINES += GLEW_STATIC\
-    INTERNAL
+DEFINES += GLEW_STATIC #\
+#    INTERNAL
 
 win32:LIBS += \
     -Lextlibs/GLEW/lib \
@@ -88,7 +88,7 @@ SOURCES += \
     src/Sakura/Core/SSpriteFileWriter.cpp \
     src/Sakura/Core/SSpriteFrame.cpp \
     src/Sakura/Core/SSpritePart.cpp \
-    src/Sakura/Resources/SpriteResource.cpp
+    src/Sakura/Resources/SpriteContainerResource.cpp
 
 INCLUDEPATH +=  \
     ../libzelda/include \
@@ -152,5 +152,5 @@ HEADERS += \
     include/Sakura/Core/SSpriteFileWriter.hpp \
     include/Sakura/Core/SSpriteFrame.hpp \
     include/Sakura/Core/SSpritePart.hpp \
-    include/Sakura/Resources/SpriteResource.hpp
+    include/Sakura/Resources/SpriteContainerResource.hpp
 

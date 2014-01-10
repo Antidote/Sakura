@@ -140,6 +140,10 @@ void SSpritePart::updateTexture()
         origin.y = m_currentFrame->size().y;
         scaleY = -scaleY;
     }
+    m_partSprite.setScale(scaleX, scaleY);
+    m_partSprite.setOrigin(origin);
+    m_partSprite.setTexture(m_root->currentTexture());
+    m_partSprite.setTextureRect(sf::IntRect((sf::Vector2i)m_currentFrame->textureOffset(), (sf::Vector2i)m_currentFrame->size()));
 }
 
 }

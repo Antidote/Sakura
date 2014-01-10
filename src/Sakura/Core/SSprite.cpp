@@ -1,3 +1,5 @@
+#include "Sakura/Core/Engine.hpp"
+#include "Sakura/Core/ResourceManager.hpp"
 #include "Sakura/Core/SSprite.hpp"
 #include "Sakura/Core/SSpritePart.hpp"
 #include "Sakura/Core/SSpriteFile.hpp"
@@ -70,6 +72,11 @@ void SSprite::addStateId(int id)
         m_stateIds.push_back(id);
 }
 
+sf::Texture& SSprite::currentTexture() const
+{
+    return sEngineRef().resourceManager().texture(m_root->texture(m_currentState)->Filepath);
+}
+
 int SSprite::stateId(int index) const
 {
     if (index >= (int)m_stateIds.size())
@@ -89,6 +96,11 @@ void SSprite::setStateIds(std::vector<int> ids)
 Uint32 SSprite::stateCount() const
 {
     return m_stateIds.size();
+}
+
+void SSprite::setCurrentState(const Uint32 id)
+{
+    m_currentState = id;
 }
 
 void SSprite::addPart(SSpritePart* part)
@@ -133,16 +145,6 @@ void SSprite::update(const sf::Time& dt)
 {
     if (!m_root)
         return;
-
-    m_currentTime += dt;
-
-    if (m_currentTime.asSeconds() > 1.f)
-    {
-        m_currentTime = sf::seconds(0);
-        m_currentState++;
-        if (m_currentState >= stateCount())
-            m_currentState = 0;
-    }
 
     for (SSpritePart* part : m_parts)
         part->update(dt);

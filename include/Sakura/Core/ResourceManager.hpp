@@ -15,7 +15,7 @@ class SoundResource;
 class SongResource;
 class TextureResource;
 class FontResource;
-class SpriteResource;
+class SpriteContainerResource;
 }
 
 namespace Core
@@ -181,11 +181,11 @@ public:
      */
     int fontCount() const;
 
-    bool loadSprite(const std::string& name, bool preload = false);
-    SSpriteFile* sprite(const std::string& name);
-    void removeSprite(const std::string& name);
-    bool spriteExists(const std::string& name) const;
-    int spriteCount() const;
+    bool loadSpriteContainer(const std::string& name, bool preload = false);
+    SSpriteFile* spriteContainer(const std::string& name);
+    void removeSpriteContainer(const std::string& name);
+    bool spriteContainerExists(const std::string& name) const;
+    int spriteContainerCount() const;
 
     /*!
      * \brief Shuts down the ResourceManager
@@ -198,14 +198,23 @@ public:
     void purgeResources();
 
 private:
-    sf::Texture*                                      m_defaultTexture;
+    enum ResourceType
+    {
+        Texture,
+        Font,
+        Song,
+        Sound,
+        SpriteContainer,
+        Map
+    };
 
-    std::unordered_map<std::string, Resources::SoundResource*>   m_soundBufferResources;
-    std::unordered_map<std::string, sf::Sound*>                  m_sounds;
-    std::unordered_map<std::string, Resources::SongResource*>    m_songResources;
-    std::unordered_map<std::string, Resources::TextureResource*> m_textureResources;
-    std::unordered_map<std::string, Resources::FontResource*>    m_fontResources;
-    std::unordered_map<std::string, Resources::SpriteResource*>  m_spriteResources;
+    sf::Texture*                                                          m_defaultTexture;
+    std::unordered_map<std::string, Resources::SoundResource*>            m_soundBufferResources;
+    std::unordered_map<std::string, sf::Sound*>                           m_sounds;
+    std::unordered_map<std::string, Resources::SongResource*>             m_songResources;
+    std::unordered_map<std::string, Resources::TextureResource*>          m_textureResources;
+    std::unordered_map<std::string, Resources::FontResource*>             m_fontResources;
+    std::unordered_map<std::string, Resources::SpriteContainerResource*>  m_spriteContainerResources;
 };
 
 } // Core
