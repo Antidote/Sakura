@@ -106,6 +106,8 @@ HEADERS += \
     include/x86cpuinfo.h \
     include/memorysize.h \
     include/cpuinfo.h \
+    include/Signal.h \
+    include/Delegate.h \
     include/Sakura/Core/UIManager.hpp \
     include/Sakura/Core/Tile.hpp \
     include/Sakura/Core/RunState.hpp \
