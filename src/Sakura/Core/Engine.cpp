@@ -597,29 +597,48 @@ void Engine::printSysInfo()
     sf::ContextSettings context = m_window.getSettings();
 
     console().print(Console::Message, "***********************************************************");
-    console().print(Console::Info, "CPU                  %s", cpuinfo->getBrandString());
-    console().print(Console::Info, "CPU Vendor           %s", cpuinfo->getVendorString());
-    console().print(Console::Info, "CPU Cores            %i", cpuinfo->getNumberOfProcessors());
-    console().print(Console::Info, "CPU Max Threads      %i", cpuinfo->getMaxLogicalProcessors());
-    console().print(Console::Info, "System RAM           %s", prettySize(getMemorySize()).c_str());
-    console().print(Console::Info, "GL_VENDOR            %s", glGetString(GL_VENDOR));
-    console().print(Console::Info, "GL_RENDERER          %s", glGetString(GL_RENDERER));
-    console().print(Console::Info, "GL_VERSION           %s", glGetString(GL_VERSION));
 
+    // CPU Info
+    console().print(Console::Info, "CPU: %s %s with %i Cores and %i Max Threads.",
+                    cpuinfo->getVendorString(),
+                    cpuinfo->getBrandString(),
+                    cpuinfo->getNumberOfProcessors(),
+                    cpuinfo->getMaxLogicalProcessors());
+
+    // RAM Info
+    console().print(Console::Info, "RAM: %s", prettySize(getMemorySize()).c_str());
+
+    // Graphics Info
+    console().print(Console::Info, "GPU: %s %s OpenGL Version %s",
+                    glGetString(GL_VENDOR),
+                    glGetString(GL_RENDERER),
+                    glGetString(GL_VERSION));
+
+    // OpenGL Extensions
     std::string extension((const char*)glGetString(GL_EXTENSIONS));
     std::replace(extension.begin(), extension.end(), ' ', '\n');
 
+    int dummy; // For some reason we need this...
+
     console().print(Console::Info, "GL_EXTENSIONS:\n%s",        extension.c_str());
-    int lastOccur;
-    console().print(Console::Info, "Found %i GL Extensions", zelda::utility::countChar(extension, '\n', lastOccur));
+    console().print(Console::Info, "Found %i GL Extensions", zelda::utility::countChar(extension, '\n',dummy));
+
+    extension.clear();
+
+    // Depth Buffer Bit..
     console().print(Console::Info, "GL_DEPTH_BUFFER_BIT  %i", context.depthBits);
+
+    //  OpenAL
     if (alGetString(AL_VENDOR))
         console().print(Console::Info, "AL_VENDOR            %s", alGetString(AL_VENDOR));
 
-    console().print(Console::Info, "ALC_DEVICE_SPECIFIER %s", alcGetString(NULL, ALC_DEVICE_SPECIFIER));
-    char* str;
-    extension.clear();
-    str =  (char*)alcGetString(NULL, ALC_EXTENSIONS);
+    console().print(Console::Info, "ALC_DEVICE_SPECIFIER %s", alcGetString(NULL, ALC_DEVICE_SPECIFIER));  
+
+
+    // ALC Extensions...
+
+    char* str =  (char*)alcGetString(NULL, ALC_EXTENSIONS);
+
     if (str)
     {
         extension = std::string((const char*)str);
@@ -630,6 +649,9 @@ void Engine::printSysInfo()
     std::replace(extension.begin(), extension.end(), ' ', '\n');
     if (!extension.empty())
         console().print(Console::Info, "ALC_EXTENSIONS:\n%s", extension.c_str());
+
+    // The End.
+    extension.clear();
 
     console().print(Console::Message, "***********************************************************");
 }

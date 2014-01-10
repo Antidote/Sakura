@@ -110,7 +110,6 @@ HEADERS += \
     include/Delegate.h \
     include/Sakura/Core/UIManager.hpp \
     include/Sakura/Core/Tile.hpp \
-    include/Sakura/Core/Signal.h \
     include/Sakura/Core/RunState.hpp \
     include/Sakura/Core/ResourceManager.hpp \
     include/Sakura/Core/Player.hpp \
@@ -124,7 +123,6 @@ HEADERS += \
     include/Sakura/Core/EntityManager.hpp \
     include/Sakura/Core/Entity.hpp \
     include/Sakura/Core/Engine.hpp \
-    include/Sakura/Core/Delegate.h \
     include/Sakura/Core/ConsoleCommandBase.hpp \
     include/Sakura/Core/Console.hpp \
     include/Sakura/Core/Config.hpp \
