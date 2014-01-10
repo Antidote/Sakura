@@ -618,10 +618,8 @@ void Engine::printSysInfo()
     std::string extension((const char*)glGetString(GL_EXTENSIONS));
     std::replace(extension.begin(), extension.end(), ' ', '\n');
 
-    int dummy; // For some reason we need this...
-
     console().print(Console::Info, "GL_EXTENSIONS:\n%s",        extension.c_str());
-    console().print(Console::Info, "Found %i GL Extensions", zelda::utility::countChar(extension, '\n',dummy));
+    console().print(Console::Info, "Found %i GL Extensions", zelda::utility::countChar(extension, '\n'));
 
     extension.clear();
 

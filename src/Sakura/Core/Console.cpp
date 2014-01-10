@@ -478,6 +478,10 @@ void Console::handleMouseWheel(int delta, int x, int y)
         return;
 
     m_startString += (delta*4);
+    if (m_startString < 0)
+        m_startString = 0;
+    if (m_startString >= (int)m_history.size())
+        m_startString = m_history.size() - 1;
 }
 
 void Console::update(const sf::Time& dt)

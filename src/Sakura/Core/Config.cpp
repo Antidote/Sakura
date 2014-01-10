@@ -641,9 +641,7 @@ void Config::parse()
                 for (std::string s : tokens2)
                     val += s + " ";
 
-                int lastIndex;
-
-                if (val.find_last_of('"') == std::string::npos || (zelda::utility::countChar(val, '"', lastIndex) % 2))
+                if (val.find_last_of('"') == std::string::npos || (zelda::utility::countChar(val, '"') % 2))
                     sEngineRef().console().print(Console::Warning, "Malformed literal at line %i", lineNum);
             }
             else
