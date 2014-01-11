@@ -38,7 +38,7 @@ public:
     /*!
      * \brief usage
      */
-    virtual void usage() = 0;
+    virtual std::string usage() const= 0;
     /*!
      * \brief execute
      * \param args
@@ -67,7 +67,7 @@ public:
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
 
     /*!
      * \brief execute
@@ -85,14 +85,14 @@ public:
     /*!
      * \brief FullscreenCommand
      */
-    FullscreenCommand() {};
+    FullscreenCommand() {}
 
-    ~FullscreenCommand() {};
+    ~FullscreenCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
 
     /*!
      * \brief execute
@@ -107,13 +107,13 @@ public:
     /*!
      * \brief ClearCommand
      */
-    ClearCommand() {};
-    ~ClearCommand() {};
+    ClearCommand() {}
+    ~ClearCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
     /*!
      * \brief execute
      * \param args
@@ -128,13 +128,13 @@ public:
     /*!
      * \brief WireframeCommand
      */
-    WireframeCommand() {};
-    ~WireframeCommand() {};
+    WireframeCommand() {}
+    ~WireframeCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
     /*!
      * \brief execute
      * \param args
@@ -148,13 +148,13 @@ public:
     /*!
      * \brief PlayCommand
      */
-    PlayCommand() {};
-    ~PlayCommand() {};
+    PlayCommand() {}
+    ~PlayCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
     /*!
      * \brief execute
      * \param args
@@ -168,13 +168,13 @@ public:
     /*!
      * \brief BindCommand
      */
-    BindCommand() {};
-    ~BindCommand() {};
+    BindCommand() {}
+    ~BindCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
 
     /*!
      * \brief execute
@@ -189,13 +189,13 @@ public:
     /*!
      * \brief UnbindCommand
      */
-    UnbindCommand() {};
-    ~UnbindCommand() {};
+    UnbindCommand() {}
+    ~UnbindCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
 
     /*!
      * \brief execute
@@ -210,13 +210,13 @@ public:
     /*!
      * \brief RestartCommand
      */
-    RestartCommand() {};
-    ~RestartCommand() {};
+    RestartCommand() {}
+    ~RestartCommand() {}
 
     /*!
      * \brief usage
      */
-    void usage();
+    std::string usage() const;
 
     /*!
      * \brief execute

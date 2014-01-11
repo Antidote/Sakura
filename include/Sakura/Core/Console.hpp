@@ -85,7 +85,7 @@ public:
      * \brief Console
      * \param logfile
      */
-    Console(const std::string& logfile);
+    Console(const std::string& logfile="log.txt");
     ~Console();
 
     /*!
@@ -256,6 +256,8 @@ private:
 
     // Command history remembers the last 5 commands
     std::vector<sf::String> m_commandHistory;
+
+    sf::Text m_fitText;
 };
 
 } // Core

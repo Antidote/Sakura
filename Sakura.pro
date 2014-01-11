@@ -150,5 +150,4 @@ HEADERS += \
     include/Sakura/Core/SSpriteFileWriter.hpp \
     include/Sakura/Core/SSpriteFrame.hpp \
     include/Sakura/Core/SSpritePart.hpp \
-    include/Sakura/Resources/SpriteContainerResource.hpp
-
+    include/Sakura/Resources/SpriteContainerResource.hpp \

@@ -20,20 +20,24 @@ public:
     ~CVarManager();
 
     bool registerCVar(CVar* cvar);
+    void requestSerialization(CVar* cvar);
 
     CVar* findCVar(const std::string& name);
 
-    std::vector<CVar*> archivedCVars();
-    std::vector<CVar*> bindings();
+    std::vector<CVar*> archivedCVars() const;
+    std::vector<CVar*> bindings() const;
+    std::vector<CVar*> cvars() const;
 
-    void writeToFile(const std::string&  file=std::string("config.cfg"));
-    void loadFromFile(const std::string& file=std::string("config.cfg"));
+    void writeToFile(const std::string&  file=std::string());
+    void loadFromFile(const std::string& file=std::string());
 
 private:
-    std::unordered_map<std::string, CVar*> m_cvars;
-    void writeBindings(TiXmlNode* root, bool newConfig);
-    void loadBindings(TiXmlNode* root);
+    bool suppressDeveloper();
+    void restoreDeveloper(bool oldDeveloper);
+
     TiXmlDocument m_config;
+    std::unordered_map<std::string, CVar*> m_cvars;
+
 };
 } // Core
 } // Sakura

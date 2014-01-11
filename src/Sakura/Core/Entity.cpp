@@ -20,9 +20,9 @@ Entity::Entity(const std::string& name, Type type)
 {
     getUniqueName();
 
-    if (sEngineRef().resourceManager().fontExists("fonts/debug"))
+    if (sEngineRef().resourceManager().fontExists("fonts/debug.ttf"))
     {
-        m_debugInfo.setFont(*sEngineRef().resourceManager().font("fonts/debug"));
+        m_debugInfo.setFont(*sEngineRef().resourceManager().font("fonts/debug.ttf"));
         m_debugInfo.setCharacterSize(10);
         //m_debugInfo.setStyle(sf::Text::Bold);
         ((sf::Texture&)m_debugInfo.getFont()->getTexture(10)).setSmooth(false);

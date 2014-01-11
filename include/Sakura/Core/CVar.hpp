@@ -5,6 +5,7 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <SFML/Window/Joystick.hpp>
+#include <SFML/Graphics/Color.hpp>
 
 class TiXmlNode;
 
@@ -44,11 +45,15 @@ class CVar
 {
 public:
 
-    struct Binding
+    class Binding
     {
+    public:
         sf::Keyboard::Key Key;
         MouseButton       Button;
         Joystick          Joysticks[sf::Joystick::Count];
+
+        Binding();
+        void clear();
     };
 
     enum Type
@@ -57,6 +62,7 @@ public:
         Integer,
         Float,
         Literal,
+        Color,
         Bind
     };
 
@@ -73,19 +79,25 @@ public:
     };
 
     CVar(const std::string& name, const std::string& value, const std::string& help, Type type, int flags);
+    CVar(const std::string& name, Binding value, const std::string& help, int flags);
+    CVar(const std::string& name, const sf::Color& value, const std::string& help, int flags);
+
+
 
     std::string name()                         const;
     std::string help()                         const;
     float       toFloat(bool* isValid   =NULL) const;
     bool        toBoolean(bool* isValid =NULL) const;
     int         toInteger(bool* isValid =NULL) const;
-    std::string toLiteral()                    const;
-    Binding     toBinding()                    const;
+    std::string toLiteral(bool* isValid =NULL) const;
+    sf::Color   toColor  (bool* isValid =NULL) const;
+    Binding     toBinding(bool* isValid =NULL) const;
 
     bool fromFloat  (const float val);
     bool fromBoolean(const bool val);
-    bool fromInteger    (const int val);
+    bool fromInteger(const int val);
     bool fromLiteral(const std::string& val);
+    bool fromColor  (const sf::Color& val);
     bool fromBinding(Binding binding);
 
     bool isFloat()       const;
@@ -94,6 +106,9 @@ public:
     bool isLiteral()     const;
     bool isBinding()     const;
     bool isModified()    const;
+    bool isReadOnly()    const;
+    bool isCheat()       const;
+    bool isArchive()     const;
     void clearModified();
     void setModified();
     void clearBindings();
@@ -104,6 +119,21 @@ public:
     void deserialize(TiXmlNode* rootNode);
     void serializeCVar(TiXmlNode* rootNode, bool oldDeveloper);
     void serializeBinding(TiXmlNode* rootNode);
+
+    /*!
+     * \brief Unlocks the CVar for writing if it is ReadOnly.
+     * <b>Handle with care!!!</b> if you use unlock(), make sure
+     * you lock the cvar using lock()
+     * \see lock
+     */
+    void unlock();
+
+    /*!
+     * \brief Locks the CVar to prevent writing if it is ReadOnly.
+     * Unlike it's partner function unlock, lock is harmless
+     * \see unlock
+     */
+    void lock();
 protected:
     std::string m_name;
     std::string m_value;
@@ -112,6 +142,7 @@ protected:
     Binding     m_binding;
     Type        m_type;
     int         m_flags;
+    bool        m_allowedWrite;
 };
 
 } // Core

@@ -25,12 +25,23 @@ namespace Core
 
 Engine* Engine::m_instance = NULL;
 const std::string Engine::SAKURA_VERSION = "0.5a";
+extern CVar* com_drawwire;
+
+CVar* com_title        = NULL;
+CVar* com_windowWidth  = NULL;
+CVar* com_windowHeight = NULL;
+CVar* com_fullscreen   = NULL;
+CVar* com_framelimit   = NULL;
+CVar* com_verticalSync = NULL;
+CVar* com_showstats    = NULL;
+CVar* com_clear        = NULL;
+CVar* com_clearColor   = NULL;
+CVar* com_drawwire     = NULL;
 
 Engine::Engine(int argc, char* argv[])
     : m_argc(argc),
       m_argv(argv),
-      m_console("log.txt"),
-      m_camera(sf::Vector2f(0, 0), sf::Vector2f(512, 224)),
+      m_camera(sf::Vector2f(0, 0), sf::Vector2f(256, 224)),
       m_lastTime(sf::seconds(0)),
       m_frameLimit(0),
       m_vsync(false),
@@ -56,20 +67,23 @@ Engine::~Engine()
     console().print(Console::Message, "********************** END OF LOG **********************");
 }
 
+
 bool Engine::initialize()
 {
+    registerCVars();
+
     config().initialize("settings.cfg");
 
-    m_title = config().settingLiteral("sys_title", defaultTitle());
-    m_size = sf::Vector2u(config().settingInt("vid_width", 640), config().settingInt("vid_height", 480));
+    m_title = com_title->toLiteral();
+    m_size = sf::Vector2u(com_windowWidth->toInteger(), com_windowHeight->toInteger());
     console().print(Console::Info, "Creating context...");
-    m_fullscreen = config().settingBoolean("r_fullscreen", false);
+    m_fullscreen = com_fullscreen->toBoolean();
     setFullscreen(m_fullscreen);
 
-    m_frameLimit = config().settingInt("sys_framelimit", 60);
+    m_frameLimit = com_framelimit->toInteger();
     window().setFramerateLimit(m_frameLimit);
 
-    m_vsync = config().settingBoolean("sys_vsync", true);
+    m_vsync = com_verticalSync->toBoolean();
     window().setVerticalSyncEnabled(m_vsync);
 
     // QUICK GRAB THE VIEW!!!
@@ -88,7 +102,7 @@ bool Engine::initialize()
 
     resourceManager().loadFont("fonts/debug.ttf", true);
 
-    m_clearColor = config().settingColor("r_clearcolor", sf::Color::Black);
+    m_clearColor = com_clearColor->toColor();
 
     // Initialize the console
     m_console.initialize();
@@ -115,7 +129,7 @@ void Engine::restart()
     // It checks for fullscreen and goes back to windowed
     // if it was. Then it shuts everything down and runs intialize
     // again
-    bool wasFullscreen = config().settingBoolean("r_fullscreen", false);
+    bool wasFullscreen = com_fullscreen->toBoolean();
     if (wasFullscreen)
         setFullscreen(false);
 
@@ -139,23 +153,27 @@ int Engine::run()
     while(window().isOpen())
     {
         // Check to see if the framelimit has been changed
-        if (config().settingInt("sys_framelimit", 60) != m_frameLimit)
+        if (com_framelimit->isModified())
         {
             // It has? Let's update the window.
-            m_frameLimit = config().settingInt("sys_framelimit", 60);
+            m_frameLimit = com_framelimit->toInteger();
+            com_framelimit->clearModified();
             window().setFramerateLimit(m_frameLimit);
         }
 
         // Check to see if vsync has been changed
-        if (config().settingBoolean("sys_vsync", true) != m_vsync)
+        if (com_verticalSync->isModified())
         {
             // It has? Let's update the window
-            m_vsync = config().settingBoolean("sys_vsync", true);
-            window().setVerticalSyncEnabled(m_vsync);
+            com_verticalSync->clearModified();
+            window().setVerticalSyncEnabled(com_verticalSync->toBoolean());
         }
 
-        if (config().settingBoolean("r_fullscreen", false) != m_fullscreen)
-            setFullscreen(config().settingBoolean("r_fullscreen", false));
+        if (com_fullscreen->isModified())
+        {
+            setFullscreen(com_fullscreen->toBoolean());
+            com_fullscreen->clearModified();
+        }
 
         m_lastTime = m_clock.restart();
         m_fps = 1.f / m_lastTime.asSeconds();
@@ -172,11 +190,18 @@ int Engine::run()
         onUpdate();
         afterUpdate();
 
+        if (com_clear->toBoolean())
+        {
+            if (com_clear->isModified())
+                com_clear->clearModified();
+            window().clear(config().settingColor("r_clearcolor", sf::Color::Black));
+        }
+
         beforeDraw();
-        for (int i = 0; i < (config().settingBoolean("r_drawwire", false) ? 2 : 1); i++)
+        for (int i = 0; i < (com_drawwire->toBoolean() ? 2 : 1); i++)
         {
             window().setView(m_camera.view());
-            if (config().settingBoolean("r_drawwire", false) && i == 1)
+            if (com_drawwire->toBoolean() && i == 1)
             {
                 glDisable(GL_TEXTURE_2D);
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -201,7 +226,7 @@ int Engine::run()
             // by default it draws stats, followed by the console and finally the FPS
             onDrawConsole();
 
-            if (config().settingBoolean("r_drawwire", false) && i == 1)
+            if (com_drawwire->toBoolean() && i == 1)
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 glEnable(GL_TEXTURE_2D);
@@ -273,7 +298,7 @@ sf::RenderWindow& Engine::window()
 
 void Engine::setClearColor(const sf::Color& color)
 {
-    config().setSettingColor("r_clearcolor", color);
+    com_clearColor->fromColor(color);
     m_clearColor = color;
 }
 
@@ -288,6 +313,9 @@ void Engine::shutdown()
         window().close();
 
 
+    console().print(Console::Info, "Killing Entity Manager...");
+    camera().setLockedOn(NULL);
+    entityManager().shutdown();
     console().print(Console::Info, "Clearing states");
     for (std::pair<std::string, RunState*> pair : m_states)
     {
@@ -297,8 +325,6 @@ void Engine::shutdown()
     m_states.clear();
     m_currentState = NULL;
 
-    console().print(Console::Info, "Killing Entity Manager...");
-    entityManager().shutdown();
     console().print(Console::Info, "Killing Resource Manager...");
     resourceManager().shutdown();
     console().print(Console::Info, "Maintenance complete...");
@@ -314,13 +340,8 @@ void Engine::setWireframe(bool mode)
 
 void Engine::setFullscreen(bool isFullscreen)
 {
-    // Don't toggle if it's the same
-    if (isFullscreen == m_fullscreen && window().isOpen())
-        return;
-
     window().close();
-    m_fullscreen = isFullscreen;
-    config().setSettingBoolean("r_fullscreen", isFullscreen);
+
     if (isFullscreen)
         window().create(sf::VideoMode(m_size.x, m_size.y), m_title, sf::Style::Fullscreen);
     else
@@ -407,6 +428,12 @@ void Engine::onEvent(const sf::Event& event)
             else
                 console().print(Console::Warning, "Failed to save screenshot");
         }
+        // Handle toggling of fullscreen
+        if (event.key.code == sf::Keyboard::Return && event.key.alt)
+        {
+            sEngineRef().toggleFullscreen();
+            return;
+        }
     }
     if (event.type == sf::Event::MouseWheelMoved)
         m_console.handleMouseWheel(event.mouseWheel.delta, event.mouseWheel.x, event.mouseWheel.y);
@@ -461,9 +488,6 @@ void Engine::onUpdate()
         }
         m_statsString.setString(stats.str());
     }
-
-    if (config().settingBoolean("r_clear", true))
-        window().clear(config().settingColor("r_clearcolor", sf::Color::Black));
 
     if (m_currentState->type() == RunState::Game && !console().isOpen() && !m_paused)
     {
@@ -542,8 +566,7 @@ void Engine::parseCommandLine()
 
 void Engine::toggleFullscreen()
 {
-    // Default it to true so it will automatically be fullscreen
-    setFullscreen(!config().settingBoolean("r_fullscreen", true));
+    com_fullscreen->fromBoolean(!com_fullscreen->toBoolean());
 }
 
 bool Engine::consoleInitialized()
@@ -630,7 +653,7 @@ void Engine::printSysInfo()
     if (alGetString(AL_VENDOR))
         console().print(Console::Info, "AL_VENDOR            %s", alGetString(AL_VENDOR));
 
-    console().print(Console::Info, "ALC_DEVICE_SPECIFIER %s", alcGetString(NULL, ALC_DEVICE_SPECIFIER));  
+    console().print(Console::Info, "ALC_DEVICE_SPECIFIER %s", alcGetString(NULL, ALC_DEVICE_SPECIFIER));
 
 
     // ALC Extensions...
@@ -652,6 +675,39 @@ void Engine::printSysInfo()
     extension.clear();
 
     console().print(Console::Message, "***********************************************************");
+}
+
+void Engine::registerCVars()
+{
+    if (!com_title)
+    {
+        com_title        = new CVar("sys_title", defaultTitle(), "Sets the window title", CVar::Literal, CVar::System | CVar::Archive | CVar::ReadOnly);
+        cvarManager().registerCVar(com_title);
+        com_windowWidth  = new CVar("vid_width", "640", "Horizontal resolution of the window", CVar::Integer, CVar::System | CVar::Archive | CVar::ReadOnly);
+        cvarManager().registerCVar(com_windowWidth);
+        com_windowHeight = new CVar("vid_height", "480", "Vertical resolution of the window", CVar::Integer, CVar::System | CVar::Archive | CVar::ReadOnly);
+        cvarManager().registerCVar(com_windowHeight);
+        com_fullscreen   = new CVar("r_fullscreen", "false", "If true, the game renders in fullscreen mode, windowed otherwise", CVar::Boolean, CVar::System | CVar::Archive);
+        cvarManager().registerCVar(com_fullscreen);
+        com_framelimit   = new CVar("sys_framelimit", "60", "Sets the framerate limit", CVar::Integer, CVar::System | CVar::Archive);
+        cvarManager().registerCVar(com_framelimit);
+        com_verticalSync = new CVar("sys_vsync", "true", "Prevents tearing", CVar::Boolean, CVar::System | CVar::Archive);
+        cvarManager().registerCVar(com_verticalSync);
+        com_showstats    = new CVar("sys_showstats", "false", "Show system statistics", CVar::Boolean, CVar::System | CVar::Archive | CVar::ReadOnly);
+        cvarManager().registerCVar(com_showstats);
+        com_clear        = new CVar("r_clear", "true", "If true the window clears after each frame, otherwise it doesn't", CVar::Boolean, CVar::System | CVar::Archive);
+        cvarManager().registerCVar(com_clear);
+        com_clearColor   = new CVar("r_clearcolor", sf::Color::Black, "Sets the color of the scene", CVar::System | CVar::Archive);
+        cvarManager().registerCVar(com_clearColor);
+        com_drawwire     = new CVar("r_drawwire", "false", "Draws the geometry of objects on screen", CVar::Boolean, (CVar::System | CVar::Archive));
+        cvarManager().registerCVar(com_drawwire);
+
+        onRegisterCVars();
+    }
+}
+
+void Engine::onRegisterCVars()
+{
 }
 
 } // Core

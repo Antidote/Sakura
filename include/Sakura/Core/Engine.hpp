@@ -245,6 +245,7 @@ public:
      */
     Map* currentMap() const;
 
+protected:
     /*!
      * \brief handleEvent
      * \param event
@@ -290,9 +291,10 @@ public:
      * \brief afterDraw
      */
     virtual void afterDraw();
-protected:
     virtual void parseCommandLine();
     void printSysInfo();
+    void registerCVars();
+    virtual void onRegisterCVars();
     void operator =(const Engine&);
     Engine(const Engine&);
 
@@ -300,13 +302,13 @@ protected:
     int              m_argc;
     char**           m_argv;
 
+    CVarManager      m_cvarManager;
     Console          m_console;
     Camera           m_camera;
     EntityManager    m_entityManager;
     ResourceManager  m_resourceManager;
     InputManager     m_inputManager;
     Config           m_config;
-    CVarManager      m_cvarManager;
 
 
     UIManager        m_uiManager;

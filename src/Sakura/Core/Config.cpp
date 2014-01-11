@@ -388,7 +388,7 @@ void Config::setSettingBoolean(const std::string& setting, bool val)
 bool Config::settingBoolean(const std::string& setting, bool def)
 {
     bool valid;
-    bool ret = zelda::utility::parseBool(settingLiteral(setting), valid);
+    bool ret = zelda::utility::parseBool(settingLiteral(setting), &valid);
 
     if (!valid)
     {

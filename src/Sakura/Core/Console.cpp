@@ -1,4 +1,5 @@
 #include "Sakura/Core/Engine.hpp"
+#include "Sakura/Core/CVar.hpp"
 #include "Sakura/Core/Console.hpp"
 #include "Sakura/Resources/TextureResource.hpp"
 #include "Sakura/Resources/SoundResource.hpp"
@@ -276,12 +277,6 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     }
 #endif
 
-    // Handle toggling of fullscreen (is this the best place for this?)
-    if (code == sf::Keyboard::Return && alt)
-    {
-        sEngineRef().toggleFullscreen();
-        return;
-    }
     // This should probably be in the even loop not here
     if (code == sEngineRef().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
     {
@@ -721,21 +716,42 @@ void Console::parseCommand()
             // The command is always the first word
             std::string command = args[0];
             std::transform(command.begin(), command.end(), command.begin(), ::tolower);
+            // remove the command
+            args.erase(args.begin());
 
             // Hard coded commands
             if (!command.compare("list"))
             {
-                // List all registered commands
-                for (std::pair<std::string, ConsoleCommandBase*> cmd : m_commands)
-                    print(Message, cmd.first);
+                std::string secondary = args[0];
+                zelda::utility::tolower(secondary);
+                if (!secondary.compare("cmds") || !secondary.compare("all"))
+                {
+                    // List all registered commands
+                    for (std::pair<std::string, ConsoleCommandBase*> cmd : m_commands)
+                        print(Message, "%s %s", cmd.first.c_str(), cmd.second->usage().c_str());
+                    print(Message, "set");
+                }
+                if (!secondary.compare("cvars") || !secondary.compare("all"))
+                {
+                    std::string tertiary;
+                    if (args.size() >= 2)
+                        tertiary = args[1];
 
-                print(Message, "set");
+                    zelda::utility::tolower(tertiary);
+
+                    for (CVar* cvar : sEngineRef().cvarManager().cvars())
+                    {
+                        if ((!tertiary.compare("readonly") || !tertiary.compare("ro")) && cvar->isReadOnly())
+                            print(Message, "%s %s", cvar->name().c_str(), cvar->help().c_str());
+                        else if ((tertiary.compare("readonly") && tertiary.compare("ro")))
+                            print(Message, "%s %s", cvar->name().c_str(), cvar->help().c_str());
+                    }
+                }
+
                 resetCursor();
                 return;
             }
 
-            // remove the command
-            args.erase(args.begin());
             if (m_commands.find(command) != m_commands.end())
                 m_commands[command]->execute(args);
             else
@@ -743,28 +759,114 @@ void Console::parseCommand()
                 if (!command.compare("set"))
                 {
                     if (args.size() == 0)
+                    {
+                        resetCursor();
                         return;
+                    }
 
-                    std::string setting = args[0];
+                    std::string setting = std::string(args[0]);
                     zelda::utility::tolower(setting);
+                    CVar* tmp = sEngineRef().cvarManager().findCVar(setting);
+                    if (tmp == NULL)
+                    {
+                        resetCursor();
+                        return;
+                    }
+
                     // Not a command?
                     // It's probably a setting
-                    if (args.size() == 2)
+                    if (args.size() >= 2)
                     {
-                        sEngineRef().config().setSettingLiteral(setting, args[1]);
-                    }
-                    else if (args.size() > 1)
-                    {
-                        std::string val = "";
                         args.erase(args.begin());
-                        for (std::string s : args)
-                            val += s + " ";
+                        std::stringstream ss;
+                        switch(tmp->type())
+                        {
+                            case CVar::Boolean:
+                                tmp->fromBoolean(zelda::utility::parseBool(std::string(args[0])));
+                            break;
+                            case CVar::Integer:
+                            {
+                                int val;
+                                ss << args[0];
+                                ss >> val;
+                                tmp->fromInteger(val);
+                            }
+                            break;
+                            case CVar::Float:
+                            {
+                                float val;
+                                ss << args[1];
+                                ss >> val;
+                                tmp->fromFloat(val);
+                            }
+                            break;
+                            case CVar::Literal:
+                            {
+                                std::string val = "";
+                                for (std::string s : args)
+                                    val += s + " ";
+                                if (val.find_last_of(" ") != std::string::npos)
+                                    val.erase(val.find_last_of(" "));
 
-                        if (val.size() > 1)
-                            sEngineRef().config().setSettingLiteral(setting, val);
+                                std::cout << val << std::endl;
+
+                                tmp->fromLiteral(val);
+                            }
+                            break;
+                            case CVar::Color:
+                            {
+                                int r, g, b, a;
+                                std::stringstream ss;
+                                int i = 0;
+                                for (; i < (int)args.size(); i++)
+                                    ss << args[i] << " ";
+
+                                while ((i++) < 3)
+                                    ss << 0;
+
+                                ss >> r >> g >> b >> a;
+
+                                tmp->fromColor(sf::Color(r, g, b, a));
+                            }
+                            break;
+                            default: break;
+                        }
                     }
-                    else
-                        print(Info, "%s -> %s", setting.c_str(), sEngineRef().config().settingLiteral(setting).c_str());
+                }
+                else
+                {
+                    CVar* tmp = sEngineRef().cvarManager().findCVar(command);
+                    if (tmp == NULL)
+                    {
+                        resetCursor();
+                        return;
+                    }
+
+                    print(Info, "%s -> %s", tmp->name().c_str(), tmp->help().c_str());
+
+                    switch(tmp->type())
+                    {
+                        case CVar::Boolean:
+                            print(Info, "Current: %i", tmp->toBoolean());
+                        break;
+                        case CVar::Integer:
+                            print(Info, "Current: %i", tmp->toInteger());
+                        break;
+                        case CVar::Float:
+                            print(Info, "Current: %f", tmp->toFloat());
+                        break;
+                        case CVar::Literal:
+                            print(Info, "Current: %s", tmp->toLiteral().c_str());
+                        break;
+                        case CVar::Color:
+                        {
+                            sf::Color color = tmp->toColor();
+                            print(Info, "Current: %i %i %i %i", color.r, color.g, color.b, color.a);
+
+                        }
+                        break;
+                        default: break;
+                    }
                 }
             }
         }

@@ -133,13 +133,13 @@ static const MouseButton MouseButtonInfo[5] =
     {"mouse.x2", sf::Mouse::XButton2}
 };
 
-struct JoyAxis
+struct JoyAxisCode
 {
     std::string name;
     sf::Joystick::Axis axis;
 };
 
-static const JoyAxis AxisInfo[8] =
+static const JoyAxisCode AxisInfo[8] =
 {
     {"x", sf::Joystick::X},
     {"y", sf::Joystick::Y},

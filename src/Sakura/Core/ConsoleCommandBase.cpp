@@ -7,9 +7,9 @@ namespace Sakura
 {
 namespace Core
 {
-void QuitCommand::usage()
+std::string QuitCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Quit       -> Quits the game");
+    return "Quits the game";
 }
 
 void QuitCommand::execute(std::vector<std::string> args)
@@ -19,11 +19,11 @@ void QuitCommand::execute(std::vector<std::string> args)
 }
 
 
-void FullscreenCommand::usage()
+std::string FullscreenCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Fullscreen -> Switches between fullscren and windowed modes");
-    sEngineRef().console().print(Console::Info, "              If no argumens are given, toggles");
-    sEngineRef().console().print(Console::Info, "              Otherwise accepts 1, 0, true or false");
+    return "Switches between fullscren and windowed modes\n"
+           "              If no argumens are given, toggles\n"
+           "              Otherwise accepts 1, 0, true or false";
 }
 
 void FullscreenCommand::execute(std::vector<std::string> args)
@@ -34,9 +34,9 @@ void FullscreenCommand::execute(std::vector<std::string> args)
 }
 
 
-void ClearCommand::usage()
+std::string ClearCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Clear -> Clears the console");
+    return "Clears the console";
 }
 
 void ClearCommand::execute(std::vector<std::string> args)
@@ -45,9 +45,9 @@ void ClearCommand::execute(std::vector<std::string> args)
     sEngineRef().console().clear();
 }
 
-void WireframeCommand::usage()
+std::string WireframeCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Wireframe -> Sets the render mode to wireframe");
+    return "Sets the render mode to wireframe";
 }
 
 void WireframeCommand::execute(std::vector<std::string> args)
@@ -59,7 +59,7 @@ void WireframeCommand::execute(std::vector<std::string> args)
     }
 
     bool valid = false;
-    bool wireFrame = zelda::utility::parseBool(args[0], valid);
+    bool wireFrame = zelda::utility::parseBool(args[0], &valid);
     if(valid)
         sEngineRef().setWireframe(wireFrame);
     else
@@ -67,9 +67,9 @@ void WireframeCommand::execute(std::vector<std::string> args)
 }
 
 
-void PlayCommand::usage()
+std::string PlayCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Play -> Plays a sound or music file from the resource manager");
+    return "Plays a sound or music file from the resource manager";
 }
 
 void PlayCommand::execute(std::vector<std::string> args)
@@ -93,11 +93,11 @@ void PlayCommand::execute(std::vector<std::string> args)
 }
 
 
-void BindCommand::usage()
+std::string BindCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Bind -> Binds a an action to a key mouse/joy \nbutton or joy axis");
-    sEngineRef().console().print(Console::Info, "bind <binding> <action>");
-    sEngineRef().console().print(Console::Info, "bind list <keyboard,mouse,joy 0-7>\nLists the binding names for the spcified device");
+    return "Binds a an action to a key mouse/joy \nbutton or joy axis\n"
+           "bind <binding> <action>\n"
+           "bind list <keyboard,mouse,joy 0-7>\nLists the binding names for the spcified device";
 }
 
 void BindCommand::execute(std::vector<std::string> args)
@@ -126,9 +126,9 @@ void BindCommand::execute(std::vector<std::string> args)
 }
 
 
-void UnbindCommand::usage()
+std::string UnbindCommand::usage() const
 {
-    sEngineRef().console().print(Console::Info, "Unbind -> Unbinds the specified key");
+    return "Unbinds the specified key";
 
 }
 
@@ -136,7 +136,7 @@ void UnbindCommand::execute(std::vector<std::string> args)
 {
     if (args.size() != 1)
     {
-        usage();
+        sEngineRef().console().print(Console::Info, "unbind %s", usage().c_str());
         return;
     }
 
@@ -144,9 +144,9 @@ void UnbindCommand::execute(std::vector<std::string> args)
 }
 
 
-void RestartCommand::usage()
+std::string RestartCommand::usage() const
 {
-
+    return "Restarts the engine";
 }
 
 void RestartCommand::execute(std::vector<std::string> args)
