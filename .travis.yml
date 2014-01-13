@@ -1,5 +1,5 @@
 before_install:
-  - apt-add-repository -yes ppa:sonkun/sfml-development
+  - add-apt-repository -yes ppa:sonkun/sfml-development
   - sudo apt-get update -qq
   - sudo apt-get install -qq qt5-qmake libsfml-dev libphysfs-dev
 
