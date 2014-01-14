@@ -12,3 +12,6 @@ before_script:
 script:
   - qmake Sakura.pro
   - make
+
+notifications:
+  irc: "irc.wiiking.com#wiiking2"
