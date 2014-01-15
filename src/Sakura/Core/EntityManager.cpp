@@ -10,7 +10,6 @@ namespace Sakura
 namespace Core
 {
 EntityManager::EntityManager()
-    : m_playerSpawned(false)
 {
 }
 
@@ -176,9 +175,7 @@ void EntityManager::shutdown()
     }
 
     m_entities.clear();
-    m_playerSpawned = false;
 }
-
 
 bool EntityManager::checkNames(const std::string& name)
 {

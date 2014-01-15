@@ -1,4 +1,4 @@
-#include "Sakura/Core/SSpriteFileReader.hpp"
+﻿#include "Sakura/Core/SSpriteFileReader.hpp"
 #include "Sakura/Core/SSpriteFile.hpp"
 #include "Sakura/Core/SSprite.hpp"
 #include "Sakura/Core/SSpritePart.hpp"
@@ -35,7 +35,11 @@ SSpriteFile* SSpriteFileReader::readFile()
 
     // TODO: Make this more verbose
     if (version != SSpriteFile::Version)
-        throw zelda::error::InvalidOperationException("Unsupported version");
+    {
+        std::stringstream ss;
+        ss << "Unsupported container version got " << std::hex << version << " expected " << SSpriteFile::Version;
+        throw zelda::error::InvalidOperationException(ss.str());
+    }
 
     // After reading in the magic and version we need to load some
     // metadata about the file.
@@ -93,9 +97,7 @@ SSpriteFile* SSpriteFileReader::readFile()
     {
         SSprite* sprite = new SSprite(ret);
         sprite->setName(base::readString());
-        sprite->setDirection((SSprite::Direction)base::readByte());
-
-        Uint8 partCount = base::readByte();
+        Uint16 partCount = base::readUInt16();
         Uint16 stateCount = base::readUInt16();
 
         // Each state id corresponds to a texture held in the parent class
@@ -114,7 +116,7 @@ SSpriteFile* SSpriteFileReader::readFile()
         // it's still a bad idea to have a metric ton of texture resources
         // littering the place
         std::vector<SSpritePart*> parts;
-        for (Uint8 j = 0; j < partCount; j++)
+        for (Uint16 j = 0; j < partCount; j++)
         {
             SSpritePart* part = new SSpritePart(sprite);
             part->setName(base::readString());

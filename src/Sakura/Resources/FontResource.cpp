@@ -68,7 +68,7 @@ void FontResource::load()
         PHYSFS_close(file);
         return;
     }
-    sEngineRef().console().print(Core::Console::Warning, "Font %s%s%s does not exist", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
+    sEngineRef().console().print(Core::Console::Warning, "Font %s@%s does not exist", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 }
 
 bool FontResource::exists() const

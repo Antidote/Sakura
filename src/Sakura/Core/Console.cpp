@@ -1,4 +1,4 @@
-#include "Sakura/Core/Engine.hpp"
+﻿#include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/CVar.hpp"
 #include "Sakura/Core/Console.hpp"
 #include "Sakura/Resources/TextureResource.hpp"
@@ -21,6 +21,13 @@ namespace Sakura
 {
 namespace Core
 {
+extern CVar* com_windowWidth;
+extern CVar* com_windowHeight;
+CVar* con_height     = NULL;
+CVar* con_color      = NULL;
+CVar* con_textcolor  = NULL;
+CVar* con_sndopen    = NULL;
+CVar* con_sndclose   = NULL;
 
 Console::Console(const std::string &logfile)
     : m_state(Closed),
@@ -38,7 +45,6 @@ Console::Console(const std::string &logfile)
       m_defaultConColor(sf::Color::White)
 {
     m_log.open(logfile, std::ios_base::out | std::ios_base::app);
-
 }
 
 Console::~Console()
@@ -48,6 +54,12 @@ Console::~Console()
 
 void Console::initialize()
 {
+    CVar* con_height     = new CVar("con_height", "234", "Console Height", CVar::Integer, CVar::System);
+    CVar* con_color      = new CVar("con_color", sf::Color::White, "Console color", CVar::System);
+    CVar* con_textcolor  = new CVar("con_textcolor", sf::Color::White, "Console text color", CVar::System);
+    CVar* con_sndopen    = new CVar("con_sndopen", "sounds/con_open.wav", "Console opening sound effect", CVar::Literal, CVar::System);
+    CVar* con_sndclose   = new CVar("con_sndopen", "sounds/con_close.wav", "Console opening sound effect", CVar::Literal, CVar::System);
+
     // register default commands
     registerCommand("quit",         new QuitCommand());
     registerCommand("con_clear",    new ClearCommand());
@@ -255,6 +267,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 {
     // shutup compiler, i might need these later
     UNUSED(system);
+    UNUSED(alt);
 #ifdef SFML_SYSTEM_LINUX
     UNUSED(shift);
 #endif
@@ -561,7 +574,7 @@ void Console::update(const sf::Time& dt)
             m_cursorShape.setSize(sf::Vector2f(glyphW - 3, m_commandText.getCharacterSize()));
         }
 
-        m_cursorShape.setPosition(((m_commandText.getCharacterSize() / 2) + m_cursorX) + 4, (m_conY - 20)+ 4);
+        m_cursorShape.setPosition(((m_commandText.getCharacterSize() / 2) + m_cursorX) + 2, (m_conY - 20)+ 4);
     }
 }
 

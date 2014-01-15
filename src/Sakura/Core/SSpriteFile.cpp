@@ -7,11 +7,11 @@ namespace Sakura
 namespace Core
 {
 
-const Uint32 SSpriteFile::Major = 0;
+const Uint32 SSpriteFile::Major = 1;
 const Uint32 SSpriteFile::Minor = 0;
 const Uint32 SSpriteFile::Revision = 1;
 const Uint32 SSpriteFile::Build = 0;
-const Uint32 SSpriteFile::Version = Major | (Major << 8) | (Revision << 16) | (Build << 24);
+const Uint32 SSpriteFile::Version = Major | (Minor << 8) | (Revision << 16) | (Build << 24);
 
 const Uint32 SSpriteFile::Magic = 'S' | ('P' << 8) | ('R' << 16) | ('S' << 24);
 

@@ -20,12 +20,12 @@ Entity::Entity(const std::string& name, Type type)
 {
     getUniqueName();
 
-    if (sEngineRef().resourceManager().fontExists("fonts/debug.ttf"))
+    sf::Font* font = sEngineRef().resourceManager().font("fonts/RetGanon.ttf");
+    if (font)
     {
-        m_debugInfo.setFont(*sEngineRef().resourceManager().font("fonts/debug.ttf"));
-        m_debugInfo.setCharacterSize(10);
-        //m_debugInfo.setStyle(sf::Text::Bold);
-        ((sf::Texture&)m_debugInfo.getFont()->getTexture(10)).setSmooth(false);
+        m_debugInfo.setFont(*font);
+        m_debugInfo.setCharacterSize(14);
+        ((sf::Texture&)m_debugInfo.getFont()->getTexture(14)).setSmooth(false);
     }
 
     //std::cout << "Entity created: " << m_name << std::endl;

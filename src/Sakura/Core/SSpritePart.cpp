@@ -1,6 +1,8 @@
-#include "Sakura/Core/SSpritePart.hpp"
+﻿#include "Sakura/Core/SSpritePart.hpp"
 #include "Sakura/Core/SSpriteFrame.hpp"
 #include "Sakura/Core/SSprite.hpp"
+
+#include <iostream>
 
 namespace Sakura
 {
@@ -122,6 +124,7 @@ void SSpritePart::draw(sf::RenderTarget& rt)
     if (!m_root)
         return;
 
+    std::cout << "Fuck you I'm off to hogwarts!" << std::endl;
     rt.draw(m_partSprite);
 }
 

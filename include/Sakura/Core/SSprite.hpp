@@ -18,17 +18,8 @@ class SSpritePart;
 class SSprite
 {
 public:
-    enum Direction
-    {
-        North,
-        South,
-        East,
-        West,
-        All
-    };
-
     SSprite(SSpriteFile* root);
-    SSprite(SSpriteFile* root, const std::string& name, Direction dir = North);
+    SSprite(SSpriteFile* root, const std::string& name);
     virtual ~SSprite();
 
     virtual void setPosition(const float x, const float y);
@@ -36,9 +27,6 @@ public:
     sf::Vector2f position() const;
     void setName(const std::string& name);
     std::string name() const;
-
-    void setDirection(const Direction dir);
-    Direction direction() const;
 
     void addStateId(int id);
 
@@ -66,7 +54,6 @@ public:
 private:
     SSpriteFile* m_root;
     std::string  m_name;
-    Direction    m_direction;
     sf::Vector2f m_position;
 
     std::vector<int> m_stateIds; //!< Stores the texture id's for each state.

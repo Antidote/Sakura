@@ -19,6 +19,7 @@ public:
     CVarManager();
     ~CVarManager();
 
+    void initialize();
     bool registerCVar(CVar* cvar);
     void requestSerialization(CVar* cvar);
 
@@ -35,8 +36,8 @@ private:
     bool suppressDeveloper();
     void restoreDeveloper(bool oldDeveloper);
 
-    TiXmlDocument m_config;
     std::unordered_map<std::string, CVar*> m_cvars;
+    TiXmlDocument m_config;
 
 };
 } // Core

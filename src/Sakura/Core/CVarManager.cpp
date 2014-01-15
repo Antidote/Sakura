@@ -12,11 +12,6 @@ CVar* com_configfile;
 
 CVarManager::CVarManager()
 {
-    com_developer = new CVar("developer", "false", "Enables developer mode", CVar::Boolean, (CVar::System | CVar::Cheat | CVar::ReadOnly));
-    com_configfile = new CVar("config", "config.cfg", "File to store configuration", CVar::Literal, CVar::System);
-    registerCVar(com_developer);
-    registerCVar(com_configfile);
-    loadFromFile();
 }
 
 CVarManager::~CVarManager()
@@ -28,6 +23,13 @@ CVarManager::~CVarManager()
     }
 
     m_cvars.clear();
+}
+
+void CVarManager::initialize()
+{
+    com_developer = new CVar("developer", "false", "Enables developer mode", CVar::Boolean, (CVar::System | CVar::Cheat | CVar::ReadOnly));
+    com_configfile = new CVar("config", "config.cfg", "File to store configuration", CVar::Literal, CVar::System);
+    loadFromFile();
 }
 
 bool CVarManager::registerCVar(CVar *cvar)

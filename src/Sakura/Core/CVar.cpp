@@ -4,7 +4,6 @@
 #include "Sakura/Core/Keys.hpp"
 #include <sstream>
 #include <algorithm>
-#include <iostream>
 #include <tinyxml.h>
 #include <utility.hpp>
 
@@ -23,6 +22,7 @@ CVar::CVar(const std::string& name, const std::string &value, const std::string 
       m_flags(flags),
       m_allowedWrite(false)
 {
+    sEngineRef().cvarManager().registerCVar(this);
 }
 
 CVar::CVar(const std::string& name, CVar::Binding value, const std::string& help, int flags)
@@ -33,6 +33,7 @@ CVar::CVar(const std::string& name, CVar::Binding value, const std::string& help
       m_flags(flags),
       m_allowedWrite(false)
 {
+    sEngineRef().cvarManager().registerCVar(this);
 }
 
 CVar::CVar(const std::string& name, const sf::Color& value, const std::string& help, int flags)
@@ -51,6 +52,8 @@ CVar::CVar(const std::string& name, const sf::Color& value, const std::string& h
     lock();
     // Clear the modified flag, just incase lock didn't do it.
     m_flags = flags;
+
+    sEngineRef().cvarManager().registerCVar(this);
 }
 
 std::string CVar::name() const
@@ -443,7 +446,6 @@ int CVar::flags() const
 
 void CVar::deserialize(TiXmlNode* rootNode)
 {
-    std::cout << "Deserializing: " << name() << std::endl;
     int oldFlags = m_flags;
     unlock();
     if (rootNode == NULL)
@@ -491,7 +493,7 @@ void CVar::deserialize(TiXmlNode* rootNode)
             for (int m = 0; m < sf::Mouse::ButtonCount; m++)
             {
                 if (!MouseButtonInfo[m].name.compare(tmp))
-                    m_binding.Button = (MouseButton)(MouseButtonInfo[m].button + 1);
+                    m_binding.Button = (MouseButton)MouseButtonInfo[m].button;
             }
 
             for (int j = 0; j < sf::Joystick::Count; j++)
@@ -518,9 +520,7 @@ void CVar::deserialize(TiXmlNode* rootNode)
                 for (int a = 0; a < sf::Joystick::AxisCount; a++)
                 {
                     if (!AxisInfo[a].name.compare(tmp))
-                    {
-                        m_binding.Joysticks[j].Axis = (Joystick::JoyAxis)(AxisInfo[a].axis + 1);
-                    }
+                        m_binding.Joysticks[j].Axis = (Joystick::JoyAxis)(AxisInfo[a].axis);
                 }
                 tmp = joyNode->Attribute("isAxisNegative");
                 m_binding.Joysticks[j].NegativeAxis = zelda::utility::parseBool(tmp);

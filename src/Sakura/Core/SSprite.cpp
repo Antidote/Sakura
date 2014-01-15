@@ -1,8 +1,10 @@
-#include "Sakura/Core/Engine.hpp"
+﻿#include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/ResourceManager.hpp"
 #include "Sakura/Core/SSprite.hpp"
 #include "Sakura/Core/SSpritePart.hpp"
 #include "Sakura/Core/SSpriteFile.hpp"
+
+#include <iostream>
 
 namespace Sakura
 {
@@ -15,10 +17,9 @@ SSprite::SSprite(SSpriteFile* root)
 {
 }
 
-SSprite::SSprite(SSpriteFile* root, const std::string& name, SSprite::Direction dir)
+SSprite::SSprite(SSpriteFile* root, const std::string& name)
     : m_root(root),
       m_name(name),
-      m_direction(dir),
       m_currentState(0)
 {
 }
@@ -51,16 +52,6 @@ void SSprite::setName(const std::string& name)
 std::string SSprite::name() const
 {
     return m_name;
-}
-
-void SSprite::setDirection(const SSprite::Direction dir)
-{
-    m_direction = dir;
-}
-
-SSprite::Direction SSprite::direction() const
-{
-    return m_direction;
 }
 
 void SSprite::addStateId(int id)

@@ -1,7 +1,8 @@
-#include "Sakura/Core/Engine.hpp"
+﻿#include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/SSpriteFileReader.hpp"
 #include "Sakura/Resources/SpriteContainerResource.hpp"
 #include <physfs.h>
+#include <Exception.hpp>
 
 namespace Sakura
 {
@@ -58,10 +59,10 @@ void SpriteContainerResource::load()
                 m_isLoaded = true;
                 sEngineRef().console().print(Core::Console::Message, "done.");
             }
-            catch (...)
+            catch (zelda::error::Exception e)
             {
                 m_isLoaded = false;
-                sEngineRef().console().print(Core::Console::Warning, "failed!");
+                sEngineRef().console().print(Core::Console::Warning, "%s failed!", e.message().c_str());
             }
         }
 
@@ -69,6 +70,7 @@ void SpriteContainerResource::load()
     }
     else
     {
+        m_isLoaded = false;
         sEngineRef().console().print(Core::Console::Warning, "Sprite container %s@%s does not exist", PHYSFS_getRealDir(m_filename.c_str()), m_filename.c_str());
 
     }

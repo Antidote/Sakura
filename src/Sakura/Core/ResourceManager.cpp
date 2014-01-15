@@ -200,13 +200,12 @@ void ResourceManager::removeSound(const std::string &name)
 
 bool ResourceManager::soundExists(const std::string &name)
 {
-    std::unordered_map<std::string, Resources::SoundResource*>::const_iterator iter = m_soundBufferResources.begin();
-    for (; iter != m_soundBufferResources.end(); ++iter)
-        if (iter->first == name)
-            return true;
+    if (m_soundBufferResources.find(name) != m_soundBufferResources.end())
+        return true;
 
     return false;
 }
+
 
 int ResourceManager::soundCount() const
 {
@@ -264,13 +263,12 @@ void ResourceManager::removeSong(const std::string &name)
 
 bool ResourceManager::songExists(const std::string& name)
 {
-    std::unordered_map<std::string, Resources::SongResource*>::const_iterator iter = m_songResources.begin();
-    for (; iter != m_songResources.end(); ++iter)
-        if (iter->first == name)
-            return true;
+    if (m_songResources.find(name) != m_songResources.end())
+        return true;
 
     return false;
 }
+
 
 int ResourceManager::songCount() const
 {
@@ -323,11 +321,8 @@ void ResourceManager::removeTexture(const std::string &name)
 
 bool ResourceManager::textureExists(const std::string &name)
 {
-    std::unordered_map<std::string, Resources::TextureResource*>::const_iterator iter = m_textureResources.begin();
-
-    for (; iter != m_textureResources.end(); ++iter)
-        if (iter->first == name)
-            return true;
+    if (m_textureResources.find(name) != m_textureResources.end())
+        return true;
 
     return false;
 }
@@ -382,11 +377,8 @@ void ResourceManager::removeFont(const std::string &name)
 
 bool ResourceManager::fontExists(const std::string& name)
 {
-    std::unordered_map<std::string, Resources::FontResource*>::const_iterator iter = m_fontResources.begin();
-
-    for (; iter != m_fontResources.end(); ++iter)
-        if (iter->first == name)
-            return true;
+    if (m_fontResources.find(name) != m_fontResources.end())
+        return true;
 
     return false;
 }
@@ -441,14 +433,12 @@ void ResourceManager::removeSpriteContainer(const std::string& name)
 
 bool ResourceManager::spriteContainerExists(const std::string& name) const
 {
-    std::unordered_map<std::string, Resources::SpriteContainerResource*>::const_iterator iter = m_spriteContainerResources.begin();
-
-    for (; iter != m_spriteContainerResources.end(); ++iter)
-        if (iter->first == name)
-            return true;
+    if (m_spriteContainerResources.find(name) != m_spriteContainerResources.end())
+        return true;
 
     return false;
 }
+
 
 int ResourceManager::spriteContainerCount() const
 {
