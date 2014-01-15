@@ -68,7 +68,6 @@ SOURCES += \
     src/Sakura/Core/Engine.cpp \
     src/Sakura/Core/ConsoleCommandBase.cpp \
     src/Sakura/Core/Console.cpp \
-    src/Sakura/Core/Config.cpp \
     src/Sakura/Core/Camera.cpp \
     src/Sakura/Core/CVar.cpp \
     src/Sakura/Core/CVarManager.cpp \
@@ -125,7 +124,6 @@ HEADERS += \
     include/Sakura/Core/Engine.hpp \
     include/Sakura/Core/ConsoleCommandBase.hpp \
     include/Sakura/Core/Console.hpp \
-    include/Sakura/Core/Config.hpp \
     include/Sakura/Core/Collideable.hpp \
     include/Sakura/Core/Camera.hpp \
     include/Sakura/Core/AI.hpp \

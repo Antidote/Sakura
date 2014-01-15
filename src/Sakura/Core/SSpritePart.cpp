@@ -124,7 +124,6 @@ void SSpritePart::draw(sf::RenderTarget& rt)
     if (!m_root)
         return;
 
-    std::cout << "Fuck you I'm off to hogwarts!" << std::endl;
     rt.draw(m_partSprite);
 }
 

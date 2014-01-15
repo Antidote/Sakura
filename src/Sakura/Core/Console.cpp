@@ -21,9 +21,9 @@ namespace Sakura
 {
 namespace Core
 {
-extern CVar* com_windowWidth;
 extern CVar* com_windowHeight;
 CVar* con_height     = NULL;
+CVar* con_speed      = NULL;
 CVar* con_color      = NULL;
 CVar* con_textcolor  = NULL;
 CVar* con_sndopen    = NULL;
@@ -54,11 +54,12 @@ Console::~Console()
 
 void Console::initialize()
 {
-    CVar* con_height     = new CVar("con_height", "234", "Console Height", CVar::Integer, CVar::System);
-    CVar* con_color      = new CVar("con_color", sf::Color::White, "Console color", CVar::System);
-    CVar* con_textcolor  = new CVar("con_textcolor", sf::Color::White, "Console text color", CVar::System);
-    CVar* con_sndopen    = new CVar("con_sndopen", "sounds/con_open.wav", "Console opening sound effect", CVar::Literal, CVar::System);
-    CVar* con_sndclose   = new CVar("con_sndopen", "sounds/con_close.wav", "Console opening sound effect", CVar::Literal, CVar::System);
+    con_height     = new CVar("con_height", "234", "Console Height", CVar::Integer, CVar::System);
+    con_speed      = new CVar("con_speed", "500.f", "Specifies how fast the console opens or closes", CVar::Float, CVar::System);
+    con_color      = new CVar("con_color", sf::Color::White, "Console color", CVar::System);
+    con_textcolor  = new CVar("con_textcolor", sf::Color::White, "Console text color", CVar::System);
+    con_sndopen    = new CVar("con_sndopen", "sounds/con_open.wav", "Console opening sound effect", CVar::Literal, CVar::System);
+    con_sndclose   = new CVar("con_sndopen", "sounds/con_close.wav", "Console opening sound effect", CVar::Literal, CVar::System);
 
     // register default commands
     registerCommand("quit",         new QuitCommand());
@@ -73,7 +74,7 @@ void Console::initialize()
     m_borderShape.setOutlineColor(sf::Color::Red);
     m_borderShape.setOutlineThickness(1.f);
 
-    m_conHeight = sEngineRef().config().settingInt("con_height", 234);
+    m_conHeight = con_height->toInteger();
 
     if (sEngineRef().resourceManager().fontExists("fonts/debug.ttf"))
     {
@@ -136,9 +137,9 @@ void Console::handleText(const sf::Uint32 unicode)
     {
         if (sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::LShift) ||
             sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::RShift))
-            m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
+            m_conHeight = com_windowHeight->toInteger();
         else
-            m_conHeight = sEngineRef().config().settingInt("con_height", 234);
+            m_conHeight = con_height->toInteger();
 
         toggleConsole();
         return;
@@ -170,13 +171,12 @@ void Console::toggleConsole()
     if (m_state == Closed || m_state == Closing)
     {
         m_state = Opening;
-        sndFile = sEngineRef().config().settingLiteral("con_sndopen", "sounds/con_open.wav");
-
+        sndFile = con_sndopen->toLiteral();
     }
     else
     {
         m_state = Closing;
-        sndFile = sEngineRef().config().settingLiteral("con_sndclose", "sounds/con_close.wav");
+        sndFile = con_sndclose->toLiteral();
     }
 
     if (sndFile != std::string())
@@ -204,12 +204,12 @@ void Console::registerCommand(const std::string& commandString, ConsoleCommandBa
 
 sf::Color Console::consoleColor() const
 {
-    return sEngineRef().config().settingColor("con_color", m_defaultConColor);
+    return con_color->toColor();
 }
 
 sf::Color Console::textColor() const
 {
-    return sEngineRef().config().settingColor("con_textcolor", sf::Color::White);
+    return con_textcolor->toColor();
 }
 
 void Console::doAutoComplete()
@@ -281,21 +281,14 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     if (code == sf::Keyboard::Tilde)
     {
         if (shift)
-            m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
+            m_conHeight = com_windowHeight->toInteger();
         else
-            m_conHeight = sEngineRef().config().settingInt("con_height", 234);
+            m_conHeight = con_height->toInteger();
 
         toggleConsole();
         return;
     }
 #endif
-
-    // This should probably be in the even loop not here
-    if (code == sEngineRef().config().keyForAction("quit", sf::Keyboard::Unknown) && (m_state != Opened && m_state != Opening))
-    {
-        sEngineRef().quit();
-        return;
-    }
 
     // if the console isn't open or opening there isn't any need to process commands
     if (m_state == Closed || m_state == Closing)
@@ -498,7 +491,7 @@ void Console::update(const sf::Time& dt)
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)
-            m_conY += dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 500.f);
+            m_conY += dt.asSeconds()*con_speed->toFloat();
     }
     else if (m_state == Opening && m_conY > m_conHeight)
     {
@@ -511,7 +504,7 @@ void Console::update(const sf::Time& dt)
 
     if (m_state == Closing && m_conY > m_drawText.getCharacterSize())
     {
-        m_conY -= dt.asSeconds()*sEngineRef().config().settingFloat("con_speed", 500.f);
+        m_conY -= dt.asSeconds()*con_speed->toFloat();
     }
     else if (m_conY < m_drawText.getCharacterSize() && m_state == Closing)
     {
@@ -676,7 +669,7 @@ void Console::print(Console::Level level, const std::string& fmt, ...)
     {
         m_hadFatalError = true;
         m_state = Opened;
-        m_conHeight = sEngineRef().config().settingInt("vid_height", 480);
+        m_conHeight = com_windowHeight->toInteger();
         m_conY = m_conHeight;
         recalcMaxLines();
     }

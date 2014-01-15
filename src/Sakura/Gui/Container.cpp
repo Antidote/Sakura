@@ -1,4 +1,5 @@
-#include "Sakura/Core/Engine.hpp"
+﻿#include "Sakura/Core/Engine.hpp"
+#include "Sakura/Core/CVar.hpp"
 #include "Sakura/Gui/Container.hpp"
 #include "Sakura/Gui/Widget.hpp"
 
@@ -6,6 +7,11 @@
 
 namespace Sakura
 {
+namespace Core
+{
+    extern CVar* com_drawwire;
+}
+
 namespace Gui
 {
 Container::Container(float x, float y, int width, int height)
@@ -147,9 +153,9 @@ void Container::update(sf::Time dt)
 void Container::draw(sf::RenderTarget& rt)
 {
     m_renderTexture.clear(sf::Color::Transparent);
-    for (int i = 0; i <= (sEngineRef().config().settingBoolean("r_drawwire", false) ? 1 : 2); i++)
+    for (int i = 0; i <= (Core::com_drawwire->toBoolean() ? 1 : 2); i++)
     {
-        if (sEngineRef().config().settingBoolean("r_drawwire", false) && i == 1)
+        if (Core::com_drawwire->toBoolean() && i == 1)
         {
             glDisable(GL_TEXTURE_2D);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -161,7 +167,7 @@ void Container::draw(sf::RenderTarget& rt)
                 w->draw(m_renderTexture);
         }
 
-        if (sEngineRef().config().settingBoolean("r_drawwire", false) && i == 1)
+        if (Core::com_drawwire->toBoolean() && i == 1)
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glEnable(GL_TEXTURE_2D);

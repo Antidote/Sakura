@@ -1,4 +1,4 @@
-#include "Sakura/Core/Engine.hpp"
+﻿#include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/RunState.hpp"
 #include "Sakura/Core/Player.hpp"
 #include "Sakura/Core/CVar.hpp"
@@ -74,8 +74,6 @@ Engine::~Engine()
 bool Engine::initialize()
 {
     registerCVars();
-
-    config().initialize("settings.cfg");
 
     m_title = com_title->toLiteral();
     m_size = sf::Vector2u(com_windowWidth->toInteger(), com_windowHeight->toInteger());
@@ -272,11 +270,6 @@ UIManager& Engine::uiManager()
     return m_uiManager;
 }
 
-Config& Engine::config()
-{
-    return m_config;
-}
-
 CVarManager& Engine::cvarManager()
 {
     return m_cvarManager;
@@ -335,13 +328,12 @@ void Engine::shutdown()
     resourceManager().shutdown();
     console().print(Console::Info, "Maintenance complete...");
     console().shutdown();
-    config().shutdown();
     cvarManager().writeToFile();
 }
 
 void Engine::setWireframe(bool mode)
 {
-    config().setSettingBoolean("r_drawwire", mode);
+    com_drawwire->fromBoolean(mode);
 }
 
 void Engine::setFullscreen(bool isFullscreen)
@@ -356,7 +348,7 @@ void Engine::setFullscreen(bool isFullscreen)
 
 void Engine::setWindowTitle(const std::string& title)
 {
-    config().setSettingLiteral("sys_title", title);
+    com_title->fromLiteral(title);
     window().setTitle(title);
 }
 
@@ -467,7 +459,7 @@ void Engine::onUpdate()
     camera().update();
 
     m_fpsString.setColor(sf::Color::White);
-    m_fpsString.setPosition(config().settingInt("vid_width", 640) - 150,  8);
+    m_fpsString.setPosition(com_windowWidth->toInteger() - 150,  8);
 
     if (com_showstats->toBoolean())
     {
@@ -554,7 +546,7 @@ void Engine::onDrawConsole()
 
     console().draw(window());
 
-    if (config().settingBoolean("r_showfps", false))
+    if (com_showfps->toBoolean())
         window().draw(m_fpsString);
 }
 

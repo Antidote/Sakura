@@ -1,6 +1,7 @@
-#include "Sakura/Core/ResourceManager.hpp"
+﻿#include "Sakura/Core/ResourceManager.hpp"
 #include "Sakura/Core/ResourceBase.hpp"
 #include "Sakura/Core/Engine.hpp"
+#include "Sakura/Core/CVar.hpp"
 #include "Sakura/Resources/SoundResource.hpp"
 #include "Sakura/Resources/SongResource.hpp"
 #include "Sakura/Resources/TextureResource.hpp"
@@ -15,6 +16,8 @@ namespace Sakura
 {
 namespace Core
 {
+
+CVar* res_basepath = NULL;
 
 ResourceManager::ResourceManager()
 {
@@ -50,6 +53,7 @@ ResourceManager::~ResourceManager()
 
 bool ResourceManager::initialize(const char* argv0)
 {
+    res_basepath = new CVar("fs_basepath", "data", "Base directory for resources", CVar::Literal, CVar::System | CVar::ReadOnly);
     sEngineRef().console().print(Console::Info, "Initializing PHYSFS");
     sEngineRef().console().print(Console::Info, "Sakura built with PHYSFS Version %i.%i.%i", PHYSFS_VER_MAJOR, PHYSFS_VER_MINOR, PHYSFS_VER_PATCH);
     PHYSFS_init(argv0);
@@ -71,9 +75,9 @@ bool ResourceManager::initialize(const char* argv0)
             sEngineRef().console().print(Console::Message, "-------------------------");
         }
     }
-    if (!PHYSFS_mount(sEngineRef().config().settingLiteral("fs_basepath", "data").c_str(), "/", 0))
+    if (!PHYSFS_mount(res_basepath->toLiteral().c_str(), "/", 0))
     {
-        sEngineRef().console().print(Console::Fatal, "Failed to mount basepath %s", sEngineRef().config().settingLiteral("fs_basepath", "data").c_str());
+        sEngineRef().console().print(Console::Fatal, "Failed to mount basepath %s", res_basepath->toLiteral().c_str());
         return false;
     }
 

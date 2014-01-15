@@ -1,4 +1,4 @@
-#ifndef ENGINE_HPP
+﻿#ifndef ENGINE_HPP
 #define ENGINE_HPP
 
 #include <string>
@@ -10,7 +10,6 @@
 #include "Sakura/Core/UIManager.hpp"
 #include "Sakura/Core/Camera.hpp"
 #include "Sakura/Core/Console.hpp"
-#include "Sakura/Core/Config.hpp"
 #include "Sakura/Core/CVarManager.hpp"
 
 // Unused macro
@@ -119,12 +118,9 @@ public:
     UIManager& uiManager();
 
     /*!
-     * \brief config
+     * \brief cvarManager
      * \return
-     * \deprecated Use CVarManager instead
      */
-    Config& config();
-
     CVarManager& cvarManager();
 
     /*!
@@ -308,8 +304,6 @@ protected:
     EntityManager    m_entityManager;
     ResourceManager  m_resourceManager;
     InputManager     m_inputManager;
-    Config           m_config;
-
 
     UIManager        m_uiManager;
 

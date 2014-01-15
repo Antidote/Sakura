@@ -85,7 +85,9 @@ float CVar::toFloat(bool* isValid) const
         ss << m_value;
         ss >> ret;
 
-        *isValid = true;
+        if (isValid)
+            *isValid = true;
+
         return ret;
     }
     catch (...)
@@ -434,6 +436,76 @@ void CVar::clearBindings()
     m_binding.clear();
 }
 
+bool CVar::tryBinding(const std::string& binding)
+{
+    std::string bindingName = binding;
+    zelda::utility::tolower(bindingName);
+    if (binding.compare("mouse") != -1)
+    {
+        for (int i = 0; i < sf::Mouse::ButtonCount; i++)
+        {
+            if(!MouseButtonInfo[i].name.compare(bindingName))
+            {
+                m_binding.Button = (MouseButton)MouseButtonInfo[i].button;
+                return true;
+            }
+        }
+    }
+
+    if (binding.compare("joy") > -1)
+    {
+        for (int i = 0; i < sf::Joystick::Count; i++)
+        {
+            // first axis
+            for (int j = 0; j < sf::Joystick::AxisCount; j++)
+            {
+                // First try axis
+                std::string axisName = zelda::utility::sprintf("joy%i.%s", i, AxisInfo[j].name.c_str());
+                std::string negAxisName = zelda::utility::sprintf("-joy%i.%s", i, AxisInfo[j].name.c_str());
+
+                if (!axisName.compare(bindingName))
+                {
+                    m_binding.Joysticks[i].Axis = (Joystick::JoyAxis)AxisInfo[j].axis;
+                    m_binding.Joysticks[i].NegativeAxis = false;
+                    return true;
+                }
+                else if (!negAxisName.compare(bindingName))
+                {
+                    m_binding.Joysticks[i].Axis = (Joystick::JoyAxis)AxisInfo[j].axis;
+                    m_binding.Joysticks[i].NegativeAxis = true;
+                    return true;
+                }
+            }
+
+            // Now buttons
+            for (int j = 0; j < sf::Joystick::ButtonCount; j++)
+            {
+                // First try axis
+                std::string axisName = zelda::utility::sprintf("joy%i.button%i", i, j);
+
+                if (!axisName.compare(bindingName))
+                {
+                    m_binding.Joysticks[i].Button = j;
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Now for keyboard
+    for (int i = 0; i < sf::Keyboard::KeyCount - 1; i++)
+    {
+        if (!bindingName.compare(KeyInfo[i].name))
+        {
+            m_binding.Key = KeyInfo[i].code;
+            return true;
+        }
+    }
+
+    // Oops user specified an invalid key!;
+    return false;
+}
+
 CVar::Type CVar::type() const
 {
     return m_type;
@@ -614,7 +686,7 @@ void CVar::serializeCVar(TiXmlNode* rootNode, bool oldDeveloper)
             cvarNode->SetAttribute("b", (int)col.b);
             cvarNode->SetAttribute("a", (int)col.a);
         }
-            break;
+        break;
         default: break;
     }
 

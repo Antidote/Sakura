@@ -1,6 +1,7 @@
-#include "Sakura/Core/Engine.hpp"
+﻿#include "Sakura/Core/Engine.hpp"
 #include "Sakura/Core/Keys.hpp"
 #include "Sakura/Core/ConsoleCommandBase.hpp"
+#include "Sakura/Core/CVar.hpp"
 #include <utility.hpp>
 
 namespace Sakura
@@ -115,10 +116,19 @@ void BindCommand::execute(std::vector<std::string> args)
             return;
         }
 
-        if (sEngineRef().config().bind(args[1], args[0]))
-            sEngineRef().console().print(Console::Message, "Bound %s to %s", args[1].c_str(), args[0].c_str());
+        CVar* binding = sEngineRef().cvarManager().findCVar(args[1]);
+
+        if (binding && binding->isBinding())
+        {
+            if (binding->tryBinding(args[0]))
+                sEngineRef().console().print(Console::Message, "Bound %s to %s", args[1].c_str(), args[0].c_str());
+            else
+                sEngineRef().console().print(Console::Info, "Invalid binding specified");
+        }
         else
-            sEngineRef().console().print(Console::Info, "Invalid binding specified");
+        {
+            sEngineRef().console().print(Console::Info, "Specified impulse %s does not exist", args[1].c_str());
+        }
         return;
     }
 
@@ -140,7 +150,11 @@ void UnbindCommand::execute(std::vector<std::string> args)
         return;
     }
 
-    sEngineRef().config().unbind(args[0]);
+    CVar* binding = sEngineRef().cvarManager().findCVar(args[0]);
+    if (binding && binding->isBinding())
+        binding->clearBindings();
+    else
+        sEngineRef().console().print(Console::Info, "Specified impulse %s does not exist", args[0].c_str());
 }
 
 

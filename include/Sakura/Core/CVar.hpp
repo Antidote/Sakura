@@ -1,4 +1,4 @@
-#ifndef CVAR_HPP
+﻿#ifndef CVAR_HPP
 #define CVAR_HPP
 
 #include <string>
@@ -86,7 +86,7 @@ public:
 
     std::string name()                         const;
     std::string help()                         const;
-    float       toFloat(bool* isValid   =NULL) const;
+    float       toFloat (bool* isValid  =NULL) const;
     bool        toBoolean(bool* isValid =NULL) const;
     int         toInteger(bool* isValid =NULL) const;
     std::string toLiteral(bool* isValid =NULL) const;
@@ -112,6 +112,7 @@ public:
     void clearModified();
     void setModified();
     void clearBindings();
+    bool tryBinding(const std::string& binding);
 
     Type type() const;
     int flags() const;
