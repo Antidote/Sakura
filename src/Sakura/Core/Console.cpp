@@ -128,27 +128,24 @@ bool Console::isOpen() const
 
 void Console::handleText(const sf::Uint32 unicode)
 {
-
     // SFML Currently doesn't properly support the '`' key
     // (XK_grave and XK_dead_grave) on some systems, this is a work around.
     // Why this key in particular is such a pain in the neck is beyond me.
-#ifdef SFML_SYSTEM_LINUX
-    if (unicode == XK_grave || unicode == XK_dead_grave)
+    if (unicode == '~' || unicode == '`')
     {
-        if (sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::LShift) ||
-            sEngineRef().inputManager().keyboard().wasKeyPressed(sf::Keyboard::RShift))
-            m_conHeight = com_windowHeight->toInteger();
+        if (unicode == '~')
+            m_conHeight = com_windowHeight->toInteger() - 2;
         else
             m_conHeight = con_height->toInteger();
 
+        recalcMaxLines();
         toggleConsole();
         return;
     }
-#endif
 
     if (m_state == Opened || m_state == Opening)
     {
-        if (unicode > 0x1f && unicode != 0x7f)
+        if (unicode > 0x1f && (unicode != 0x7e && unicode != 0x7f))
         {
             if(!m_overwrite)
                 m_commandString.insert(m_cursorPosition, unicode);
@@ -277,7 +274,7 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
 
     // Anything but linux should be safe
     // from bug mentioned in handleText
-#ifndef SFML_SYSTEM_LINUX
+#if 0
     if (code == sf::Keyboard::Tilde)
     {
         if (shift)
@@ -290,8 +287,8 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     }
 #endif
 
-    // if the console isn't open or opening there isn't any need to process commands
-    if (m_state == Closed || m_state == Closing)
+    // if the console isn't open there isn't any need to process commands
+    if (m_state == Closed || m_state == Closing || m_state == Opening)
         return;
 
     // This switch is getting huge, really need to cut it down
@@ -299,168 +296,173 @@ void Console::handleInput(sf::Keyboard::Key code, bool alt, bool control, bool s
     {
         case sf::Keyboard::Tab:
             doAutoComplete();
-        break;
+            break;
 
         case sf::Keyboard::BackSpace:
-        {
-            if (m_commandString.getSize() > 0)
             {
-                // If control is pressed we need to erase whole words
-                if (control)
+                if (m_commandString.getSize() > 0)
                 {
-                    int index = m_commandString.toAnsiString().rfind(' ', m_cursorPosition - 1);
-                    if (index == (int)std::string::npos)
+                    // If control is pressed we need to erase whole words
+                    if (control)
                     {
-                        m_commandString.clear();
-                        m_cursorPosition = 0;
+                        int index = m_commandString.toAnsiString().rfind(' ', m_cursorPosition - 1);
+                        if (index == (int)std::string::npos)
+                        {
+                            m_commandString.clear();
+                            m_cursorPosition = 0;
+                        }
+                        else
+                        {
+                            m_commandString.erase(index, (index - m_commandString.getSize()));
+                            m_cursorPosition = index;
+                        }
+                        m_cursorX = 0;
+                        for (int i = 0; i < (int)m_commandString.getSize(); i++)
+                            m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[i], m_drawText.getCharacterSize(), false).advance);
                     }
                     else
                     {
-                        m_commandString.erase(index, (index - m_commandString.getSize()));
-                        m_cursorPosition = index;
-                    }
-                    m_cursorX = 0;
-                    for (int i = 0; i < (int)m_commandString.getSize(); i++)
-                        m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[i], m_drawText.getCharacterSize(), false).advance);
-                }
-                else
-                {
-                    m_cursorX -= (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
+                        m_cursorX -= (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
 
-                    m_commandString.erase(--m_cursorPosition);
+                        m_commandString.erase(--m_cursorPosition);
+                    }
                 }
             }
-        }
-        break;
+            break;
         case sf::Keyboard::Delete:
-        {
-            if (m_commandString.getSize() > 0)
             {
-                // Don't try to delete if the cursor is at the end of the line
-                if (m_cursorPosition >= (int)m_commandString.getSize())
-                    break;
-                m_commandString.erase(m_cursorPosition);
+                if (m_commandString.getSize() > 0)
+                {
+                    // Don't try to delete if the cursor is at the end of the line
+                    if (m_cursorPosition >= (int)m_commandString.getSize())
+                        break;
+                    m_commandString.erase(m_cursorPosition);
+                }
             }
-        }
-        break;
+            break;
 
         case sf::Keyboard::PageUp:
-        {
-            if (control && (int)((m_history.size()) - (m_startString + m_maxLines)) >= m_maxLines)
             {
-                m_startString += m_maxLines;
-                break;
-            }
-            if ((int)((m_history.size())  - m_startString) >= m_maxLines)
-                m_startString++;
-        }
-        break;
-        case sf::Keyboard::PageDown:
-        {
-            if (m_startString > 0)
-            {
-                if (m_startString >= m_maxLines && control)
+                if (control && (int)((m_history.size() - 1) - (m_startString + m_maxLines)) >= m_maxLines)
                 {
-                    m_startString -= m_maxLines;
+                    m_startString += m_maxLines;
                     break;
                 }
-                m_startString--;
+                if ((int)((m_history.size() - 1) - m_startString) >= m_maxLines)
+                    m_startString++;
             }
-        }
-        break;
+            break;
+        case sf::Keyboard::PageDown:
+            {
+                if (m_startString > 0)
+                {
+                    if (m_startString >= m_maxLines && control)
+                    {
+                        m_startString -= m_maxLines;
+                        break;
+                    }
+                    m_startString--;
+                }
+            }
+            break;
         case sf::Keyboard::Return:
-        {
-            parseCommand();
-        }
-        break;
+            {
+                parseCommand();
+            }
+            break;
         case sf::Keyboard::Left:
-        {
-            if (m_cursorPosition <= 0)
-                break;
-            m_cursorPosition--;
-            m_cursorX -= (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
-            m_showCursor = true;
-            m_cursorTime = sf::seconds(0.f);
-        }
-        break;
+            {
+                if (m_cursorPosition <= 0)
+                    break;
+                m_cursorPosition--;
+                m_cursorX -= (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
+                m_showCursor = true;
+                m_cursorTime = sf::seconds(0.f);
+            }
+            break;
         case sf::Keyboard::Right:
-        {
-            if (m_cursorPosition >= (int)m_commandString.getSize())
-                break;
-            m_cursorPosition++;
-            m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
-            m_showCursor = true;
-            m_cursorTime = sf::seconds(0.f);
-        }
-        break;
+            {
+                if (m_cursorPosition >= (int)m_commandString.getSize())
+                    break;
+                m_cursorPosition++;
+                m_cursorX += (m_drawText.getFont()->getGlyph(m_drawText.getString()[m_cursorPosition - 1], m_drawText.getCharacterSize(), false).advance);
+                m_showCursor = true;
+                m_cursorTime = sf::seconds(0.f);
+            }
+            break;
 
         case sf::Keyboard::Up:
-        {
-            if (m_commandHistory.size() == 0)
-                break;
-
-            if (m_currentCommand < (int)m_commandHistory.size())
             {
-                m_commandString = m_commandHistory[m_currentCommand];
+                if (m_commandHistory.size() == 0)
+                    break;
+
+                if (m_currentCommand < (int)m_commandHistory.size())
+                {
+                    m_commandString = m_commandHistory[m_currentCommand];
+                }
+
+                m_drawText.setString(m_commandString);
+                m_cursorX = m_drawText.getLocalBounds().width;
+                m_cursorPosition = m_commandString.getSize();
+                m_currentCommand++;
+
+                if (m_currentCommand > (int)m_commandHistory.size() - 1)
+                    m_currentCommand = m_commandHistory.size() - 1;
             }
-
-            m_drawText.setString(m_commandString);
-            m_cursorX = m_drawText.getLocalBounds().width;
-            m_cursorPosition = m_commandString.getSize();
-            m_currentCommand++;
-
-            if (m_currentCommand > (int)m_commandHistory.size() - 1)
-                m_currentCommand = m_commandHistory.size() - 1;
-        }
-        break;
+            break;
 
         case sf::Keyboard::Down:
-        {
-            if (m_commandHistory.size() == 0)
-                break;
-            if (m_currentCommand >= 0)
             {
-                m_commandString = m_commandHistory[m_currentCommand];
+                if (m_commandHistory.size() == 0)
+                    break;
+                if (m_currentCommand >= 0)
+                {
+                    m_commandString = m_commandHistory[m_currentCommand];
+                }
+
+                m_drawText.setString(m_commandString);
+                m_cursorX = m_drawText.getLocalBounds().width;
+                m_cursorPosition = m_commandString.getSize();
+                m_currentCommand--;
+
+                if (m_currentCommand < 0)
+                    m_currentCommand = 0;
             }
-
-            m_drawText.setString(m_commandString);
-            m_cursorX = m_drawText.getLocalBounds().width;
-            m_cursorPosition = m_commandString.getSize();
-            m_currentCommand--;
-
-            if (m_currentCommand < 0)
-                m_currentCommand = 0;
-        }
-        break;
+            break;
 
         case sf::Keyboard::Insert: m_overwrite ^= 1; break;
         case sf::Keyboard::Home:
-        {
-            m_cursorPosition = 0;
-            m_drawText.setString(m_commandString);
-            m_cursorX = 0;
-            m_showCursor = true;
-            m_cursorTime = sf::seconds(0.f);
-        }
-        break;
+            {
+                m_cursorPosition = 0;
+                m_drawText.setString(m_commandString);
+                m_cursorX = 0;
+                m_showCursor = true;
+                m_cursorTime = sf::seconds(0.f);
+            }
+            break;
         case sf::Keyboard::End:
-        {
-            m_cursorPosition = m_commandString.getSize();
-            m_drawText.setString(m_commandString);
-            m_cursorX = m_drawText.getLocalBounds().width;
-            m_showCursor = true;
-            m_cursorTime = sf::seconds(0.f);
-        }
-        break;
+            {
+                m_cursorPosition = m_commandString.getSize();
+                m_drawText.setString(m_commandString);
+                m_cursorX = m_drawText.getLocalBounds().width;
+                m_showCursor = true;
+                m_cursorTime = sf::seconds(0.f);
+            }
+            break;
 
         default:
-        break;
+            break;
     }
 
     if (m_cursorPosition > (int)m_commandString.getSize())
         m_cursorPosition = m_commandString.getSize();
     if (m_cursorPosition < 0)
         m_cursorPosition = 0;
+
+    if (m_startString > (int)m_history.size() - 1)
+        m_startString = m_history.size() - 1;
+    if (m_startString < 0)
+        m_startString = 0;
 }
 
 void Console::handleMouseWheel(int delta, int x, int y)
@@ -487,7 +489,6 @@ void Console::handleMouseWheel(int delta, int x, int y)
 
 void Console::update(const sf::Time& dt)
 {
-    recalcMaxLines();
     if (m_state == Opening && m_conY < m_conHeight)
     {
         if (m_conY < m_conHeight)
@@ -500,7 +501,10 @@ void Console::update(const sf::Time& dt)
     }
 
     if (m_state == Closed)
+    {
+        recalcMaxLines();
         return;
+    }
 
     if (m_state == Closing && m_conY > m_drawText.getCharacterSize())
     {
@@ -626,19 +630,19 @@ void Console::print(Console::Level level, const std::string& fmt, ...)
     switch(level)
     {
         case Message:
-        break;
+            break;
         case Info:
             label = "[Info   ] ";
-        break;
+            break;
         case Warning:
             label = "[Warning] ";
-        break;
+            break;
         case Error:
             label = "[Error  ] ";
-        break;
+            break;
         case Fatal:
             label = "[FATAL  ] ";
-        break;
+            break;
     }
     std::vector<std::string> entries = zelda::utility::split(str, '\n');
 
@@ -789,52 +793,52 @@ void Console::parseCommand()
                         {
                             case CVar::Boolean:
                                 tmp->fromBoolean(zelda::utility::parseBool(std::string(args[0])));
-                            break;
+                                break;
                             case CVar::Integer:
-                            {
-                                int val;
-                                ss << args[0];
-                                ss >> val;
-                                tmp->fromInteger(val);
-                            }
-                            break;
+                                {
+                                    int val;
+                                    ss << args[0];
+                                    ss >> val;
+                                    tmp->fromInteger(val);
+                                }
+                                break;
                             case CVar::Float:
-                            {
-                                float val;
-                                ss << args[1];
-                                ss >> val;
-                                tmp->fromFloat(val);
-                            }
-                            break;
+                                {
+                                    float val;
+                                    ss << args[1];
+                                    ss >> val;
+                                    tmp->fromFloat(val);
+                                }
+                                break;
                             case CVar::Literal:
-                            {
-                                std::string val = "";
-                                for (std::string s : args)
-                                    val += s + " ";
-                                if (val.find_last_of(" ") != std::string::npos)
-                                    val.erase(val.find_last_of(" "));
+                                {
+                                    std::string val = "";
+                                    for (std::string s : args)
+                                        val += s + " ";
+                                    if (val.find_last_of(" ") != std::string::npos)
+                                        val.erase(val.find_last_of(" "));
 
-                                std::cout << val << std::endl;
+                                    std::cout << val << std::endl;
 
-                                tmp->fromLiteral(val);
-                            }
-                            break;
+                                    tmp->fromLiteral(val);
+                                }
+                                break;
                             case CVar::Color:
-                            {
-                                int r, g, b, a;
-                                std::stringstream ss;
-                                int i = 0;
-                                for (; i < (int)args.size(); i++)
-                                    ss << args[i] << " ";
+                                {
+                                    int r, g, b, a;
+                                    std::stringstream ss;
+                                    int i = 0;
+                                    for (; i < (int)args.size(); i++)
+                                        ss << args[i] << " ";
 
-                                while ((i++) < 3)
-                                    ss << 0;
+                                    while ((i++) < 3)
+                                        ss << 0;
 
-                                ss >> r >> g >> b >> a;
+                                    ss >> r >> g >> b >> a;
 
-                                tmp->fromColor(sf::Color(r, g, b, a));
-                            }
-                            break;
+                                    tmp->fromColor(sf::Color(r, g, b, a));
+                                }
+                                break;
                             default: break;
                         }
                     }
@@ -854,23 +858,23 @@ void Console::parseCommand()
                     {
                         case CVar::Boolean:
                             print(Info, "Current: %i", tmp->toBoolean());
-                        break;
+                            break;
                         case CVar::Integer:
                             print(Info, "Current: %i", tmp->toInteger());
-                        break;
+                            break;
                         case CVar::Float:
                             print(Info, "Current: %f", tmp->toFloat());
-                        break;
+                            break;
                         case CVar::Literal:
                             print(Info, "Current: %s", tmp->toLiteral().c_str());
-                        break;
+                            break;
                         case CVar::Color:
-                        {
-                            sf::Color color = tmp->toColor();
-                            print(Info, "Current: %i %i %i %i", color.r, color.g, color.b, color.a);
+                            {
+                                sf::Color color = tmp->toColor();
+                                print(Info, "Current: %i %i %i %i", color.r, color.g, color.b, color.a);
 
-                        }
-                        break;
+                            }
+                            break;
                         default: break;
                     }
                 }
@@ -883,7 +887,7 @@ void Console::parseCommand()
 
 void Console::recalcMaxLines()
 {
-    m_maxLines = std::abs(m_conHeight / (m_drawText.getCharacterSize())) - 1;
+    m_maxLines = std::floor(m_conHeight / (m_drawText.getCharacterSize())) - 2;
 }
 
 
@@ -903,19 +907,19 @@ void Console::drawHistory(sf::RenderWindow& rt)
             case Message:
             case Info:
                 m_drawText.setColor(textColor());
-            break;
+                break;
             case Warning:
                 m_drawText.setColor(sf::Color::Yellow);
-            break;
+                break;
             case Error:
                 m_drawText.setColor(sf::Color::Red);
-            break;
+                break;
             case Fatal:
                 if (!m_showError)
                     m_drawText.setColor(sf::Color::Red);
                 else
                     m_drawText.setColor(sf::Color::Transparent);
-            break;
+                break;
         }
 
         m_drawText.setPosition(2, posY);
@@ -932,7 +936,7 @@ void Console::drawSeparator(sf::RenderWindow& rt)
     m_drawText.setString("v"+sEngineRef().gameVersion());
     float versionWidth = (m_drawText.getLocalBounds().width + 2);
     int sepWidth = m_drawText.getFont()->getGlyph('^', m_drawText.getCharacterSize(), false).advance +
-                   m_drawText.getFont()->getGlyph(' ', m_drawText.getCharacterSize(), false).advance;
+            m_drawText.getFont()->getGlyph(' ', m_drawText.getCharacterSize(), false).advance;
 
     if (m_startString != 0)
     {

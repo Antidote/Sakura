@@ -17,7 +17,7 @@ SSpriteFileWriter::SSpriteFileWriter(const std::string& filepath)
 
 void SSpriteFileWriter::writeFile(SSpriteFile* file)
 {
-    UNUSED(file);
+    ((void)file);
 }
 
 }

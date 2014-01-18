@@ -54,8 +54,6 @@ Engine::Engine(int argc, char* argv[])
       m_currentState(NULL)
 {
     m_instance = this;
-    // First we initialize the CVar subsystem
-    cvarManager().initialize();
     console().print(Console::Info, "Sakura Engine " + version() + ": Initializing");
     console().print(Console::Info, "Built with SFML %i.%i", SFML_VERSION_MAJOR , SFML_VERSION_MINOR);
     console().print(Console::Info, "Build date %s %s", __DATE__, __TIME__);
@@ -73,6 +71,8 @@ Engine::~Engine()
 
 bool Engine::initialize()
 {
+    // First we initialize the CVar subsystem
+    cvarManager().initialize();
     registerCVars();
 
     m_title = com_title->toLiteral();
@@ -681,27 +681,16 @@ void Engine::registerCVars()
     if (!com_title)
     {
         com_title        = new CVar("sys_title", defaultTitle(), "Sets the window title", CVar::Literal, CVar::System | CVar::Archive | CVar::ReadOnly);
-//        cvarManager().registerCVar(com_title);
         com_windowWidth  = new CVar("vid_width", "640", "Horizontal resolution of the window", CVar::Integer, CVar::System | CVar::Archive | CVar::ReadOnly);
-//        cvarManager().registerCVar(com_windowWidth);
         com_windowHeight = new CVar("vid_height", "480", "Vertical resolution of the window", CVar::Integer, CVar::System | CVar::Archive | CVar::ReadOnly);
-//        cvarManager().registerCVar(com_windowHeight);
         com_fullscreen   = new CVar("r_fullscreen", "false", "If true, the game renders in fullscreen mode, windowed otherwise", CVar::Boolean, CVar::System | CVar::Archive);
-//        cvarManager().registerCVar(com_fullscreen);
         com_framelimit   = new CVar("sys_framelimit", "60", "Sets the framerate limit", CVar::Integer, CVar::System | CVar::Archive);
-//        cvarManager().registerCVar(com_framelimit);
         com_verticalSync = new CVar("sys_vsync", "true", "Prevents tearing", CVar::Boolean, CVar::System | CVar::Archive);
-//        cvarManager().registerCVar(com_verticalSync);
         com_showstats    = new CVar("sys_showstats", "false", "Show system statistics", CVar::Boolean, CVar::System | CVar::Archive | CVar::ReadOnly);
-//        cvarManager().registerCVar(com_showstats);
         com_clear        = new CVar("r_clear", "true", "If true the window clears after each frame, otherwise it doesn't", CVar::Boolean, CVar::System | CVar::Archive);
-//        cvarManager().registerCVar(com_clear);
         com_clearColor   = new CVar("r_clearcolor", sf::Color::Black, "Sets the color of the scene", CVar::System | CVar::Archive);
-        //cvarManager().registerCVar(com_clearColor);
         com_drawwire     = new CVar("r_drawwire", "false", "Draws the geometry of objects on screen", CVar::Boolean, (CVar::System | CVar::Archive));
-//        cvarManager().registerCVar(com_drawwire);
         com_showfps      = new CVar("r_showfps", "false", "If true, renders the framerate in the upper right hand corner.", CVar::Boolean, (CVar::System | CVar::Archive));
-//        cvarManager().registerCVar(com_showfps);
         onRegisterCVars();
     }
 }

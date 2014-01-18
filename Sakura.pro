@@ -4,7 +4,8 @@ DESTDIR = lib
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-DEFINES += GLEW_STATIC #\
+DEFINES += GLEW_STATIC \
+     TIXML_USE_STL
 #    INTERNAL
 
 win32:LIBS += \
@@ -13,6 +14,7 @@ win32:LIBS += \
     -Lextlibs/AL/lib \
     -Lextlibs/physfs/lib \
     -Lextlibs/AL/lib \
+    -Lextlibs/tinyxml/lib \
     -lopenal32 \
     -lopengl32
 
@@ -96,7 +98,8 @@ win32:INCLUDEPATH += \
     extlibs/physfs/include \
     extlibs/SFML/include \
     extlibs/AL/include \
-    extlibs/GLEW/include
+    extlibs/GLEW/include \
+    extlibs/tinyxml/include
 
 HEADERS += \
     include/Mainpage.hpp \
@@ -148,4 +151,4 @@ HEADERS += \
     include/Sakura/Core/SSpriteFileWriter.hpp \
     include/Sakura/Core/SSpriteFrame.hpp \
     include/Sakura/Core/SSpritePart.hpp \
-    include/Sakura/Resources/SpriteContainerResource.hpp \
+    include/Sakura/Resources/SpriteContainerResource.hpp
