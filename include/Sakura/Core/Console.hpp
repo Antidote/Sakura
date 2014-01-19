@@ -1,4 +1,4 @@
-// This file is part of Sakura.
+﻿// This file is part of Sakura.
 //
 // libZelda is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -213,8 +213,12 @@ private:
     void drawSeparator(sf::RenderWindow& rt);
     void drawVersion(sf::RenderWindow& rt);
     void parseCommand();
+    void parseCVars(const std::string& command, std::vector<std::string> args);
     void resetCursor();
     void recalcMaxLines();
+    void recalcMaxLen();
+    void addEntry(const Level level, const std::string& message, const std::string& timestamp, const std::string& label = std::string());
+    sf::Uint32 currentMaxLen();
 
     State      m_state;
     bool       m_showCursor;
@@ -242,6 +246,9 @@ private:
     bool               m_hadFatalError;
     int                m_maxLines;
     int                m_conHeight;
+    int                m_conWidth;
+    int                m_currentMaxLen;
+    int                m_commandStart;
 
     float              m_cursorX;
     float              m_conY;
@@ -262,4 +269,4 @@ private:
 
 } // Core
 } // Sakura
-#endif // CONSOLE_HPP
+#endif

@@ -1,4 +1,4 @@
-#include "Sakura/Core/SSpriteFile.hpp"
+﻿#include "Sakura/Core/SSpriteFile.hpp"
 #include "Sakura/Core/SSprite.hpp"
 #include <iostream>
 

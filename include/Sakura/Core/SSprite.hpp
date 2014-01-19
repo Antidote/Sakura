@@ -1,4 +1,4 @@
-#ifndef SSPRITE_HPP
+﻿#ifndef SSPRITE_HPP
 #define SSPRITE_HPP
 
 #include <unordered_map>
@@ -38,6 +38,7 @@ public:
      */
     int stateId(int index) const;
     void setStateIds(std::vector<int> ids);
+    std::vector<int> stateIds() const;
     Uint32 stateCount() const;
     void setCurrentState(const Uint32 id);
 

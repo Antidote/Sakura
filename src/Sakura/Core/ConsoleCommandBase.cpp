@@ -113,6 +113,16 @@ void BindCommand::execute(std::vector<std::string> args)
                     sEngineRef().console().print(Console::Info, "Key: " + KeyInfo[i].name);
             }
 
+            if (args[1] == "mouse")
+            {
+                std::vector<std::string> buttons;
+
+                for (int i = 0; i < sf::Mouse::ButtonCount; i++)
+                    buttons.push_back(MouseButtonInfo[i].name);
+
+                sEngineRef().console().print(Console::Info, "Buttons: %s", zelda::utility::join(buttons, " ").c_str());
+            }
+
             return;
         }
 
@@ -132,7 +142,7 @@ void BindCommand::execute(std::vector<std::string> args)
         return;
     }
 
-    usage();
+    sEngineRef().console().print(Console::Message, usage().c_str());
 }
 
 
